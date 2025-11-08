@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LABORATORIO DE SIMULACIÓN - UNICUCES</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-navy: #0f0c29;
+            --dark-purple: #302b63;
+            --medium-purple: #4a3f8c;
+            --light-purple: #6a52b5;
+            --electric-blue: #2196f3;
+            --light-blue: #64b5f6;
+            --lavender: #b39ddb;
+            --white: #ffffff;
+            --light-gray: #f5f7ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--deep-navy), var(--dark-purple));
+            color: var(--white);
+            line-height: 1.6;
+            min-height: 100vh;
+            font-family: 'Exo 2', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        /* Header Styles */
+        header {
+            padding: 1.2rem 0;
+            background: rgba(15, 12, 41, 0.98);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--light-purple);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            border: 2px solid var(--light-blue);
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+            transition: all 0.3s ease;
+            padding: 5px;
+        }
+        
+        .logo-icon:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
+            border-color: var(--electric-blue);
+        }
+        
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .logo-text {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--light-blue), var(--lavender));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        .lab-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            color: var(--lavender);
+            margin-top: 0.3rem;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: var(--lavender);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 0.7rem 1.2rem;
+            border-radius: 6px;
+            font-family: 'Exo 2', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        
+        nav a:hover {
+            color: var(--light-blue);
+            background: rgba(100, 181, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+            background: linear-gradient(rgba(15, 12, 41, 0.9), rgba(48, 43, 99, 0.95)), 
+                        url('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero h1 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, var(--light-blue), var(--lavender));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.4rem;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            color: var(--lavender);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--light-blue);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--lavender);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Simulators Section */
+        .simulators-section {
+            padding: 5rem 0;
+            background: rgba(15, 12, 41, 0.8);
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+            font-size: 2.8rem;
+            color: var(--light-blue);
+            position: relative;
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 4px;
+            background: linear-gradient(to right, var(--electric-blue), var(--light-purple));
+            border-radius: 2px;
+        }
+        
+        .simulators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2.5rem;
+        }
+        
+        .simulator-card {
+            background: linear-gradient(145deg, var(--dark-purple), var(--medium-purple));
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            border: 1px solid rgba(100, 181, 246, 0.2);
+            display: flex;
+            flex-direction: column;
+            height: 220px;
+            position: relative;
+        }
+        
+        .simulator-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(33, 150, 243, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .simulator-card:hover {
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(33, 150, 243, 0.5);
+            border-color: var(--electric-blue);
+        }
+        
+        .simulator-card:hover::before {
+            opacity: 1;
+        }
+        
+        .card-image {
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+        
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(15, 12, 41, 0.7));
+        }
+        
+        .simulator-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--white);
+            text-align: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* About Section */
+        .about-section {
+            padding: 5rem 0;
+            background: rgba(15, 12, 41, 0.7);
+        }
+        
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        
+        .about-image {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            height: 400px;
+            background: url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .about-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--medium-purple), transparent);
+            opacity: 0.3;
+        }
+        
+        .about-text h2 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--light-blue);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        .about-text p {
+            color: var(--lavender);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            text-transform: uppercase;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--deep-navy);
+            color: var(--lavender);
+            padding: 3rem 0 2rem;
+            border-top: 1px solid var(--light-purple);
+            font-family: 'Exo 2', sans-serif;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr;
+            gap: 5rem;
+            margin-bottom: 2rem;
+            align-items: start;
+        }
+        
+        .footer-column h3 {
+            color: var(--light-blue);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .footer-column a {
+            color: var(--lavender);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-column a:hover {
+            color: var(--light-blue);
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            justify-content: center;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(100, 181, 246, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--lavender);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(100, 181, 246, 0.2);
+        }
+        
+        .social-link:hover {
+            background: var(--light-blue);
+            color: var(--deep-navy);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(179, 157, 219, 0.2);
+            color: var(--lavender);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Estilos específicos para la primera columna del footer */
+        .footer-column:first-child {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .footer-column:first-child p {
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Estilos específicos para la columna central del footer (Enlaces Rápidos) */
+        .footer-column:nth-child(2) {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+        }
+        
+        .footer-column:nth-child(2) h3 {
+            text-align: left;
+        }
+        
+        .footer-column:nth-child(2) ul {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .footer-column:nth-child(2) ul li {
+            justify-content: flex-start;
+        }
+        
+        /* Estilos específicos para la tercera columna del footer (Información de Contacto) */
+        .footer-column:last-child {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+        }
+        
+        .footer-column:last-child h3 {
+            text-align: left;
+        }
+        
+        .footer-column:last-child ul {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .footer-column:last-child ul li {
+            justify-content: flex-start;
+            text-align: left;
+        }
+        
+        /* Physics Animation */
+        .physics-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: var(--electric-blue);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+            }
+            50% {
+                transform: translateY(-20px) translateX(10px);
+            }
+            100% {
+                transform: translateY(0) translateX(0);
+            }
+        }
+
+        /* MODAL STYLES */
+        .modal-simulador {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 12, 41, 0.98);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--dark-purple), var(--medium-purple));
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--electric-blue);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-titulo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.8rem;
+            color: var(--light-blue);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 0;
+        }
+
+        .btn-cerrar {
+            background: linear-gradient(145deg, var(--electric-blue), var(--light-blue));
+            color: white;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-cerrar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
+        }
+
+        .modal-contenido {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .about-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            
+            .about-image {
+                height: 300px;
+            }
+
+            .modal-header {
+                padding: 1rem 1.5rem;
+            }
+
+            .modal-titulo {
+                font-size: 1.4rem;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .footer-column:first-child,
+            .footer-column:nth-child(2),
+            .footer-column:last-child {
+                align-items: center;
+                text-align: center;
+            }
+            
+            .footer-column:nth-child(2) ul,
+            .footer-column:last-child ul {
+                align-items: center;
+            }
+            
+            .footer-column:nth-child(2) ul li,
+            .footer-column:last-child ul li {
+                justify-content: center;
+            }
+            
+            .footer-column:nth-child(2) h3,
+            .footer-column:last-child h3 {
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            nav ul {
+                gap: 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .simulators-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .lab-title {
+                font-size: 0.8rem;
+            }
+            
+            .hero-stats {
+                flex-wrap: wrap;
+                gap: 2rem;
+            }
+
+            .modal-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .modal-titulo {
+                font-size: 1.2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .hero {
+                padding: 4rem 0;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .simulators-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .simulator-card {
+                height: 180px;
+            }
+            
+            .simulator-name {
+                font-size: 1.3rem;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-cerrar {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <img src="imagenes/logo-unicuces.jpg" alt="Logo UNICUCES">
+                    </div>
+                    <div>
+                        <div class="logo-text">Laboratorio de Simulación</div>
+                        <div class="lab-title">UNICUCES - 2025</div>
+                    </div>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#inicio">INICIO</a></li>
+                        <li><a href="#simuladores">SIMULADORES</a></li>
+                        <li><a href="#nosotros">NOSOTROS</a></li>
+                        <li><a href="#contacto">CONTACTO</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="inicio">
+        <div class="physics-animation" id="physics-animation"></div>
+        <div class="container">
+            <div class="hero-content">
+                <h1>LABORATORIO VIRTUAL DE FÍSICA</h1>
+                <p>PLATAFORMA INTERACTIVA CON 11 SIMULADORES ESPECIALIZADOS</p>
+                
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">11</div>
+                        <div class="stat-label">SIMULADORES</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">INTERACTIVO</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">DISPONIBLE</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simulators Section -->
+    <section class="simulators-section" id="simuladores">
+        <div class="container">
+            <h2 class="section-title">SIMULADORES DISPONIBLES</h2>
+            <div class="simulators-grid">
+                <!-- Simulador 1 - CINEMÁTICA -->
+                <div class="simulator-card" onclick="cargarSimulador('CINEMÁTICA')">
+                    <div class="card-image" style="background-image: url('imagenes/cinematica.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">CINEMÁTICA</div>
+                </div>
+                
+                <!-- Simulador 2 - DINÁMICA -->
+                <div class="simulator-card" onclick="cargarSimulador('DINÁMICA')">
+                    <div class="card-image" style="background-image: url('imagenes/dinamica.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">DINÁMICA</div>
+                </div>
+                
+                <!-- Simulador 3 - TRABAJO Y ENERGÍA -->
+                <div class="simulator-card" onclick="cargarSimulador('TRABAJO Y ENERGÍA')">
+                    <div class="card-image" style="background-image: url('imagenes/trabajo-energia.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">TRABAJO Y ENERGÍA</div>
+                </div>
+                
+                <!-- Simulador 4 - IMPULSO Y CANTIDAD DE MOVIMIENTO -->
+                <div class="simulator-card" onclick="cargarSimulador('IMPULSO Y CANTIDAD DE MOVIMIENTO')">
+                    <div class="card-image" style="background-image: url('imagenes/impulso.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">IMPULSO Y CANTIDAD DE MOVIMIENTO</div>
+                </div>
+                
+                <!-- Simulador 5 - GRAVITACIÓN -->
+                <div class="simulator-card" onclick="cargarSimulador('GRAVITACIÓN')">
+                    <div class="card-image" style="background-image: url('imagenes/gravitacion.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">GRAVITACIÓN</div>
+                </div>
+                
+                <!-- Simulador 6 - OSCILACIONES Y ONDAS -->
+                <div class="simulator-card" onclick="cargarSimulador('OSCILACIONES Y ONDAS')">
+                    <div class="card-image" style="background-image: url('imagenes/oscilaciones.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">OSCILACIONES Y ONDAS</div>
+                </div>
+                
+                <!-- Simulador 7 - TERMODINÁMICA -->
+                <div class="simulator-card" onclick="cargarSimulador('TERMODINÁMICA')">
+                    <div class="card-image" style="background-image: url('imagenes/termodinamica.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">TERMODINÁMICA</div>
+                </div>
+                
+                <!-- Simulador 8 - ELECTRICIDAD Y MAGNETISMO -->
+                <div class="simulator-card" onclick="cargarSimulador('ELECTRICIDAD Y MAGNETISMO')">
+                    <div class="card-image" style="background-image: url('imagenes/electromagnetismo.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">ELECTRICIDAD Y MAGNETISMO</div>
+                </div>
+                
+                <!-- Simulador 9 - ELASTICIDAD -->
+                <div class="simulator-card" onclick="cargarSimulador('ELASTICIDAD')">
+                    <div class="card-image" style="background-image: url('imagenes/elasticidad.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">ELASTICIDAD</div>
+                </div>
+                
+                <!-- Simulador 10 - LEY DE CONSERVACIÓN DE ENERGÍA -->
+                <div class="simulator-card" onclick="cargarSimulador('LEY DE CONSERVACIÓN DE ENERGÍA')">
+                    <div class="card-image" style="background-image: url('imagenes/conservacion-energia.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">CONSERVACIÓN DE ENERGÍA</div>
+                </div>
+                
+                <!-- Simulador 11 - ESTÁTICA -->
+                <div class="simulator-card" onclick="cargarSimulador('ESTÁTICA')">
+                    <div class="card-image" style="background-image: url('imagenes/estatica.jpg')">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="simulator-name">ESTÁTICA</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section" id="nosotros">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-image"></div>
+                <div class="about-text">
+                    <h2>SOBRE EL LABORATORIO</h2>
+                    <p>EL LABORATORIO DE SIMULACIÓN DE UNICUCES ES UNA PLATAFORMA VIRTUAL DE VANGUARDIA DISEÑADA PARA REVOLUCIONAR LA ENSEÑANZA DE LA FÍSICA.</p>
+                    <p>NUESTRA PLATAFORMA INTEGRA 11 SIMULADORES ESPECIALIZADOS QUE PERMITEN A ESTUDIANTES Y PROFESORES EXPERIMENTAR CON FENÓMENOS FÍSICOS EN UN ENTORNO VIRTUAL INTERACTIVO.</p>
+                    <p>DESARROLLADO CON TECNOLOGÍAS WEB MODERNAS, NUESTRO LABORATORIO VIRTUAL OFRECE UNA EXPERIENCIA EDUCATIVA INMERSIVA Y ACCESIBLE DESDE CUALQUIER DISPOSITIVO CON CONEXIÓN A INTERNET.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contacto">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <p>LA CORPORACIÓN UNIVERSITARIA CENTRO SUPERIOR, UNICUCES, ES UNA INSTITUCIÓN DE EDUCACIÓN SUPERIOR QUE SE ENCUENTRA SUJETA A INSPECCIÓN Y VIGILANCIA POR PARTE DEL MINISTERIO DE EDUCACIÓN NACIONAL.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>ENLACES RÁPIDOS</h3>
+                    <ul>
+                        <li><i class="fas fa-chevron-right"></i><a href="#inicio">INICIO</a></li>
+                        <li><i class="fas fa-chevron-right"></i><a href="#simuladores">SIMULADORES</a></li>
+                        <li><i class="fas fa-chevron-right"></i><a href="#nosotros">SOBRE NOSOTROS</a></li>
+                        <li><i class="fas fa-chevron-right"></i><a href="#contacto">CONTACTO</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>INFORMACIÓN DE CONTACTO</h3>
+                    <ul>
+                        <li><i class="fas fa-map-marker-alt"></i> CALLE 14 NORTE # 8-35 / CALI, COLOMBIA</li>
+                        <li><i class="fas fa-phone"></i> 602 660 1011</li>
+                        <li><i class="fas fa-envelope"></i> info@unicuces.edu.co</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 LABORATORIO DE SIMULACIÓN - UNICUCES. TODOS LOS DERECHOS RESERVADOS.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal para Simuladores -->
+    <div id="modal-simulador" class="modal-simulador">
+        <div class="modal-header">
+            <h2 class="modal-titulo" id="modal-titulo">SIMULADOR</h2>
+            <button class="btn-cerrar" onclick="cerrarSimulador()">
+                <i class="fas fa-times"></i> CERRAR SIMULADOR
+            </button>
+        </div>
+        <iframe id="iframe-simulador" class="modal-contenido" frameborder="0"></iframe>
+    </div>
+
+    <script>
+        // Crear partículas flotantes para el efecto de física
+        document.addEventListener('DOMContentLoaded', function() {
+            const physicsAnimation = document.getElementById('physics-animation');
+            const colors = ['#2196f3', '#64b5f6', '#6a52b5', '#b39ddb'];
+            
+            for (let i = 0; i < 25; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                const size = Math.random() * 20 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.animationDelay = `${Math.random() * 15}s`;
+                
+                physicsAnimation.appendChild(particle);
+            }
+
+            // Agregar cursor pointer a todas las tarjetas
+            document.querySelectorAll('.simulator-card').forEach(card => {
+                card.style.cursor = 'pointer';
+            });
+        });
+
+        // Configuración de simuladores
+        const simuladoresConfig = {
+            'CINEMÁTICA': 'simuladores/Cinemática.html',
+            'DINÁMICA': 'simuladores/Dinamica.html',
+            'TRABAJO Y ENERGÍA': 'simuladores/Trabajo y energía.html',
+            'IMPULSO Y CANTIDAD DE MOVIMIENTO': 'simuladores/Impulso y cantidad de movimiento.html',
+            'GRAVITACIÓN': 'simuladores/Gravitacion.html',
+            'OSCILACIONES Y ONDAS': 'simuladores/Oscilaciones y ondas.html',
+            'TERMODINÁMICA': 'simuladores/Termodinamica.html',
+            'ELECTRICIDAD Y MAGNETISMO': 'simuladores/Electricidad y magnetismo.html',
+            'ELASTICIDAD': 'simuladores/Elasticidad.html',
+            'LEY DE CONSERVACIÓN DE ENERGÍA': 'simuladores/Ley de conservación de energía.html',
+            'ESTÁTICA': 'simuladores/Estatica.html'
+        };
+
+        // Función para cargar simulador en modal
+        function cargarSimulador(nombreSimulador) {
+            const archivoSimulador = simuladoresConfig[nombreSimulador];
+            const modal = document.getElementById('modal-simulador');
+            const iframe = document.getElementById('iframe-simulador');
+            const titulo = document.getElementById('modal-titulo');
+            
+            if (archivoSimulador) {
+                titulo.textContent = nombreSimulador;
+                iframe.src = archivoSimulador;
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                alert('Simulador en desarrollo: ' + nombreSimulador);
+            }
+        }
+
+        // Función para cerrar simulador
+        function cerrarSimulador() {
+            const modal = document.getElementById('modal-simulador');
+            const iframe = document.getElementById('iframe-simulador');
+            
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            iframe.src = 'about:blank';
+        }
+
+        // Cerrar modal con ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                cerrarSimulador();
+            }
+        });
+
+        // Cerrar modal haciendo click fuera del contenido
+        document.getElementById('modal-simulador').addEventListener('click', function(event) {
+            if (event.target === this) {
+                cerrarSimulador();
+            }
+        });
+    </script>
+</body>
+</html>

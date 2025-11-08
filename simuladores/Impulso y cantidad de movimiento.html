@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador de Impulso y Cantidad de Movimiento</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(180deg, #0f0c29, #302b63, #4a3f8c);
+      color: #f5f7ff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #64b5f6;
+      text-align: center;
+      margin: 20px 0 10px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #b39ddb;
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+
+    .theory {
+      background-color: rgba(74, 63, 140, 0.8);
+      padding: 25px;
+      border-radius: 15px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .controls-simulation-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .panel, .simulation-container, .chart-container, .results {
+      background-color: rgba(74, 63, 140, 0.8);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .panel {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .simulation-container {
+      flex: 2;
+      min-width: 300px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    input, select, button {
+      padding: 10px;
+      margin: 8px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+    }
+
+    input, select {
+      width: 140px;
+      background-color: #302b63;
+      color: white;
+    }
+
+    button {
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: bold;
+    }
+
+    #start, #random, .export-btn {
+      background-color: #2196f3;
+    }
+
+    #reset {
+      background-color: #f44336;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    #start:hover, #random:hover, .export-btn:hover {
+      background-color: #64b5f6;
+    }
+
+    #reset:hover {
+      background-color: #ff5252;
+    }
+
+    .charts-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .chart-container {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .results {
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      background-color: #302b63;
+      border-radius: 10px;
+      display: block;
+      width: 100%;
+    }
+
+    .simulation-container canvas {
+      height: 350px;
+    }
+
+    .chart-container h3 {
+      margin: 0 0 15px 0;
+      color: #64b5f6;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .chart-canvas-container {
+      flex: 1;
+      padding: 10px;
+    }
+
+    .chart-canvas-container canvas {
+      height: 250px;
+    }
+
+    .results h2 {
+      color: #64b5f6;
+      text-align: center;
+      margin-top: 0;
+      font-weight: 600;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .result-item {
+      background-color: rgba(106, 82, 181, 0.3);
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid rgba(179, 157, 219, 0.2);
+    }
+
+    .result-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #64b5f6;
+      margin-top: 5px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .theory h2, .panel h2 {
+      color: #64b5f6;
+      font-weight: 600;
+      border-bottom: 1px solid #64b5f6;
+      padding-bottom: 8px;
+    }
+
+    .speed-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(106, 82, 181, 0.2);
+      border-radius: 10px;
+    }
+
+    .speed-control label {
+      color: #f5f7ff;
+      font-weight: 500;
+      min-width: 150px;
+    }
+
+    .speed-control input {
+      flex: 1;
+      max-width: 200px;
+    }
+
+    .speed-value {
+      color: #64b5f6;
+      font-weight: bold;
+      min-width: 50px;
+    }
+
+    .simulation-results-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex: 2;
+      min-width: 300px;
+    }
+
+    .vector-legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .vector-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .vector-color {
+      width: 30px;
+      height: 8px;
+      border-radius: 4px;
+    }
+
+    .vector-force {
+      background-color: #ff4444;
+    }
+
+    .vector-velocity {
+      background-color: #64b5f6;
+    }
+
+    .vector-acceleration {
+      background-color: #4CAF50;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    @media (max-width: 768px) {
+      .controls-simulation-section {
+        flex-direction: column;
+      }
+      
+      .charts-section {
+        flex-direction: column;
+      }
+      
+      .simulation-container canvas {
+        height: 300px;
+      }
+      
+      .chart-canvas-container canvas {
+        height: 250px;
+      }
+      
+      .simulation-results-container {
+        flex-direction: column;
+      }
+      
+      .chart-header {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .speed-control {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Simulador Interactivo: Impulso y Cantidad de Movimiento</h1>
+    <p class="subtitle">Explora la relación entre fuerza, tiempo y cambio en el movimiento</p>
+
+    <div class="theory">
+      <h2>Conceptos Básicos</h2>
+      <p>
+        El <strong>impulso</strong> (<em>J</em>) se define como el producto entre la fuerza neta 
+        aplicada sobre un objeto y el intervalo de tiempo durante el cual actúa esa fuerza:
+        <br><br>
+        <strong>J = F · Δt</strong>
+        <br><br>
+        El impulso está directamente relacionado con el cambio en la 
+        <strong>cantidad de movimiento</strong> (<em>p</em>), que se calcula como el producto entre la masa 
+        y la velocidad del cuerpo:
+        <br><br>
+        <strong>p = m · v</strong>
+        <br><br>
+        De esta forma, el impulso equivale al cambio en la cantidad de movimiento:
+        <br><br>
+        <strong>J = Δp = m · (v<sub>f</sub> − v<sub>i</sub>)</strong>
+        <br><br>
+        En esta simulación verás cómo el bate (fuerza aplicada) cambia la velocidad de la pelota. 
+        Podrás ajustar la masa, la fuerza y el tiempo de contacto para observar cómo el impulso y 
+        la cantidad de movimiento se relacionan visualmente.
+      </p>
+    </div>
+
+    <div class="controls-simulation-section">
+      <div class="panel">
+        <h2>Controles</h2>
+        <div class="controls">
+          <div>
+            <label>Masa (kg):</label>
+            <input type="number" id="mass" value="0.145" step="0.001" min="0.01">
+          </div>
+          <div>
+            <label>Velocidad inicial (m/s):</label>
+            <input type="number" id="velocity" value="-20" step="0.1">
+          </div>
+          <div>
+            <label>Fuerza del bate (N):</label>
+            <input type="number" id="force" value="2000" step="10" min="1">
+          </div>
+          <div>
+            <label>Tiempo de contacto (s):</label>
+            <input type="number" id="contact" value="0.01" step="0.001" min="0.001">
+          </div>
+        </div>
+        <div class="controls">
+          <button id="start">Iniciar Simulación</button>
+          <button id="reset">Reiniciar</button>
+          <button id="random">Valores Aleatorios</button>
+        </div>
+        <div class="speed-control">
+          <label for="speed">Velocidad de simulación:</label>
+          <input type="range" id="speed" min="1.0" max="5.0" step="0.05" value="1.0">
+          <span id="speed-value" class="speed-value">1.0x</span>
+        </div>
+      </div>
+      
+      <div class="simulation-results-container">
+        <div class="simulation-container">
+          <canvas id="field"></canvas>
+          <div class="vector-legend">
+            <div class="vector-item">
+              <div class="vector-color vector-force"></div>
+              <span>Fuerza (N)</span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-color vector-velocity"></div>
+              <span>Velocidad (m/s)</span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-color vector-acceleration"></div>
+              <span>Aceleración (m/s²)</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="results">
+          <h2>Resultados de la Simulación</h2>
+          <div class="results-grid">
+            <div class="result-item">
+              <div>Impulso Aplicado</div>
+              <div class="result-value" id="impulse-result">0 N·s</div>
+            </div>
+            <div class="result-item">
+              <div>Cambio en Cantidad de Movimiento</div>
+              <div class="result-value" id="momentum-change">0 kg·m/s</div>
+            </div>
+            <div class="result-item">
+              <div>Velocidad Final</div>
+              <div class="result-value" id="final-velocity">0 m/s</div>
+            </div>
+            <div class="result-item">
+              <div>Energía Cinética Final</div>
+              <div class="result-value" id="kinetic-energy">0 J</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-section">
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Fuerza vs Tiempo (Impulso)</h3>
+          <button class="export-btn" id="export-force">Exportar a Excel</button>
+        </div>
+        <div class="chart-canvas-container">
+          <canvas id="force-time-chart"></canvas>
+        </div>
+      </div>
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Cantidad de Movimiento vs Tiempo</h3>
+          <button class="export-btn" id="export-momentum">Exportar a Excel</button>
+        </div>
+        <div class="chart-canvas-container">
+          <canvas id="momentum-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-section">
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Velocidad vs Tiempo</h3>
+          <button class="export-btn" id="export-velocity">Exportar a Excel</button>
+        </div>
+        <div class="chart-canvas-container">
+          <canvas id="velocity-time-chart"></canvas>
+        </div>
+      </div>
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Aceleración vs Tiempo</h3>
+          <button class="export-btn" id="export-acceleration">Exportar a Excel</button>
+        </div>
+        <div class="chart-canvas-container">
+          <canvas id="acceleration-time-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuración global
+    const CONFIG = {
+      colors: {
+        force: '#ff4444',
+        velocity: '#64b5f6',
+        acceleration: '#4CAF50', // Verde para el vector en simulación
+        chart: '#2196f3' // Azul para los gráficos
+      },
+      physics: {
+        baseTimeStep: 0.001,
+        chartUpdateInterval: 0.002
+      }
+    };
+
+    // Elementos del DOM
+    const elements = {
+      field: document.getElementById('field'),
+      massInput: document.getElementById('mass'),
+      v0Input: document.getElementById('velocity'),
+      forceInput: document.getElementById('force'),
+      contactInput: document.getElementById('contact'),
+      startBtn: document.getElementById('start'),
+      resetBtn: document.getElementById('reset'),
+      randomBtn: document.getElementById('random'),
+      speedInput: document.getElementById('speed'),
+      speedValue: document.getElementById('speed-value'),
+      impulseResult: document.getElementById('impulse-result'),
+      momentumChange: document.getElementById('momentum-change'),
+      finalVelocity: document.getElementById('final-velocity'),
+      kineticEnergy: document.getElementById('kinetic-energy')
+    };
+
+    const ctx = elements.field.getContext('2d');
+    
+    // Estado de la simulación
+    let simulationState = {
+      running: false,
+      ball: null,
+      bat: null,
+      currentForce: 0,
+      totalImpulse: 0,
+      animationId: null,
+      simulationSpeed: 1.0,
+      startTime: 0
+    };
+
+    // Gráficos
+    let charts = {
+      force: null,
+      momentum: null,
+      velocity: null,
+      acceleration: null
+    };
+
+    // Inicialización de elementos
+    function initializeElements() {
+      simulationState.bat = {
+        x: elements.field.width * 0.15,
+        y: elements.field.height - 100,
+        width: 15,
+        height: 80,
+        angle: Math.PI/4,
+        swingProgress: 0
+      };
+      
+      simulationState.ball = {
+        x: simulationState.bat.x + 25,
+        y: simulationState.bat.y + simulationState.bat.height/2 - 15,
+        r: 15,
+        vx: 0,
+        inContact: false
+      };
+    }
+
+    // Dibujar escena
+    function drawScene() {
+      ctx.fillStyle = '#0f0c29';
+      ctx.fillRect(0, 0, elements.field.width, elements.field.height);
+
+      // Césped
+      ctx.fillStyle = '#302b63';
+      ctx.fillRect(0, elements.field.height - 70, elements.field.width, 70);
+      
+      // Líneas del campo
+      ctx.strokeStyle = 'rgba(179, 157, 219, 0.3)';
+      ctx.lineWidth = 1;
+      for(let i = 0; i < elements.field.width; i += 25) {
+        ctx.beginPath();
+        ctx.moveTo(i, elements.field.height - 70);
+        ctx.lineTo(i, elements.field.height);
+        ctx.stroke();
+      }
+
+      drawBat();
+      drawForceVector();
+      drawBall();
+    }
+
+    function drawBat() {
+      const bat = simulationState.bat;
+      ctx.save();
+      ctx.translate(bat.x, bat.y + bat.height);
+      ctx.rotate(bat.angle);
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(-bat.width/2, -bat.height, bat.width, bat.height);
+      
+      // Detalles del bate
+      ctx.fillStyle = '#A0522D';
+      ctx.fillRect(-bat.width/2, -bat.height, bat.width, bat.height * 0.3);
+      
+      // Empuñadura
+      ctx.fillStyle = '#5D4037';
+      ctx.fillRect(-bat.width/2, -bat.height * 0.2, bat.width, bat.height * 0.2);
+      ctx.restore();
+
+      // Efecto de movimiento
+      if (bat.swingProgress > 0 && bat.swingProgress < 1) {
+        ctx.save();
+        ctx.translate(bat.x, bat.y + bat.height);
+        ctx.rotate(bat.angle);
+        ctx.fillStyle = `rgba(33, 150, 243, ${0.3 * (1 - bat.swingProgress)})`;
+        ctx.fillRect(-bat.width/2 - 8, -bat.height - 15, bat.width + 16, bat.height + 15);
+        ctx.restore();
+      }
+    }
+
+    function drawForceVector() {
+      if (simulationState.currentForce <= 0 || !simulationState.running) return;
+
+      const forceMagnitude = Math.min(simulationState.currentForce / 500, 2.5);
+      const arrowLength = 100 * forceMagnitude;
+      const bat = simulationState.bat;
+      
+      ctx.save();
+      ctx.translate(bat.x, bat.y - 40);
+      
+      // Línea de fuerza
+      ctx.strokeStyle = CONFIG.colors.force;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(arrowLength, 0);
+      ctx.stroke();
+      
+      // Flecha
+      ctx.fillStyle = CONFIG.colors.force;
+      ctx.beginPath();
+      ctx.moveTo(arrowLength, 0);
+      ctx.lineTo(arrowLength - 20, -10);
+      ctx.lineTo(arrowLength - 20, 10);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Texto
+      ctx.fillStyle = CONFIG.colors.force;
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText(`F = ${simulationState.currentForce.toFixed(0)} N`, arrowLength + 15, -18);
+      ctx.restore();
+    }
+
+    function drawBall() {
+      const ball = simulationState.ball;
+      if (!ball) return;
+
+      // Pelota con efecto 3D
+      const gradient = ctx.createRadialGradient(
+        ball.x - 5, ball.y - 5, 0,
+        ball.x, ball.y, ball.r
+      );
+      gradient.addColorStop(0, '#ffffff');
+      gradient.addColorStop(0.7, '#ffcc00');
+      gradient.addColorStop(1, '#ff9900');
+      
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      ctx.strokeStyle = '#2196f3';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      
+      // Efecto de brillo
+      ctx.beginPath();
+      ctx.arc(ball.x - 5, ball.y - 5, ball.r/3, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fill();
+
+      drawVelocityVector();
+      drawAccelerationVector();
+    }
+
+    function drawVelocityVector() {
+      const ball = simulationState.ball;
+      if (Math.abs(ball.vx) <= 0.1 || ball.inContact) return;
+
+      const velocityDirection = Math.sign(ball.vx);
+      const velocityMagnitude = Math.min(Math.abs(ball.vx) / 10, 3);
+      const arrowLength = 80 * velocityMagnitude;
+      
+      ctx.strokeStyle = CONFIG.colors.velocity;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(ball.x, ball.y);
+      ctx.lineTo(ball.x + arrowLength * velocityDirection, ball.y);
+      ctx.stroke();
+      
+      // Flecha
+      ctx.fillStyle = CONFIG.colors.velocity;
+      ctx.beginPath();
+      ctx.moveTo(ball.x + arrowLength * velocityDirection, ball.y);
+      ctx.lineTo(ball.x + (arrowLength - 16) * velocityDirection, ball.y - 8);
+      ctx.lineTo(ball.x + (arrowLength - 16) * velocityDirection, ball.y + 8);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Texto
+      ctx.fillStyle = CONFIG.colors.velocity;
+      ctx.font = 'bold 16px Arial';
+      const textX = ball.x + arrowLength * velocityDirection + 10;
+      ctx.fillText(`v = ${ball.vx.toFixed(1)} m/s`, textX, ball.y - 20);
+    }
+
+    function drawAccelerationVector() {
+      if (simulationState.currentForce <= 0 || !simulationState.running || !simulationState.ball.inContact) return;
+
+      const ball = simulationState.ball;
+      const acceleration = simulationState.currentForce / parseFloat(elements.massInput.value);
+      const accelerationMagnitude = Math.min(acceleration / 100, 2.5);
+      const arrowLength = 70 * accelerationMagnitude;
+      
+      // Vector de aceleración VERDE en la simulación
+      ctx.strokeStyle = CONFIG.colors.acceleration; // Verde
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(ball.x, ball.y + 35);
+      ctx.lineTo(ball.x + arrowLength, ball.y + 35);
+      ctx.stroke();
+      
+      // Flecha
+      ctx.fillStyle = CONFIG.colors.acceleration; // Verde
+      ctx.beginPath();
+      ctx.moveTo(ball.x + arrowLength, ball.y + 35);
+      ctx.lineTo(ball.x + arrowLength - 16, ball.y + 27);
+      ctx.lineTo(ball.x + arrowLength - 16, ball.y + 43);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Texto
+      ctx.fillStyle = CONFIG.colors.acceleration; // Verde
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText(`a = ${acceleration.toFixed(0)} m/s²`, ball.x + arrowLength + 10, ball.y + 30);
+    }
+
+    // Actualizar gráficos
+    function updateCharts(t, F, p, v, a) {
+      const timeLabel = t.toFixed(3);
+      
+      charts.force.data.labels.push(timeLabel);
+      charts.force.data.datasets[0].data.push(F);
+      charts.force.update('none');
+
+      charts.momentum.data.labels.push(timeLabel);
+      charts.momentum.data.datasets[0].data.push(p);
+      charts.momentum.update('none');
+
+      charts.velocity.data.labels.push(timeLabel);
+      charts.velocity.data.datasets[0].data.push(v);
+      charts.velocity.update('none');
+
+      charts.acceleration.data.labels.push(timeLabel);
+      charts.acceleration.data.datasets[0].data.push(a);
+      charts.acceleration.update('none');
+    }
+
+    // Actualizar resultados
+    function updateResults(m, v0, vf, impulse) {
+      elements.impulseResult.textContent = impulse.toFixed(3) + " N·s";
+      elements.momentumChange.textContent = (m * (vf - v0)).toFixed(3) + " kg·m/s";
+      elements.finalVelocity.textContent = vf.toFixed(2) + " m/s";
+      elements.kineticEnergy.textContent = (0.5 * m * vf * vf).toFixed(2) + " J";
+    }
+
+    // Iniciar simulación
+    function startSimulation() {
+      if (simulationState.running) return;
+      
+      const m = parseFloat(elements.massInput.value);
+      const v0 = parseFloat(elements.v0Input.value);
+      const F = parseFloat(elements.forceInput.value);
+      const dt = parseFloat(elements.contactInput.value);
+
+      // Validar entradas
+      if (m <= 0 || F <= 0 || dt <= 0) {
+        alert("Por favor, ingresa valores válidos (mayores que cero)");
+        return;
+      }
+
+      simulationState.running = true;
+      resetCharts();
+      
+      let v = v0;
+      let t = 0;
+      simulationState.totalImpulse = 0;
+      simulationState.currentForce = 0;
+      
+      // Reiniciar posiciones
+      simulationState.ball.x = simulationState.bat.x + 25;
+      simulationState.ball.y = simulationState.bat.y + simulationState.bat.height/2 - 15;
+      simulationState.ball.vx = v;
+      simulationState.ball.inContact = true;
+      simulationState.bat.swingProgress = 0;
+      simulationState.bat.angle = Math.PI/4;
+
+      const timeStep = CONFIG.physics.baseTimeStep / simulationState.simulationSpeed;
+      let lastChartUpdate = 0;
+
+      function animate() {
+        if (!simulationState.running) return;
+        
+        if (t < dt) {
+          // Física durante el contacto
+          const f = F * Math.sin((t/dt) * Math.PI);
+          const a = f / m;
+          v += a * timeStep;
+          simulationState.totalImpulse += f * timeStep;
+          simulationState.currentForce = f;
+          
+          // Actualizar posición de la pelota
+          simulationState.ball.x = simulationState.bat.x + 25;
+          simulationState.ball.y = simulationState.bat.y + simulationState.bat.height/2 - 15;
+          simulationState.ball.vx = v;
+          
+          // Actualizar gráficos
+          if (t - lastChartUpdate >= CONFIG.physics.chartUpdateInterval) {
+            updateCharts(t, f, m*v, v, a);
+            lastChartUpdate = t;
+          }
+          
+          t += timeStep;
+          
+          // Animación del bate
+          simulationState.bat.swingProgress = t / dt;
+          simulationState.bat.angle = Math.PI/4 - (Math.PI/2) * Math.sin(simulationState.bat.swingProgress * Math.PI);
+          
+        } else {
+          // Simulación completada
+          completeSimulation(m, v0, v);
+          return;
+        }
+        
+        drawScene();
+        simulationState.animationId = requestAnimationFrame(animate);
+      }
+      
+      simulationState.animationId = requestAnimationFrame(animate);
+    }
+
+    function completeSimulation(m, v0, v) {
+      simulationState.ball.inContact = false;
+      const vf = Math.abs(v);
+      simulationState.ball.vx = vf;
+      
+      updateResults(m, v0, vf, simulationState.totalImpulse);
+      simulationState.running = false;
+      simulationState.currentForce = 0;
+      cancelAnimationFrame(simulationState.animationId);
+      
+      // Movimiento de la pelota después del contacto
+      function moveBallAfterContact() {
+        if (simulationState.ball.x < elements.field.width && simulationState.ball.x > 0) {
+          simulationState.ball.x += simulationState.ball.vx * 0.5;
+          drawScene();
+          requestAnimationFrame(moveBallAfterContact);
+        }
+      }
+      moveBallAfterContact();
+    }
+
+    // Inicializar gráficos
+    function initializeCharts() {
+      const chartConfig = {
+        type: 'line',
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 0 },
+          scales: {
+            x: { 
+              title: { display: true, text: 'Tiempo (s)', color: '#fff' }, 
+              ticks: { color: '#fff' },
+              grid: { color: 'rgba(255,255,255,0.1)' }
+            },
+            y: { 
+              title: { display: true, text: '', color: '#fff' }, 
+              ticks: { color: '#fff' },
+              grid: { color: 'rgba(255,255,255,0.1)' }
+            }
+          },
+          plugins: { 
+            legend: { 
+              labels: { color: '#fff' } 
+            } 
+          },
+          layout: { padding: { bottom: 10 } }
+        }
+      };
+
+      charts.force = new Chart(document.getElementById('force-time-chart').getContext('2d'), {
+        ...chartConfig,
+        data: {
+          labels: [],
+          datasets: [{ 
+            label: 'Fuerza (N)', 
+            data: [], 
+            borderColor: CONFIG.colors.chart, // Azul para el gráfico
+            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1
+          }]
+        }
+      });
+
+      charts.momentum = new Chart(document.getElementById('momentum-chart').getContext('2d'), {
+        ...chartConfig,
+        data: {
+          labels: [],
+          datasets: [{ 
+            label: 'Cantidad de Movimiento (kg·m/s)', 
+            data: [], 
+            borderColor: CONFIG.colors.chart, // Azul para el gráfico
+            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1
+          }]
+        }
+      });
+
+      charts.velocity = new Chart(document.getElementById('velocity-time-chart').getContext('2d'), {
+        ...chartConfig,
+        data: {
+          labels: [],
+          datasets: [{ 
+            label: 'Velocidad (m/s)', 
+            data: [], 
+            borderColor: CONFIG.colors.chart, // Azul para el gráfico
+            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1
+          }]
+        }
+      });
+
+      charts.acceleration = new Chart(document.getElementById('acceleration-time-chart').getContext('2d'), {
+        ...chartConfig,
+        data: {
+          labels: [],
+          datasets: [{ 
+            label: 'Aceleración (m/s²)', 
+            data: [], 
+            borderColor: CONFIG.colors.chart, // Azul para el gráfico (igual que los demás)
+            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1
+          }]
+        }
+      });
+    }
+
+    function resetCharts() {
+      Object.values(charts).forEach(chart => {
+        chart.data.labels = [];
+        chart.data.datasets[0].data = [];
+      });
+    }
+
+    function resetAll() {
+      simulationState.running = false;
+      if (simulationState.animationId) {
+        cancelAnimationFrame(simulationState.animationId);
+      }
+      initializeElements();
+      simulationState.currentForce = 0;
+      drawScene();
+      resetCharts();
+      Object.values(charts).forEach(chart => chart.update());
+      
+      // Reiniciar resultados
+      elements.impulseResult.textContent = "0 N·s";
+      elements.momentumChange.textContent = "0 kg·m/s";
+      elements.finalVelocity.textContent = "0 m/s";
+      elements.kineticEnergy.textContent = "0 J";
+    }
+
+    function randomize() {
+      elements.massInput.value = (Math.random()*0.3+0.1).toFixed(3);
+      elements.v0Input.value = (Math.random()*-50).toFixed(1);
+      elements.forceInput.value = (Math.random()*3000+500).toFixed(0);
+      elements.contactInput.value = (Math.random()*0.02+0.005).toFixed(4);
+    }
+
+    // Exportar datos a Excel
+    function exportToExcel(chart, filename) {
+      if (!chart.data.labels.length || !chart.data.datasets[0].data.length) {
+        alert("No hay datos para exportar. Ejecuta la simulación primero.");
+        return;
+      }
+
+      const data = [["Tiempo (s)", chart.data.datasets[0].label]];
+      
+      for (let i = 0; i < chart.data.labels.length; i++) {
+        data.push([
+          parseFloat(chart.data.labels[i]),
+          chart.data.datasets[0].data[i]
+        ]);
+      }
+      
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Datos");
+      XLSX.writeFile(wb, `${filename}.xlsx`);
+    }
+
+    // Control de velocidad
+    elements.speedInput.addEventListener('input', function() {
+      simulationState.simulationSpeed = parseFloat(this.value);
+      elements.speedValue.textContent = simulationState.simulationSpeed.toFixed(2) + 'x';
+    });
+
+    // Event listeners para exportación
+    document.getElementById('export-force').addEventListener('click', () => exportToExcel(charts.force, "fuerza_vs_tiempo"));
+    document.getElementById('export-momentum').addEventListener('click', () => exportToExcel(charts.momentum, "cantidad_movimiento_vs_tiempo"));
+    document.getElementById('export-velocity').addEventListener('click', () => exportToExcel(charts.velocity, "velocidad_vs_tiempo"));
+    document.getElementById('export-acceleration').addEventListener('click', () => exportToExcel(charts.acceleration, "aceleracion_vs_tiempo"));
+
+    // Event listeners principales
+    elements.startBtn.onclick = startSimulation;
+    elements.resetBtn.onclick = resetAll;
+    elements.randomBtn.onclick = randomize;
+
+    // Ajustar tamaño del canvas
+    function resizeCanvas() {
+      const container = elements.field.parentElement;
+      elements.field.width = container.clientWidth - 40;
+      elements.field.height = 350;
+      initializeElements();
+      drawScene();
+    }
+
+    // Inicialización
+    initializeCharts();
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+  </script>
+</body>
+</html>

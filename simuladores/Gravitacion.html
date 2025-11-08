@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Gravitación Universal - Laboratorio Virtual de Física</title>
+    <style>
+        /* ESTILOS OPTIMIZADOS Y MODULARES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-bg: linear-gradient(135deg, #0f0c29, #302b63);
+            --card-bg: linear-gradient(145deg, #302b63, #4a3f8c);
+            --accent-color: #2196f3;
+            --secondary-color: #64b5f6;
+            --text-light: #ffffff;
+            --text-muted: #b39ddb;
+            --border-color: #6a52b5;
+            --success-color: #4CAF50;
+            --collision-color: #ff4444;
+            --force-color: #ff9800;
+        }
+
+        body {
+            background: var(--primary-bg);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+            padding: 0;
+        }
+
+        .simulator-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .simulator-header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+
+        .simulator-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, var(--secondary-color), var(--text-muted));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(33, 150, 243, 0.3);
+        }
+
+        .simulator-subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .explanation-card {
+            background: rgba(74, 63, 140, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .simulation-area {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .simulation-canvas {
+            width: 100%;
+            height: 500px;
+            background-color: #0f0c29;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            display: block;
+        }
+
+        .controls-panel {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .scenario-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .scenario-btn {
+            padding: 12px;
+            background: rgba(15, 12, 41, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .scenario-btn:hover {
+            background: rgba(33, 150, 243, 0.2);
+            border-color: var(--accent-color);
+        }
+
+        .scenario-btn.active {
+            background: rgba(33, 150, 243, 0.4);
+            border-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            background: #302b63;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.7);
+        }
+
+        .slider-value {
+            width: 50px;
+            text-align: center;
+            background: #0f0c29;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--accent-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(to right, #4a3f8c, #6a52b5);
+            color: white;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(to right, #6a52b5, #4a3f8c);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: rgba(15, 12, 41, 0.6);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .info-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.3rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .graphics-panel {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            margin: 25px 0;
+        }
+
+        .graph-container {
+            position: relative;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .graph-canvas {
+            width: 100%;
+            height: 400px;
+            background-color: #0f0c29;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            display: block;
+        }
+
+        .graph-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        .learning-steps {
+            display: grid;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .step {
+            background: rgba(15, 12, 41, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .step-number {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .step-title {
+            display: inline;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* NUEVOS ESTILOS PARA TRAYECTORIAS Y PLANETAS */
+        .trajectory-controls {
+            background: rgba(15, 12, 41, 0.6);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .planet-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .planet-btn {
+            padding: 8px 12px;
+            background: rgba(15, 12, 41, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .planet-btn:hover {
+            background: rgba(33, 150, 243, 0.2);
+            border-color: var(--accent-color);
+        }
+
+        .planet-btn.active {
+            background: rgba(33, 150, 243, 0.4);
+            border-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(15, 12, 41, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .toggle-btn.active {
+            background: rgba(33, 150, 243, 0.4);
+            border-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        /* NUEVO: Estilos para efectos de colisión */
+        .collision-effect {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .collision-info {
+            background: rgba(255, 68, 68, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid var(--collision-color);
+            display: none;
+        }
+
+        .collision-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* NUEVO: Estilos para indicadores de fuerza */
+        .force-indicators {
+            background: rgba(255, 152, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid var(--force-color);
+        }
+
+        @media (max-width: 768px) {
+            .simulator-title {
+                font-size: 2rem;
+            }
+            
+            .scenario-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .graph-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .planet-selector {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .collision-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulator-container">
+        <div class="simulator-header">
+            <h1 class="simulator-title">Simulador de Gravitación Universal</h1>
+            <p class="simulator-subtitle">Explora las leyes de la gravitación con simulaciones interactivas y datos en tiempo real</p>
+        </div>
+
+        <div id="simulatorContent">
+            <div class="explanation-card">
+                <h2>¿Qué es la Gravedad?</h2>
+                <p>La gravedad es la fuerza fundamental que gobierna el movimiento de los cuerpos celestes. Según la ley de gravitación universal de Newton, toda partícula atrae a otra con una fuerza proporcional al producto de sus masas e inversamente proporcional al cuadrado de la distancia entre ellas.</p>
+            </div>
+
+            <!-- Panel de información de colisiones -->
+            <div class="collision-info" id="collisionInfo">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-size: 1.5rem;">💥</div>
+                    <div>
+                        <strong style="color: var(--collision-color);">¡COLISIÓN DETECTADA!</strong>
+                        <div style="font-size: 0.9rem; color: var(--text-muted);">Los cuerpos celestes han chocado y se han fusionado</div>
+                    </div>
+                </div>
+                <div class="collision-stats">
+                    <div class="info-card">
+                        <div class="info-title">Cuerpos Restantes</div>
+                        <div class="info-value" id="remainingBodies">2</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-title">Colisiones Totales</div>
+                        <div class="info-value" id="totalCollisions">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="simulation-area">
+                    <canvas id="simulationCanvas" class="simulation-canvas"></canvas>
+                    <div class="info-card" style="margin-top: 15px;">
+                        <div class="info-title">Descripción del Escenario</div>
+                        <div class="info-value" id="scenario-description">Sistema Solar - Planetas orbitando alrededor de una estrella</div>
+                    </div>
+                </div>
+
+                <div class="controls-panel">
+                    <h3 class="panel-title">Controles de Simulación</h3>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Escenario:</label>
+                        <div class="scenario-buttons">
+                            <button class="scenario-btn active" data-scenario="solar">Sistema Solar</button>
+                            <button class="scenario-btn" data-scenario="binary">Estrellas Binarias</button>
+                            <button class="scenario-btn" data-scenario="moons">Sistema de Lunas</button>
+                            <button class="scenario-btn" data-scenario="collision">Colisión</button>
+                        </div>
+                    </div>
+
+                    <!-- Selector de Planetas para Sistema Solar -->
+                    <div class="control-group" id="planetSelectorGroup">
+                        <label class="control-label">Planeta a Orbitar:</label>
+                        <div class="planet-selector">
+                            <button class="planet-btn active" data-planet="mercury">Mercurio</button>
+                            <button class="planet-btn" data-planet="venus">Venus</button>
+                            <button class="planet-btn" data-planet="earth">Tierra</button>
+                            <button class="planet-btn" data-planet="mars">Marte</button>
+                            <button class="planet-btn" data-planet="jupiter">Júpiter</button>
+                            <button class="planet-btn" data-planet="saturn">Saturno</button>
+                        </div>
+                    </div>
+
+                    <!-- Controles de Trayectoria -->
+                    <div class="trajectory-controls">
+                        <label class="control-label">Visualización de Trayectorias:</label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" id="showTrails">Mostrar Trayectorias</button>
+                            <button class="toggle-btn" id="clearTrails">Limpiar Trayectorias</button>
+                        </div>
+                        <div class="slider-container" style="margin-top: 10px;">
+                            <label class="control-label">Longitud de Trayectoria:</label>
+                            <input type="range" min="10" max="200" value="50" class="slider" id="trailLength">
+                            <span class="slider-value" id="trailLengthValue">50</span>
+                        </div>
+                    </div>
+
+                    <!-- NUEVO: Controles de Indicadores de Fuerza -->
+                    <div class="force-indicators">
+                        <label class="control-label">Indicadores de Fuerza:</label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" id="showForceVectors">Vectores de Fuerza</button>
+                            <button class="toggle-btn" id="showForceMagnitude">Mostrar Magnitud</button>
+                        </div>
+                        <div class="slider-container" style="margin-top: 10px;">
+                            <label class="control-label">Escala de Vectores:</label>
+                            <input type="range" min="1" max="20" value="8" class="slider" id="forceScale">
+                            <span class="slider-value" id="forceScaleValue">8</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Fuerza Gravitacional:</label>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="100" value="50" class="slider" id="gravityStrength">
+                            <span class="slider-value" id="gravityStrengthValue">50</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Velocidad de Simulación:</label>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="100" value="40" class="slider" id="simulationSpeed">
+                            <span class="slider-value" id="simulationSpeedValue">40</span>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="startBtn">Iniciar Simulación</button>
+                        <button class="btn btn-secondary" id="resetBtn">Reiniciar</button>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-title">Estado</div>
+                            <div class="info-value" id="simulationState">En pausa</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-title">Cuerpos</div>
+                            <div class="info-value" id="bodiesCount">5</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-title">Tiempo</div>
+                            <div class="info-value" id="timeValue">0.0 s</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-title">Fuerza Máxima</div>
+                            <div class="info-value" id="maxForceValue">0.0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="graphics-panel">
+                <h3 class="panel-title">Análisis Gráfico de Fuerzas</h3>
+                <div class="graph-container">
+                    <canvas id="forceGraph" class="graph-canvas"></canvas>
+                    <div class="graph-controls">
+                        <div class="info-value" id="graphStats">Fuerza máxima: 0.0 | Tiempo: 0.0s</div>
+                        <button class="btn btn-primary" id="downloadGraph">Descargar Gráfica</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="learning-steps">
+                <h3 class="panel-title">Conceptos Clave</h3>
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <span class="step-title">Ley de Gravitación Universal</span>
+                    <p>F = G × (m₁ × m₂) / r² donde G es la constante gravitacional, m son las masas y r la distancia entre centros.</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <span class="step-title">Vectores de Fuerza</span>
+                    <p>La fuerza gravitacional es un vector: tiene magnitud y dirección. Las flechas naranjas muestran la dirección y fuerza relativa de la atracción gravitacional.</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <span class="step-title">Órbitas Estables</span>
+                    <p>Un objeto orbita cuando su velocidad tangencial equilibra la atracción gravitacional, creando una trayectoria cerrada.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GRAVITATION SIMULATOR - MEJORADO CON INDICADORES DE FUERZA
+        class GravitationSimulator {
+            constructor() {
+                this.canvas = null;
+                this.ctx = null;
+                this.forceGraph = null;
+                this.forceCtx = null;
+                
+                this.bodies = [];
+                this.simulationRunning = false;
+                this.animationId = null;
+                this.startTime = 0;
+                this.elapsedTime = 0;
+                this.currentScenario = 'solar';
+                this.selectedPlanet = 'mercury';
+                this.showTrails = true;
+                this.trailLength = 50;
+                
+                // NUEVO: Variables para indicadores de fuerza
+                this.showForceVectors = true;
+                this.showForceMagnitude = false;
+                this.forceScale = 8;
+                this.forceVectors = [];
+                
+                // Variables para colisiones
+                this.collisionEffects = [];
+                this.totalCollisions = 0;
+                this.collisionCooldown = new Set();
+                
+                this.forceData = [];
+                this.timeData = [];
+                this.maxDataPoints = 100;
+                
+                this.config = {
+                    gravityStrength: 50,
+                    simulationSpeed: 40
+                };
+
+                // Datos de planetas del sistema solar
+                this.planetsData = {
+                    mercury: { name: "Mercurio", radius: 8, mass: 10, distance: 100, speed: 1.8, color: '#8c7853' },
+                    venus: { name: "Venus", radius: 12, mass: 20, distance: 150, speed: 1.4, color: '#e39e54' },
+                    earth: { name: "Tierra", radius: 13, mass: 22, distance: 200, speed: 1.2, color: '#2196f3' },
+                    mars: { name: "Marte", radius: 10, mass: 15, distance: 250, speed: 1.0, color: '#FF6B6B' },
+                    jupiter: { name: "Júpiter", radius: 25, mass: 100, distance: 350, speed: 0.6, color: '#e0b074' },
+                    saturn: { name: "Saturno", radius: 22, mass: 80, distance: 450, speed: 0.4, color: '#f0d890' }
+                };
+
+                this.scenarios = {
+                    solar: {
+                        name: "Sistema Solar",
+                        description: "Planetas orbitando alrededor del Sol",
+                        bodies: () => this.generateSolarSystem()
+                    },
+                    binary: {
+                        name: "Estrellas Binarias", 
+                        description: "Dos estrellas orbitando alrededor de su centro de masa común",
+                        bodies: [
+                            { x: 300, y: 225, radius: 20, mass: 200, vx: 0, vy: 0.8, color: '#FFD700', name: "Estrella A" },
+                            { x: 500, y: 225, radius: 18, mass: 180, vx: 0, vy: -0.9, color: '#FF6B6B', name: "Estrella B" }
+                        ]
+                    },
+                    moons: {
+                        name: "Sistema de Lunas",
+                        description: "Múltiples lunas orbitando un planeta gigante",
+                        bodies: [
+                            { x: 400, y: 225, radius: 25, mass: 300, vx: 0, vy: 0, color: '#6a52b5', name: "Planeta" },
+                            { x: 300, y: 225, radius: 6, mass: 5, vx: 0, vy: 1.2, color: '#b39ddb', name: "Luna 1" },
+                            { x: 450, y: 150, radius: 5, mass: 4, vx: -0.9, vy: 0, color: '#64b5f6', name: "Luna 2" },
+                            { x: 500, y: 300, radius: 7, mass: 8, vx: 0.7, vy: 0, color: '#2196f3', name: "Luna 3" }
+                        ]
+                    },
+                    collision: {
+                        name: "Colisión Planetaria",
+                        description: "Dos cuerpos masivos en trayectoria de colisión",
+                        bodies: () => this.generateCollisionScenario()
+                    }
+                };
+
+                this.init();
+            }
+
+            // Generar escenario de colisión
+            generateCollisionScenario() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                return [
+                    { 
+                        x: centerX - 200, y: centerY, 
+                        radius: 25, mass: 300, 
+                        vx: 1.2, vy: 0, 
+                        color: '#FFD700', name: "Asteroide A",
+                        isDestroyed: false
+                    },
+                    { 
+                        x: centerX + 200, y: centerY, 
+                        radius: 22, mass: 250, 
+                        vx: -1.0, vy: 0, 
+                        color: '#FF6B6B', name: "Asteroide B",
+                        isDestroyed: false
+                    },
+                    { 
+                        x: centerX, y: centerY - 150, 
+                        radius: 18, mass: 200, 
+                        vx: 0.5, vy: 0.8, 
+                        color: '#64b5f6', name: "Asteroide C",
+                        isDestroyed: false
+                    }
+                ];
+            }
+
+            // Generar sistema solar basado en el planeta seleccionado
+            generateSolarSystem() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                const bodies = [];
+                
+                // Sol en el centro
+                bodies.push({
+                    x: centerX, y: centerY, radius: 30, mass: 500, 
+                    vx: 0, vy: 0, color: '#FFD700', name: "Sol",
+                    isDestroyed: false
+                });
+                
+                // Planeta seleccionado
+                const planet = this.planetsData[this.selectedPlanet];
+                bodies.push({
+                    x: centerX + planet.distance, y: centerY,
+                    radius: planet.radius, mass: planet.mass,
+                    vx: 0, vy: planet.speed,
+                    color: planet.color, name: planet.name,
+                    isDestroyed: false
+                });
+                
+                return bodies;
+            }
+
+            async init() {
+                // Initialize canvases immediately
+                this.canvas = document.getElementById('simulationCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.forceGraph = document.getElementById('forceGraph');
+                this.forceCtx = this.forceGraph.getContext('2d');
+                
+                // Set initial canvas sizes
+                this.resizeCanvases();
+                
+                // Setup event listeners
+                this.setupEventListeners();
+                
+                // Load initial scenario
+                this.loadScenario(this.currentScenario);
+                
+                // Draw initial state
+                this.draw();
+                this.drawForceGraph();
+                
+                // Add resize listener
+                window.addEventListener('resize', () => {
+                    this.resizeCanvases();
+                    if (!this.simulationRunning) {
+                        this.draw();
+                        this.drawForceGraph();
+                    }
+                });
+            }
+
+            setupEventListeners() {
+                // Scenario buttons
+                document.querySelectorAll('.scenario-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentScenario = e.target.dataset.scenario;
+                        
+                        // Mostrar/ocultar selector de planetas según el escenario
+                        const planetSelector = document.getElementById('planetSelectorGroup');
+                        planetSelector.style.display = this.currentScenario === 'solar' ? 'block' : 'none';
+                        
+                        this.resetSimulation();
+                    });
+                });
+
+                // Planet buttons
+                document.querySelectorAll('.planet-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.planet-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.selectedPlanet = e.target.dataset.planet;
+                        if (this.currentScenario === 'solar') {
+                            this.resetSimulation();
+                        }
+                    });
+                });
+
+                // Trail controls
+                document.getElementById('showTrails').addEventListener('click', (e) => {
+                    this.showTrails = !this.showTrails;
+                    e.target.classList.toggle('active', this.showTrails);
+                    e.target.textContent = this.showTrails ? 'Mostrar Trayectorias' : 'Ocultar Trayectorias';
+                });
+
+                document.getElementById('clearTrails').addEventListener('click', () => {
+                    this.bodies.forEach(body => {
+                        body.trail = [];
+                    });
+                    this.draw();
+                });
+
+                document.getElementById('trailLength').addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    document.getElementById('trailLengthValue').textContent = value;
+                    this.trailLength = parseInt(value);
+                });
+
+                // NUEVO: Force vector controls
+                document.getElementById('showForceVectors').addEventListener('click', (e) => {
+                    this.showForceVectors = !this.showForceVectors;
+                    e.target.classList.toggle('active', this.showForceVectors);
+                    e.target.textContent = this.showForceVectors ? 'Vectores de Fuerza' : 'Ocultar Vectores';
+                });
+
+                document.getElementById('showForceMagnitude').addEventListener('click', (e) => {
+                    this.showForceMagnitude = !this.showForceMagnitude;
+                    e.target.classList.toggle('active', this.showForceMagnitude);
+                    e.target.textContent = this.showForceMagnitude ? 'Mostrar Magnitud' : 'Ocultar Magnitud';
+                });
+
+                document.getElementById('forceScale').addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    document.getElementById('forceScaleValue').textContent = value;
+                    this.forceScale = parseInt(value);
+                });
+
+                // Control sliders
+                const gravitySlider = document.getElementById('gravityStrength');
+                const speedSlider = document.getElementById('simulationSpeed');
+
+                gravitySlider.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    document.getElementById('gravityStrengthValue').textContent = value;
+                    this.config.gravityStrength = parseInt(value);
+                });
+
+                speedSlider.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    document.getElementById('simulationSpeedValue').textContent = value;
+                    this.config.simulationSpeed = parseInt(value);
+                });
+
+                // Control buttons
+                document.getElementById('startBtn').addEventListener('click', () => this.toggleSimulation());
+                document.getElementById('resetBtn').addEventListener('click', () => this.resetSimulation());
+                document.getElementById('downloadGraph').addEventListener('click', () => this.downloadForceGraph());
+            }
+
+            resizeCanvases() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = 500;
+                
+                const graphContainer = this.forceGraph.parentElement;
+                this.forceGraph.width = graphContainer.clientWidth;
+                this.forceGraph.height = 400;
+            }
+
+            loadScenario(scenarioKey) {
+                const scenario = this.scenarios[scenarioKey];
+                this.bodies = [];
+                
+                // Reset colisiones
+                this.collisionEffects = [];
+                this.totalCollisions = 0;
+                this.collisionCooldown.clear();
+                this.forceVectors = [];
+                
+                // Ocultar panel de colisiones
+                document.getElementById('collisionInfo').style.display = 'none';
+                
+                // Obtener cuerpos (puede ser un array o una función)
+                const scenarioBodies = typeof scenario.bodies === 'function' 
+                    ? scenario.bodies() 
+                    : scenario.bodies;
+                
+                scenarioBodies.forEach(body => {
+                    const adjustedBody = {...body};
+                    // Scale positions based on current canvas size
+                    if (this.canvas.width !== 800 || this.canvas.height !== 500) {
+                        adjustedBody.x = (body.x / 800) * this.canvas.width;
+                        adjustedBody.y = (body.y / 500) * this.canvas.height;
+                        
+                        // Scale velocities
+                        const scale = Math.min(this.canvas.width / 800, this.canvas.height / 500);
+                        adjustedBody.vx = body.vx * scale;
+                        adjustedBody.vy = body.vy * scale;
+                    }
+                    
+                    adjustedBody.trail = [];
+                    adjustedBody.isDestroyed = false;
+                    this.bodies.push(adjustedBody);
+                });
+                
+                // Reset graph data
+                this.forceData = [];
+                this.timeData = [];
+                
+                // Update UI
+                document.getElementById('bodiesCount').textContent = this.bodies.length;
+                document.getElementById('scenario-description').textContent = scenario.description;
+                document.getElementById('simulationState').textContent = 'En pausa';
+                document.getElementById('totalCollisions').textContent = '0';
+                document.getElementById('remainingBodies').textContent = this.bodies.length;
+                
+                // Mostrar/ocultar selector de planetas
+                const planetSelector = document.getElementById('planetSelectorGroup');
+                planetSelector.style.display = scenarioKey === 'solar' ? 'block' : 'none';
+            }
+
+            toggleSimulation() {
+                if (this.simulationRunning) {
+                    this.stopSimulation();
+                    document.getElementById('startBtn').textContent = 'Iniciar Simulación';
+                } else {
+                    this.startSimulation();
+                    document.getElementById('startBtn').textContent = 'Pausar Simulación';
+                }
+            }
+
+            startSimulation() {
+                if (!this.simulationRunning) {
+                    this.simulationRunning = true;
+                    this.startTime = Date.now() - this.elapsedTime;
+                    document.getElementById('simulationState').textContent = 'Ejecutándose';
+                    this.animate();
+                }
+            }
+
+            stopSimulation() {
+                this.simulationRunning = false;
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+                document.getElementById('simulationState').textContent = 'En pausa';
+            }
+
+            resetSimulation() {
+                this.stopSimulation();
+                document.getElementById('startBtn').textContent = 'Iniciar Simulación';
+                this.elapsedTime = 0;
+                document.getElementById('timeValue').textContent = '0.0 s';
+                document.getElementById('maxForceValue').textContent = '0.0';
+                this.loadScenario(this.currentScenario);
+                this.draw();
+                this.drawForceGraph();
+            }
+
+            animate() {
+                if (!this.simulationRunning) return;
+                
+                this.updatePhysics();
+                this.updateCollisionEffects();
+                this.updateGraphData();
+                this.draw();
+                this.drawForceGraph();
+                
+                this.elapsedTime = Date.now() - this.startTime;
+                document.getElementById('timeValue').textContent = (this.elapsedTime / 1000).toFixed(1) + ' s';
+                
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+
+            // NUEVO: Calcular vectores de fuerza
+            calculateForceVectors() {
+                this.forceVectors = [];
+                const activeBodies = this.bodies.filter(body => !body.isDestroyed);
+                
+                for (let i = 0; i < activeBodies.length; i++) {
+                    const body = activeBodies[i];
+                    let totalFx = 0;
+                    let totalFy = 0;
+                    
+                    for (let j = 0; j < activeBodies.length; j++) {
+                        if (i !== j) {
+                            const otherBody = activeBodies[j];
+                            const dx = otherBody.x - body.x;
+                            const dy = otherBody.y - body.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance > 0) {
+                                const force = (this.config.gravityStrength * body.mass * otherBody.mass) / (distance * distance);
+                                const fx = force * dx / distance;
+                                const fy = force * dy / distance;
+                                
+                                totalFx += fx;
+                                totalFy += fy;
+                                
+                                // Vector individual entre cuerpos
+                                this.forceVectors.push({
+                                    from: { x: body.x, y: body.y },
+                                    to: { x: body.x + fx / this.forceScale, y: body.y + fy / this.forceScale },
+                                    magnitude: force,
+                                    color: this.getForceColor(force)
+                                });
+                            }
+                        }
+                    }
+                    
+                    // Vector de fuerza total sobre el cuerpo
+                    if (totalFx !== 0 || totalFy !== 0) {
+                        const totalForce = Math.sqrt(totalFx * totalFx + totalFy * totalFy);
+                        this.forceVectors.push({
+                            from: { x: body.x, y: body.y },
+                            to: { 
+                                x: body.x + totalFx / totalForce * this.forceScale * 2, 
+                                y: body.y + totalFy / totalForce * this.forceScale * 2 
+                            },
+                            magnitude: totalForce,
+                            color: '#ff9800',
+                            isTotal: true
+                        });
+                    }
+                }
+            }
+
+            // NUEVO: Obtener color basado en la magnitud de la fuerza
+            getForceColor(force) {
+                const maxForce = 1000; // Fuerza máxima esperada
+                const intensity = Math.min(force / maxForce, 1);
+                
+                // De amarillo (baja fuerza) a rojo (alta fuerza)
+                const r = Math.floor(255 * intensity);
+                const g = Math.floor(255 * (1 - intensity));
+                const b = 0;
+                
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+
+            // NUEVO: Dibujar vectores de fuerza
+            drawForceVectors() {
+                if (!this.showForceVectors) return;
+                
+                for (const vector of this.forceVectors) {
+                    const dx = vector.to.x - vector.from.x;
+                    const dy = vector.to.y - vector.from.y;
+                    const angle = Math.atan2(dy, dx);
+                    
+                    // Dibujar línea del vector
+                    this.ctx.strokeStyle = vector.color;
+                    this.ctx.lineWidth = vector.isTotal ? 3 : 2;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(vector.from.x, vector.from.y);
+                    this.ctx.lineTo(vector.to.x, vector.to.y);
+                    this.ctx.stroke();
+                    
+                    // Dibujar cabeza de flecha
+                    const headLength = vector.isTotal ? 10 : 8;
+                    this.ctx.fillStyle = vector.color;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(vector.to.x, vector.to.y);
+                    this.ctx.lineTo(
+                        vector.to.x - headLength * Math.cos(angle - Math.PI / 6),
+                        vector.to.y - headLength * Math.sin(angle - Math.PI / 6)
+                    );
+                    this.ctx.lineTo(
+                        vector.to.x - headLength * Math.cos(angle + Math.PI / 6),
+                        vector.to.y - headLength * Math.sin(angle + Math.PI / 6)
+                    );
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    // Mostrar magnitud si está habilitado
+                    if (this.showForceMagnitude && vector.isTotal) {
+                        this.ctx.fillStyle = '#ffffff';
+                        this.ctx.font = '10px Arial';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.fillText(
+                            vector.magnitude.toFixed(1),
+                            vector.from.x + dx / 2,
+                            vector.from.y + dy / 2 - 10
+                        );
+                    }
+                }
+            }
+
+            // Sistema de detección y manejo de colisiones
+            checkCollisions() {
+                for (let i = 0; i < this.bodies.length; i++) {
+                    if (this.bodies[i].isDestroyed) continue;
+                    
+                    for (let j = i + 1; j < this.bodies.length; j++) {
+                        if (this.bodies[j].isDestroyed) continue;
+                        
+                        const bodyA = this.bodies[i];
+                        const bodyB = this.bodies[j];
+                        const collisionKey = `${Math.min(i, j)}-${Math.max(i, j)}`;
+                        
+                        // Evitar detección múltiple de la misma colisión
+                        if (this.collisionCooldown.has(collisionKey)) continue;
+                        
+                        const dx = bodyB.x - bodyA.x;
+                        const dy = bodyB.y - bodyA.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Detectar colisión
+                        if (distance < bodyA.radius + bodyB.radius) {
+                            this.handleCollision(bodyA, bodyB, i, j, collisionKey);
+                        }
+                    }
+                }
+            }
+
+            // Manejar colisión entre dos cuerpos
+            handleCollision(bodyA, bodyB, indexA, indexB, collisionKey) {
+                // Agregar a cooldown para evitar detección múltiple
+                this.collisionCooldown.add(collisionKey);
+                setTimeout(() => {
+                    this.collisionCooldown.delete(collisionKey);
+                }, 1000);
+                
+                this.totalCollisions++;
+                
+                // Crear efecto de explosión
+                this.createCollisionEffect(bodyA.x, bodyB.y, 
+                    Math.max(bodyA.radius, bodyB.radius) * 2);
+                
+                // Determinar qué cuerpo "sobrevive" (el más masivo)
+                let survivor, destroyed;
+                if (bodyA.mass >= bodyB.mass) {
+                    survivor = bodyA;
+                    destroyed = bodyB;
+                    this.bodies[indexB].isDestroyed = true;
+                } else {
+                    survivor = bodyB;
+                    destroyed = bodyA;
+                    this.bodies[indexA].isDestroyed = true;
+                }
+                
+                // Conservación del momento lineal
+                const totalMass = bodyA.mass + bodyB.mass;
+                survivor.vx = (bodyA.mass * bodyA.vx + bodyB.mass * bodyB.vx) / totalMass;
+                survivor.vy = (bodyA.mass * bodyA.vy + bodyB.mass * bodyB.vy) / totalMass;
+                
+                // El cuerpo sobreviviente crece (conservación de masa aproximada)
+                survivor.mass = totalMass;
+                survivor.radius = Math.sqrt(bodyA.radius * bodyA.radius + bodyB.radius * bodyB.radius);
+                
+                // Actualizar nombre para reflejar la fusión
+                survivor.name = `${survivor.name}+${destroyed.name}`;
+                
+                // Mostrar información de colisión
+                this.showCollisionInfo();
+                
+                // Reproducir sonido de colisión (simulado con vibración si está disponible)
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+            }
+
+            // Crear efecto visual de colisión
+            createCollisionEffect(x, y, maxRadius) {
+                this.collisionEffects.push({
+                    x: x,
+                    y: y,
+                    radius: 5,
+                    maxRadius: maxRadius * 3,
+                    growthSpeed: 8,
+                    opacity: 1,
+                    fadeSpeed: 0.05,
+                    color: '#ff4444'
+                });
+            }
+
+            // Actualizar efectos de colisión
+            updateCollisionEffects() {
+                for (let i = this.collisionEffects.length - 1; i >= 0; i--) {
+                    const effect = this.collisionEffects[i];
+                    
+                    effect.radius += effect.growthSpeed;
+                    effect.opacity -= effect.fadeSpeed;
+                    
+                    if (effect.opacity <= 0 || effect.radius >= effect.maxRadius) {
+                        this.collisionEffects.splice(i, 1);
+                    }
+                }
+            }
+
+            // Mostrar información de colisión
+            showCollisionInfo() {
+                const collisionInfo = document.getElementById('collisionInfo');
+                const remainingBodies = this.bodies.filter(body => !body.isDestroyed).length;
+                
+                document.getElementById('remainingBodies').textContent = remainingBodies;
+                document.getElementById('totalCollisions').textContent = this.totalCollisions;
+                
+                collisionInfo.style.display = 'block';
+                
+                // Ocultar después de 3 segundos
+                setTimeout(() => {
+                    if (this.totalCollisions > 0) {
+                        collisionInfo.style.display = 'none';
+                    }
+                }, 3000);
+            }
+
+            updatePhysics() {
+                const dt = this.config.simulationSpeed / 500;
+                
+                // Verificar colisiones primero
+                if (this.currentScenario === 'collision') {
+                    this.checkCollisions();
+                }
+                
+                // NUEVO: Calcular vectores de fuerza
+                this.calculateForceVectors();
+                
+                // Filtrar cuerpos destruidos
+                const activeBodies = this.bodies.filter(body => !body.isDestroyed);
+                
+                // Calculate forces solo para cuerpos activos
+                for (let i = 0; i < activeBodies.length; i++) {
+                    let fx = 0, fy = 0;
+                    
+                    for (let j = 0; j < activeBodies.length; j++) {
+                        if (i !== j) {
+                            const dx = activeBodies[j].x - activeBodies[i].x;
+                            const dy = activeBodies[j].y - activeBodies[i].y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance > activeBodies[i].radius + activeBodies[j].radius) {
+                                const force = (this.config.gravityStrength * activeBodies[i].mass * activeBodies[j].mass) / (distance * distance);
+                                fx += force * dx / distance;
+                                fy += force * dy / distance;
+                            }
+                        }
+                    }
+                    
+                    // Update velocities
+                    activeBodies[i].vx += fx / activeBodies[i].mass * dt;
+                    activeBodies[i].vy += fy / activeBodies[i].mass * dt;
+                }
+                
+                // Update positions
+                for (let i = 0; i < activeBodies.length; i++) {
+                    activeBodies[i].x += activeBodies[i].vx * dt;
+                    activeBodies[i].y += activeBodies[i].vy * dt;
+                    
+                    // Actualizar trayectorias (solo si están habilitadas)
+                    if (this.showTrails) {
+                        activeBodies[i].trail.push({x: activeBodies[i].x, y: activeBodies[i].y});
+                        if (activeBodies[i].trail.length > this.trailLength) {
+                            activeBodies[i].trail.shift();
+                        }
+                    }
+                    
+                    // Boundary collision with damping
+                    if (activeBodies[i].x - activeBodies[i].radius < 0 || activeBodies[i].x + activeBodies[i].radius > this.canvas.width) {
+                        activeBodies[i].vx = -activeBodies[i].vx * 0.95;
+                        activeBodies[i].x = Math.max(activeBodies[i].radius, Math.min(this.canvas.width - activeBodies[i].radius, activeBodies[i].x));
+                    }
+                    if (activeBodies[i].y - activeBodies[i].radius < 0 || activeBodies[i].y + activeBodies[i].radius > this.canvas.height) {
+                        activeBodies[i].vy = -activeBodies[i].vy * 0.95;
+                        activeBodies[i].y = Math.max(activeBodies[i].radius, Math.min(this.canvas.height - activeBodies[i].radius, activeBodies[i].y));
+                    }
+                }
+            }
+
+            updateGraphData() {
+                const currentTime = this.elapsedTime / 1000;
+                
+                // Calculate maximum force between all active body pairs
+                let maxForce = 0;
+                const activeBodies = this.bodies.filter(body => !body.isDestroyed);
+                
+                for (let i = 0; i < activeBodies.length; i++) {
+                    for (let j = i + 1; j < activeBodies.length; j++) {
+                        const dx = activeBodies[j].x - activeBodies[i].x;
+                        const dy = activeBodies[j].y - activeBodies[i].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > 0) {
+                            const force = (this.config.gravityStrength * activeBodies[i].mass * activeBodies[j].mass) / (distance * distance);
+                            maxForce = Math.max(maxForce, force);
+                        }
+                    }
+                }
+                
+                // Add data points
+                this.forceData.push(maxForce);
+                this.timeData.push(currentTime);
+                
+                // Maintain data array size
+                if (this.forceData.length > this.maxDataPoints) {
+                    this.forceData.shift();
+                    this.timeData.shift();
+                }
+                
+                // Update statistics
+                const maxForceValue = this.forceData.length > 0 ? Math.max(...this.forceData) : 0;
+                document.getElementById('maxForceValue').textContent = maxForceValue.toFixed(2);
+                document.getElementById('graphStats').textContent = 
+                    `Fuerza máxima: ${maxForceValue.toFixed(2)} | Tiempo: ${currentTime.toFixed(1)}s`;
+            }
+
+            draw() {
+                // Clear canvas
+                this.ctx.fillStyle = '#0f0c29';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Dibujar efectos de colisión
+                this.drawCollisionEffects();
+                
+                // Dibujar trayectorias (si están habilitadas)
+                if (this.showTrails) {
+                    this.drawTrails();
+                }
+                
+                // NUEVO: Dibujar vectores de fuerza
+                this.drawForceVectors();
+                
+                // Draw force lines between active bodies
+                this.drawForceLines();
+                
+                // Draw active bodies
+                this.drawBodies();
+                
+                // Draw simulation info
+                this.drawSimulationInfo();
+            }
+
+            // Dibujar efectos de colisión
+            drawCollisionEffects() {
+                for (const effect of this.collisionEffects) {
+                    // Anillo exterior
+                    this.ctx.beginPath();
+                    this.ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    this.ctx.strokeStyle = `rgba(255, 100, 100, ${effect.opacity})`;
+                    this.ctx.lineWidth = 3;
+                    this.ctx.stroke();
+                    
+                    // Anillo interior
+                    this.ctx.beginPath();
+                    this.ctx.arc(effect.x, effect.y, effect.radius * 0.7, 0, Math.PI * 2);
+                    this.ctx.strokeStyle = `rgba(255, 200, 100, ${effect.opacity})`;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+                    
+                    // Centro brillante
+                    this.ctx.beginPath();
+                    this.ctx.arc(effect.x, effect.y, effect.radius * 0.3, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `rgba(255, 255, 200, ${effect.opacity})`;
+                    this.ctx.fill();
+                }
+            }
+
+            // Dibujar trayectorias
+            drawTrails() {
+                const activeBodies = this.bodies.filter(body => !body.isDestroyed);
+                
+                for (let i = 0; i < activeBodies.length; i++) {
+                    const trail = activeBodies[i].trail;
+                    if (trail && trail.length > 1) {
+                        this.ctx.strokeStyle = activeBodies[i].color + '60';
+                        this.ctx.lineWidth = 2;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(trail[0].x, trail[0].y);
+                        
+                        // Dibujar línea suavizada para la trayectoria
+                        for (let j = 1; j < trail.length; j++) {
+                            this.ctx.lineTo(trail[j].x, trail[j].y);
+                        }
+                        this.ctx.stroke();
+                        
+                        // Dibujar puntos a lo largo de la trayectoria
+                        this.ctx.fillStyle = activeBodies[i].color + '40';
+                        for (let j = 0; j < trail.length; j += 5) {
+                            this.ctx.beginPath();
+                            this.ctx.arc(trail[j].x, trail[j].y, 2, 0, Math.PI * 2);
+                            this.ctx.fill();
+                        }
+                    }
+                }
+            }
+
+            // Dibujar líneas de fuerza
+            drawForceLines() {
+                const activeBodies = this.bodies.filter(body => !body.isDestroyed);
+                
+                if (activeBodies.length <= 6) {
+                    for (let i = 0; i < activeBodies.length; i++) {
+                        for (let j = i + 1; j < activeBodies.length; j++) {
+                            const dx = activeBodies[j].x - activeBodies[i].x;
+                            const dy = activeBodies[j].y - activeBodies[i].y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < Math.min(this.canvas.width, this.canvas.height) * 0.4) {
+                                const force = (this.config.gravityStrength * activeBodies[i].mass * activeBodies[j].mass) / (distance * distance);
+                                const lineWidth = Math.min(5, force / 500);
+                                
+                                if (lineWidth > 0.1) {
+                                    this.ctx.beginPath();
+                                    this.ctx.moveTo(activeBodies[i].x, activeBodies[i].y);
+                                    this.ctx.lineTo(activeBodies[j].x, activeBodies[j].y);
+                                    this.ctx.strokeStyle = `rgba(179, 157, 219, ${0.3 + lineWidth/10})`;
+                                    this.ctx.lineWidth = lineWidth;
+                                    this.ctx.stroke();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Dibujar cuerpos
+            drawBodies() {
+                const activeBodies = this.bodies.filter(body => !body.isDestroyed);
+                
+                for (let i = 0; i < activeBodies.length; i++) {
+                    const body = activeBodies[i];
+                    
+                    // Shadow
+                    this.ctx.beginPath();
+                    this.ctx.arc(body.x + 3, body.y + 3, body.radius, 0, Math.PI * 2);
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    this.ctx.fill();
+                    
+                    // Main body
+                    this.ctx.beginPath();
+                    this.ctx.arc(body.x, body.y, body.radius, 0, Math.PI * 2);
+                    this.ctx.fillStyle = body.color;
+                    this.ctx.fill();
+                    
+                    // Glow effect
+                    this.ctx.beginPath();
+                    this.ctx.arc(body.x, body.y, body.radius + 5, 0, Math.PI * 2);
+                    this.ctx.strokeStyle = body.color + '40';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+                    
+                    // Highlight for larger bodies
+                    if (body.radius > 10) {
+                        this.ctx.beginPath();
+                        this.ctx.arc(body.x, body.y, body.radius * 0.6, 0, Math.PI * 2);
+                        this.ctx.fillStyle = '#ffffff';
+                        this.ctx.fill();
+                    }
+                    
+                    // Name label
+                    if (body.name) {
+                        this.ctx.fillStyle = '#ffffff';
+                        this.ctx.font = '12px Arial';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.fillText(body.name, body.x, body.y + body.radius + 15);
+                    }
+                }
+            }
+
+            // Dibujar información de simulación
+            drawSimulationInfo() {
+                const activeBodies = this.bodies.filter(body => !body.isDestroyed).length;
+                
+                this.ctx.fillStyle = '#b39ddb';
+                this.ctx.font = '14px Arial';
+                this.ctx.textAlign = 'left';
+                this.ctx.fillText(`Escenario: ${this.scenarios[this.currentScenario].name}`, 10, 20);
+                this.ctx.fillText(`Cuerpos: ${activeBodies}/${this.bodies.length}`, 10, 40);
+                this.ctx.fillText(`Tiempo: ${(this.elapsedTime / 1000).toFixed(1)}s`, 10, 60);
+                
+                if (this.showTrails) {
+                    this.ctx.fillText(`Trayectorias: Activadas (${this.trailLength} pts)`, 10, 80);
+                }
+                
+                if (this.showForceVectors) {
+                    this.ctx.fillText(`Vectores: Activados`, 10, 100);
+                }
+                
+                // Mostrar colisiones en el escenario de colisión
+                if (this.currentScenario === 'collision' && this.totalCollisions > 0) {
+                    this.ctx.fillText(`Colisiones: ${this.totalCollisions}`, 10, 120);
+                }
+            }
+
+            drawForceGraph() {
+                // ... (el código de drawForceGraph se mantiene igual)
+                const width = this.forceGraph.width;
+                const height = this.forceGraph.height;
+                const padding = 50;
+                
+                // Clear canvas
+                this.forceCtx.fillStyle = '#0f0c29';
+                this.forceCtx.fillRect(0, 0, width, height);
+                
+                if (this.forceData.length < 2) {
+                    // Show message when no data
+                    this.forceCtx.fillStyle = '#b39ddb';
+                    this.forceCtx.font = '16px Arial';
+                    this.forceCtx.textAlign = 'center';
+                    this.forceCtx.fillText('Inicia la simulación para ver los datos de fuerza gravitacional', width / 2, height / 2);
+                    return;
+                }
+                
+                const maxForce = Math.max(0.1, ...this.forceData);
+                const maxTime = Math.max(1, ...this.timeData);
+                
+                // Draw axes
+                this.forceCtx.strokeStyle = '#b39ddb';
+                this.forceCtx.lineWidth = 2;
+                this.forceCtx.beginPath();
+                // Eje Y
+                this.forceCtx.moveTo(padding, padding);
+                this.forceCtx.lineTo(padding, height - padding);
+                // Eje X
+                this.forceCtx.moveTo(padding, height - padding);
+                this.forceCtx.lineTo(width - padding, height - padding);
+                this.forceCtx.stroke();
+                
+                // Etiquetas de ejes
+                this.forceCtx.fillStyle = '#b39ddb';
+                this.forceCtx.font = '12px Arial';
+                this.forceCtx.textAlign = 'center';
+                this.forceCtx.fillText('Tiempo (s)', width / 2, height - 15);
+                
+                this.forceCtx.save();
+                this.forceCtx.translate(20, height / 2);
+                this.forceCtx.rotate(-Math.PI / 2);
+                this.forceCtx.fillText('Fuerza Gravitacional', 0, 0);
+                this.forceCtx.restore();
+                
+                // Título de la gráfica
+                this.forceCtx.font = 'bold 16px Arial';
+                this.forceCtx.fillStyle = '#64b5f6';
+                this.forceCtx.fillText('Evolución de la Fuerza Gravitacional Máxima', width / 2, 25);
+                
+                // Dibujar línea de la gráfica
+                this.forceCtx.strokeStyle = '#2196f3';
+                this.forceCtx.lineWidth = 3;
+                this.forceCtx.beginPath();
+                
+                for (let i = 0; i < this.forceData.length; i++) {
+                    const x = padding + (this.timeData[i] / maxTime) * (width - 2 * padding);
+                    const y = height - padding - (this.forceData[i] / maxForce) * (height - 2 * padding);
+                    
+                    if (i === 0) {
+                        this.forceCtx.moveTo(x, y);
+                    } else {
+                        this.forceCtx.lineTo(x, y);
+                    }
+                }
+                this.forceCtx.stroke();
+                
+                // Dibujar puntos de datos
+                this.forceCtx.fillStyle = '#64b5f6';
+                for (let i = 0; i < this.forceData.length; i++) {
+                    const x = padding + (this.timeData[i] / maxTime) * (width - 2 * padding);
+                    const y = height - padding - (this.forceData[i] / maxForce) * (height - 2 * padding);
+                    
+                    this.forceCtx.beginPath();
+                    this.forceCtx.arc(x, y, 4, 0, Math.PI * 2);
+                    this.forceCtx.fill();
+                }
+                
+                // Leyenda
+                const legendX = width - 180;
+                const legendY = padding + 30;
+                
+                this.forceCtx.fillStyle = '#b39ddb';
+                this.forceCtx.font = '12px Arial';
+                this.forceCtx.textAlign = 'left';
+                this.forceCtx.fillText('Leyenda:', legendX, legendY);
+                this.forceCtx.fillText(`Fuerza máxima: ${maxForce.toFixed(2)}`, legendX, legendY + 20);
+                this.forceCtx.fillText(`Tiempo total: ${maxTime.toFixed(1)}s`, legendX, legendY + 40);
+                this.forceCtx.fillText(`Datos: ${this.forceData.length} puntos`, legendX, legendY + 60);
+            }
+
+            downloadForceGraph() {
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                link.download = `grafica_fuerza_gravitacional_${timestamp}.png`;
+                link.href = this.forceGraph.toDataURL('image/png');
+                link.click();
+            }
+
+            // Cleanup method for memory management
+            cleanup() {
+                this.stopSimulation();
+                this.bodies = [];
+                this.forceData = [];
+                this.timeData = [];
+                this.collisionEffects = [];
+                this.forceVectors = [];
+            }
+        }
+
+        // Initialize simulator when page loads
+        let simulator;
+        document.addEventListener('DOMContentLoaded', () => {
+            simulator = new GravitationSimulator();
+        });
+
+        // Cleanup when page is unloaded
+        window.addEventListener('beforeunload', () => {
+            if (simulator) {
+                simulator.cleanup();
+            }
+        });
+    </script>
+</body>
+</html>

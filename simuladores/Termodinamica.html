@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Avanzado de Física Termodinámica</title>
+    <style>
+        :root {
+            --deep-navy: #0f0c29;
+            --dark-purple: #302b63;
+            --medium-purple: #4a3f8c;
+            --light-purple: #6a52b5;
+            --electric-blue: #2196f3;
+            --light-blue: #64b5f6;
+            --lavender: #b39ddb;
+            --white: #ffffff;
+            --light-gray: #f5f7ff;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #f44336;
+            --teal: #26A69A;
+            --pink: #EC407A;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--deep-navy), var(--dark-purple), var(--medium-purple));
+            color: var(--white);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(15, 12, 41, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--light-purple);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--electric-blue), var(--light-purple), var(--pink));
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, var(--white), var(--lavender), var(--light-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            color: var(--lavender);
+        }
+        
+        .simulator-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .simulation-area {
+            flex: 2;
+            min-width: 300px;
+            background: rgba(48, 43, 99, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--light-purple);
+        }
+        
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(48, 43, 99, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--light-purple);
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: var(--deep-navy);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid var(--light-purple);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--electric-blue);
+            position: relative;
+            padding-bottom: 8px;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--electric-blue);
+        }
+        
+        .slider-container {
+            margin-bottom: 15px;
+            background: rgba(74, 63, 140, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(106, 82, 181, 0.3);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--lavender);
+        }
+        
+        .slider-value {
+            display: inline-block;
+            width: 60px;
+            text-align: right;
+            color: var(--light-blue);
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--electric-blue);
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(33, 150, 243, 0.7);
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--light-blue);
+            transform: scale(1.1);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--electric-blue);
+            color: var(--white);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        button:hover::before {
+            left: 100%;
+        }
+        
+        button:hover {
+            background: var(--light-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        button.active {
+            background: var(--light-purple);
+            box-shadow: 0 0 10px rgba(106, 82, 181, 0.5);
+        }
+        
+        .data-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .data-item {
+            background: rgba(74, 63, 140, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--light-purple);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .data-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--electric-blue);
+        }
+        
+        .data-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .data-label {
+            font-size: 0.9rem;
+            color: var(--lavender);
+            margin-bottom: 5px;
+        }
+        
+        .data-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 5px 0;
+            color: var(--light-blue);
+        }
+        
+        .data-unit {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            color: var(--lavender);
+        }
+        
+        .theory {
+            background: rgba(48, 43, 99, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--light-purple);
+        }
+        
+        .theory h2 {
+            margin-bottom: 15px;
+        }
+        
+        .theory p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: var(--lavender);
+        }
+        
+        .law {
+            background: rgba(74, 63, 140, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--electric-blue);
+            transition: all 0.3s ease;
+        }
+        
+        .law:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .law h3 {
+            color: var(--light-blue);
+            margin-bottom: 10px;
+        }
+        
+        .process-info {
+            background: rgba(74, 63, 140, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid var(--light-purple);
+            display: none;
+        }
+        
+        .process-info.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background: var(--success);
+            box-shadow: 0 0 5px var(--success);
+        }
+        
+        .status-inactive {
+            background: var(--danger);
+        }
+        
+        .graph-container {
+            background: rgba(74, 63, 140, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid var(--light-purple);
+            height: 200px;
+            position: relative;
+        }
+        
+        .history-graph {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .preset-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .preset-btn {
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .energy-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+        
+        .energy-value {
+            color: var(--light-blue);
+            font-weight: bold;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .tab-container {
+            margin-top: 15px;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--light-purple);
+        }
+        
+        .tab-button {
+            padding: 10px 15px;
+            background: transparent;
+            border: none;
+            color: var(--lavender);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab-button.active {
+            color: var(--electric-blue);
+            border-bottom: 3px solid var(--electric-blue);
+        }
+        
+        .tab-content {
+            padding: 15px 0;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .download-btn {
+            background: var(--success) !important;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .download-btn:hover {
+            background: #45a049 !important;
+        }
+        
+        .advanced-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .advanced-control {
+            flex: 1;
+            min-width: 150px;
+            background: rgba(74, 63, 140, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(106, 82, 181, 0.3);
+        }
+        
+        .comparison-mode {
+            background: rgba(74, 63, 140, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid var(--light-purple);
+        }
+        
+        .comparison-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .comparison-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background: rgba(15, 12, 41, 0.5);
+            border-radius: 8px;
+            border: 1px solid var(--light-purple);
+        }
+        
+        .heat-flow {
+            position: absolute;
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(90deg, transparent, var(--pink), transparent);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .heat-flow.active {
+            opacity: 0.7;
+            animation: heatPulse 2s infinite;
+        }
+        
+        @keyframes heatPulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.3; }
+        }
+        
+        .real-world-example {
+            background: rgba(74, 63, 140, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid var(--teal);
+        }
+        
+        .real-world-example h4 {
+            color: var(--teal);
+            margin-bottom: 10px;
+        }
+        
+        .step-by-step {
+            background: rgba(74, 63, 140, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid var(--warning);
+        }
+        
+        .step-by-step h4 {
+            color: var(--warning);
+            margin-bottom: 10px;
+        }
+        
+        .step {
+            margin-bottom: 10px;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        .step::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 7px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--warning);
+        }
+        
+        .molecular-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: var(--lavender);
+        }
+        
+        .molecular-stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: var(--light-blue);
+        }
+        
+        .mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .mode-btn.active {
+            background: var(--light-purple);
+        }
+        
+        @media (max-width: 768px) {
+            .simulator-container {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+            
+            .preset-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .advanced-controls {
+                flex-direction: column;
+            }
+            
+            .comparison-container {
+                flex-direction: column;
+            }
+            
+            .energy-display {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Simulador Avanzado de Física Termodinámica</h1>
+            <p class="subtitle">Explora los principios de la termodinámica con este simulador interactivo mejorado</p>
+        </header>
+        
+        <div class="simulator-container">
+            <div class="simulation-area">
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="basicModeBtn">Modo Básico</button>
+                    <button class="mode-btn" id="advancedModeBtn">Modo Avanzado</button>
+                    <button class="mode-btn" id="comparisonModeBtn">Modo Comparación</button>
+                </div>
+                
+                <h2>Simulación de Gas Ideal</h2>
+                <div class="canvas-container">
+                    <div class="heat-flow" id="heatFlowTop"></div>
+                    <canvas id="simulationCanvas"></canvas>
+                    <div class="heat-flow" id="heatFlowBottom"></div>
+                </div>
+                
+                <div class="data-panel">
+                    <div class="data-item">
+                        <div class="data-label">Temperatura</div>
+                        <div class="data-value" id="tempValue">300</div>
+                        <div class="data-unit">K</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Presión</div>
+                        <div class="data-value" id="pressureValue">1.0</div>
+                        <div class="data-unit">atm</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Volumen</div>
+                        <div class="data-value" id="volumeValue">1.0</div>
+                        <div class="data-unit">L</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Partículas</div>
+                        <div class="data-value" id="particlesValue">50</div>
+                        <div class="data-unit">moléculas</div>
+                    </div>
+                </div>
+                
+                <div class="molecular-stats">
+                    <div class="molecular-stat">
+                        <div>Velocidad Promedio</div>
+                        <div class="stat-value" id="avgSpeed">450</div>
+                        <div>m/s</div>
+                    </div>
+                    <div class="molecular-stat">
+                        <div>Energía Cinética</div>
+                        <div class="stat-value" id="kineticEnergy">6.21</div>
+                        <div>×10⁻²¹ J</div>
+                    </div>
+                    <div class="molecular-stat">
+                        <div>Colisiones/s</div>
+                        <div class="stat-value" id="collisions">125</div>
+                    </div>
+                </div>
+                
+                <div class="energy-display">
+                    <div>Energía Interna: <span class="energy-value" id="internalEnergy">1245</span> J</div>
+                    <div>Trabajo Realizado: <span class="energy-value" id="workDone">0</span> J</div>
+                    <div>Calor Transferido: <span class="energy-value" id="heatTransferred">0</span> J</div>
+                    <div>Entropía: <span class="energy-value" id="entropyValue">5.2</span> J/K</div>
+                </div>
+                
+                <div class="graph-container">
+                    <canvas class="history-graph" id="historyGraph"></canvas>
+                </div>
+                
+                <div class="graph-container">
+                    <canvas class="history-graph" id="pvGraph"></canvas>
+                </div>
+                
+                <button id="downloadGraphBtn" class="download-btn">Descargar Datos y Gráficas</button>
+                
+                <div class="process-info" id="processInfo">
+                    <h3>Proceso Actual: <span id="currentProcessName">Ninguno</span></h3>
+                    <p id="processDescription">Selecciona un proceso termodinámico para ver su descripción.</p>
+                </div>
+                
+                <div class="real-world-example" id="realWorldExample">
+                    <h4>Ejemplo del Mundo Real</h4>
+                    <p id="realWorldText">Selecciona un proceso termodinámico para ver un ejemplo práctico.</p>
+                </div>
+                
+                <div class="step-by-step" id="stepByStep">
+                    <h4>Explicación Paso a Paso</h4>
+                    <div id="stepByStepContent">
+                        <p>Selecciona un proceso para ver una explicación detallada.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <h2>Controles</h2>
+                
+                <div class="control-group">
+                    <div class="slider-container">
+                        <label for="tempSlider">Temperatura: <span class="slider-value" id="tempSliderValue">300</span> K</label>
+                        <input type="range" id="tempSlider" min="100" max="500" value="300" step="10">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label for="volumeSlider">Volumen: <span class="slider-value" id="volumeSliderValue">1.0</span> L</label>
+                        <input type="range" id="volumeSlider" min="0.5" max="2.0" value="1.0" step="0.1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label for="particlesSlider">Número de Partículas: <span class="slider-value" id="particlesSliderValue">50</span></label>
+                        <input type="range" id="particlesSlider" min="10" max="100" value="50" step="5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h2>Procesos Termodinámicos</h2>
+                    <div class="buttons">
+                        <button id="isothermalBtn">Isotérmico</button>
+                        <button id="isobaricBtn">Isobárico</button>
+                        <button id="isochoricBtn">Isocórico</button>
+                        <button id="adiabaticBtn">Adiabático</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h2>Acciones</h2>
+                    <div class="buttons">
+                        <button id="resetBtn">Reiniciar</button>
+                        <button id="heatBtn">Añadir Calor</button>
+                        <button id="coolBtn">Enfriar</button>
+                    </div>
+                    
+                    <div class="preset-container">
+                        <button class="preset-btn" id="roomTempBtn">Temperatura Ambiente</button>
+                        <button class="preset-btn" id="highTempBtn">Alta Temperatura</button>
+                        <button class="preset-btn" id="lowTempBtn">Baja Temperatura</button>
+                        <button class="preset-btn" id="highPressureBtn">Alta Presión</button>
+                    </div>
+                </div>
+                
+                <div class="control-group advanced-controls" id="advancedControls">
+                    <h2>Controles Avanzados</h2>
+                    <div class="advanced-control">
+                        <label for="particleSizeSlider">Tamaño de Partículas</label>
+                        <input type="range" id="particleSizeSlider" min="3" max="10" value="5" step="1">
+                    </div>
+                    <div class="advanced-control">
+                        <label for="simulationSpeedSlider">Velocidad de Simulación</label>
+                        <input type="range" id="simulationSpeedSlider" min="0.5" max="2" value="1" step="0.1">
+                    </div>
+                    <div class="advanced-control">
+                        <label for="showTrailsCheckbox">
+                            <input type="checkbox" id="showTrailsCheckbox"> Mostrar Trayectorias
+                        </label>
+                    </div>
+                    <div class="advanced-control">
+                        <label for="showStatsCheckbox">
+                            <input type="checkbox" id="showStatsCheckbox" checked> Mostrar Estadísticas
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h2>Estado del Sistema</h2>
+                    <div class="status-container">
+                        <p><span class="status-indicator" id="systemStatus"></span> Estado: <span id="systemStatusText">En reposo</span></p>
+                        <p>Entropía: <span id="entropyDisplay">5.2 J/K</span></p>
+                        <p>Eficiencia: <span id="efficiencyDisplay">0%</span></p>
+                    </div>
+                </div>
+                
+                <div class="comparison-mode" id="comparisonMode">
+                    <h2>Comparación de Procesos</h2>
+                    <div class="comparison-container">
+                        <div class="comparison-item">
+                            <h4>Isotérmico</h4>
+                            <p>Trabajo: <span id="isoWork">0 J</span></p>
+                            <p>Calor: <span id="isoHeat">0 J</span></p>
+                        </div>
+                        <div class="comparison-item">
+                            <h4>Adiabático</h4>
+                            <p>Trabajo: <span id="adiWork">0 J</span></p>
+                            <p>Calor: <span id="adiHeat">0 J</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="info">Información</button>
+                        <button class="tab-button" data-tab="formulas">Fórmulas</button>
+                        <button class="tab-button" data-tab="examples">Ejemplos</button>
+                    </div>
+                    <div class="tab-content active" id="info-tab">
+                        <p>Este simulador mejorado te permite explorar los principios de la termodinámica mediante un gas ideal. Ajusta los parámetros y observa cómo cambian las variables del sistema.</p>
+                        <p>Características nuevas:</p>
+                        <ul>
+                            <li>Física de partículas más realista</li>
+                            <li>Gráfico P-V interactivo</li>
+                            <li>Modo de comparación de procesos</li>
+                            <li>Estadísticas moleculares detalladas</li>
+                            <li>Ejemplos del mundo real</li>
+                        </ul>
+                    </div>
+                    <div class="tab-content" id="formulas-tab">
+                        <p><strong>Ley de los gases ideales:</strong> PV = nRT</p>
+                        <p><strong>Primera ley de la termodinámica:</strong> ΔU = Q - W</p>
+                        <p><strong>Proceso adiabático:</strong> PV<sup>γ</sup> = constante</p>
+                        <p><strong>Distribución de Maxwell-Boltzmann:</strong> f(v) = 4πv² (m/2πkT)<sup>3/2</sup> e<sup>-mv²/2kT</sup></p>
+                        <p><strong>Energía cinética promedio:</strong> (3/2)kT por molécula</p>
+                    </div>
+                    <div class="tab-content" id="examples-tab">
+                        <p><strong>Ejemplo isotérmico:</strong> Compresión lenta de un gas manteniendo temperatura constante.</p>
+                        <p><strong>Ejemplo isobárico:</strong> Calentamiento de un gas en un recipiente con pistón móvil.</p>
+                        <p><strong>Ejemplo isocórico:</strong> Calentamiento de un gas en un recipiente rígido.</p>
+                        <p><strong>Ejemplo adiabático:</strong> Compresión rápida de un gas en un cilindro aislado.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="theory">
+            <h2>Conceptos de Termodinámica</h2>
+            
+            <div class="law">
+                <h3>Ley Cero de la Termodinámica</h3>
+                <p>Si dos sistemas están en equilibrio térmico con un tercero, entonces están en equilibrio térmico entre sí. Esta ley define el concepto de temperatura.</p>
+            </div>
+            
+            <div class="law">
+                <h3>Primera Ley de la Termodinámica</h3>
+                <p>La energía no se crea ni se destruye, solo se transforma. En un sistema termodinámico, el cambio en la energía interna es igual al calor añadido menos el trabajo realizado: ΔU = Q - W.</p>
+            </div>
+            
+            <div class="law">
+                <h3>Segunda Ley de la Termodinámica</h3>
+                <p>El calor no puede fluir espontáneamente de un objeto frío a uno caliente. Esta ley introduce el concepto de entropía, que tiende a aumentar en sistemas aislados.</p>
+            </div>
+            
+            <div class="law">
+                <h3>Ley de los Gases Ideales</h3>
+                <p>Para un gas ideal, la presión, el volumen y la temperatura están relacionados por la ecuación: PV = nRT, donde P es presión, V es volumen, n es el número de moles, R es la constante universal de los gases y T es la temperatura absoluta.</p>
+            </div>
+            
+            <div class="law">
+                <h3>Teoría Cinética de los Gases</h3>
+                <p>Los gases están compuestos por partículas en movimiento constante y aleatorio. La presión ejercida por un gas resulta de las colisiones de estas partículas con las paredes del recipiente. La temperatura es una medida de la energía cinética promedio de las partículas.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        ¡Cambios aplicados correctamente!
+    </div>
+
+    <script>
+        // Configuración del canvas y contexto
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const historyCanvas = document.getElementById('historyGraph');
+        const historyCtx = historyCanvas.getContext('2d');
+        const pvCanvas = document.getElementById('pvGraph');
+        const pvCtx = pvCanvas.getContext('2d');
+        
+        // Variables de configuración avanzada
+        let particleSize = 5;
+        let simulationSpeed = 1;
+        let showTrails = false;
+        let showStats = true;
+        let currentMode = 'basic';
+        
+        // Ajustar tamaño del canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            historyCanvas.width = historyCanvas.parentElement.clientWidth;
+            historyCanvas.height = historyCanvas.parentElement.clientHeight;
+            
+            pvCanvas.width = pvCanvas.parentElement.clientWidth;
+            pvCanvas.height = pvCanvas.parentElement.clientHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Variables de estado del sistema
+        let temperature = 300; // K
+        let volume = 1.0; // L
+        let pressure = 1.0; // atm
+        let particleCount = 50;
+        let particles = [];
+        let containerWidth, containerHeight;
+        let pistonHeight;
+        let isHeating = false;
+        let isCooling = false;
+        let currentProcess = 'none';
+        let workDone = 0;
+        let heatTransferred = 0;
+        let internalEnergy = 1245;
+        let entropy = 5.2;
+        let simulationRunning = true;
+        
+        // Historial de datos para gráficos
+        let history = {
+            temperature: [],
+            pressure: [],
+            volume: [],
+            time: []
+        };
+        
+        let pvData = [];
+        
+        // Colores para partículas según velocidad
+        const slowColor = [100, 150, 255];   // Azul para partículas lentas
+        const fastColor = [255, 100, 100];   // Rojo para partículas rápidas
+        
+        // Inicializar partículas
+        function initParticles() {
+            particles = [];
+            containerWidth = canvas.width * 0.9;
+            containerHeight = canvas.height * 0.8;
+            pistonHeight = canvas.height * 0.1;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const containerLeft = centerX - containerWidth / 2;
+            const containerTop = centerY - containerHeight / 2;
+            
+            for (let i = 0; i < particleCount; i++) {
+                // Distribución de velocidades de Maxwell-Boltzmann
+                const speed = maxwellBoltzmannSpeed(temperature);
+                const angle = Math.random() * Math.PI * 2;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                
+                particles.push({
+                    x: containerLeft + Math.random() * containerWidth,
+                    y: containerTop + Math.random() * containerHeight,
+                    vx: vx,
+                    vy: vy,
+                    radius: particleSize,
+                    color: getColorBySpeed(speed),
+                    trail: []
+                });
+            }
+        }
+        
+        // Distribución de velocidades de Maxwell-Boltzmann
+        function maxwellBoltzmannSpeed(T) {
+            // Constante de Boltzmann (J/K)
+            const k = 1.380649e-23;
+            // Masa de una molécula de gas (kg) - aproximación para aire
+            const m = 4.8e-26;
+            
+            // Escala la velocidad según la temperatura
+            const scale = Math.sqrt(3 * k * T / m) / 500;
+            
+            // Usamos el método de Box-Muller para generar una distribución normal
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            
+            const normal = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            
+            return Math.abs(normal) * scale * 10;
+        }
+        
+        // Obtener color según velocidad
+        function getColorBySpeed(speed) {
+            const maxSpeed = 20; // Velocidad máxima para escala de colores
+            const ratio = Math.min(speed / maxSpeed, 1);
+            
+            const r = Math.floor(slowColor[0] + (fastColor[0] - slowColor[0]) * ratio);
+            const g = Math.floor(slowColor[1] + (fastColor[1] - slowColor[1]) * ratio);
+            const b = Math.floor(slowColor[2] + (fastColor[2] - slowColor[2]) * ratio);
+            
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        
+        // Actualizar física de partículas
+        function updateParticles() {
+            containerWidth = canvas.width * 0.9 * Math.sqrt(volume);
+            containerHeight = canvas.height * 0.8 / Math.sqrt(volume);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const containerLeft = centerX - containerWidth / 2;
+            const containerRight = containerLeft + containerWidth;
+            const containerTop = centerY - containerHeight / 2;
+            const containerBottom = containerTop + containerHeight;
+            
+            let totalSpeed = 0;
+            let collisionCount = 0;
+            
+            // Actualizar posición y velocidad de cada partícula
+            particles.forEach(particle => {
+                // Actualizar posición
+                particle.x += particle.vx * simulationSpeed;
+                particle.y += particle.vy * simulationSpeed;
+                
+                // Guardar posición para el rastro si está activado
+                if (showTrails) {
+                    particle.trail.push({x: particle.x, y: particle.y});
+                    if (particle.trail.length > 10) {
+                        particle.trail.shift();
+                    }
+                }
+                
+                // Colisiones con las paredes
+                if (particle.x - particle.radius < containerLeft) {
+                    particle.x = containerLeft + particle.radius;
+                    particle.vx = Math.abs(particle.vx);
+                    collisionCount++;
+                } else if (particle.x + particle.radius > containerRight) {
+                    particle.x = containerRight - particle.radius;
+                    particle.vx = -Math.abs(particle.vx);
+                    collisionCount++;
+                }
+                
+                if (particle.y - particle.radius < containerTop) {
+                    particle.y = containerTop + particle.radius;
+                    particle.vy = Math.abs(particle.vy);
+                    collisionCount++;
+                } else if (particle.y + particle.radius > containerBottom) {
+                    particle.y = containerBottom - particle.radius;
+                    particle.vy = -Math.abs(particle.vy);
+                    collisionCount++;
+                }
+                
+                // Actualizar velocidad según temperatura
+                const currentSpeed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
+                const targetSpeed = maxwellBoltzmannSpeed(temperature);
+                
+                // Ajustar velocidad gradualmente hacia la distribución de Maxwell-Boltzmann
+                if (currentSpeed > 0) {
+                    const adjustment = 0.05 * simulationSpeed;
+                    particle.vx *= (1 + (targetSpeed / currentSpeed - 1) * adjustment);
+                    particle.vy *= (1 + (targetSpeed / currentSpeed - 1) * adjustment);
+                }
+                
+                // Actualizar color según velocidad
+                particle.color = getColorBySpeed(currentSpeed);
+                
+                totalSpeed += currentSpeed;
+            });
+            
+            // Actualizar estadísticas
+            const avgSpeed = totalSpeed / particles.length;
+            document.getElementById('avgSpeed').textContent = Math.round(avgSpeed * 100);
+            document.getElementById('collisions').textContent = collisionCount;
+            
+            // Calcular energía cinética promedio (en unidades de 10^-21 J)
+            const avgKineticEnergy = (3/2) * 1.38 * temperature / 100; // Simplificación
+            document.getElementById('kineticEnergy').textContent = avgKineticEnergy.toFixed(2);
+            
+            // Actualizar energía interna (simplificación)
+            internalEnergy = particleCount * temperature * 0.5;
+            document.getElementById('internalEnergy').textContent = Math.round(internalEnergy);
+            
+            // Actualizar entropía (simplificación)
+            entropy = 5.2 + Math.log(volume) + 1.5 * Math.log(temperature/300);
+            document.getElementById('entropyValue').textContent = entropy.toFixed(2);
+        }
+        
+        // Dibujar partículas y contenedor
+        function drawParticles() {
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const containerLeft = centerX - containerWidth / 2;
+            const containerTop = centerY - containerHeight / 2;
+            const containerRight = containerLeft + containerWidth;
+            const containerBottom = containerTop + containerHeight;
+            
+            // Dibujar contenedor
+            ctx.strokeStyle = '#64b5f6';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(containerLeft, containerTop, containerWidth, containerHeight);
+            
+            // Dibujar pistón
+            ctx.fillStyle = 'rgba(179, 157, 219, 0.3)';
+            ctx.fillRect(containerLeft, containerTop - 10, containerWidth, 10);
+            ctx.fillRect(containerLeft, containerBottom, containerWidth, 10);
+            
+            // Dibujar partículas
+            particles.forEach(particle => {
+                // Dibujar rastro si está activado
+                if (showTrails && particle.trail.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(particle.trail[0].x, particle.trail[0].y);
+                    
+                    for (let i = 1; i < particle.trail.length; i++) {
+                        ctx.lineTo(particle.trail[i].x, particle.trail[i].y);
+                    }
+                    
+                    ctx.strokeStyle = 'rgba(100, 150, 255, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+                
+                // Dibujar partícula
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.fill();
+                
+                // Dibujar borde
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+            
+            // Dibujar información si está activada
+            if (showStats) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.font = '14px Arial';
+                ctx.fillText(`T: ${temperature}K | P: ${pressure.toFixed(2)}atm | V: ${volume.toFixed(2)}L`, 10, 20);
+                ctx.fillText(`Proceso: ${currentProcess} | Partículas: ${particleCount}`, 10, 40);
+            }
+        }
+        
+        // Dibujar gráfico de historial
+        function drawHistoryGraph() {
+            const width = historyCanvas.width;
+            const height = historyCanvas.height;
+            
+            // Limpiar canvas
+            historyCtx.clearRect(0, 0, width, height);
+            
+            // Dibujar fondo
+            historyCtx.fillStyle = 'rgba(15, 12, 41, 0.5)';
+            historyCtx.fillRect(0, 0, width, height);
+            
+            // Dibujar ejes
+            historyCtx.strokeStyle = '#64b5f6';
+            historyCtx.lineWidth = 1;
+            historyCtx.beginPath();
+            historyCtx.moveTo(50, 20);
+            historyCtx.lineTo(50, height - 20);
+            historyCtx.lineTo(width - 20, height - 20);
+            historyCtx.stroke();
+            
+            // Dibujar líneas de la cuadrícula
+            historyCtx.strokeStyle = 'rgba(100, 150, 255, 0.2)';
+            historyCtx.lineWidth = 0.5;
+            
+            // Líneas verticales
+            for (let i = 1; i < 5; i++) {
+                const x = 50 + (width - 70) * i / 5;
+                historyCtx.beginPath();
+                historyCtx.moveTo(x, 20);
+                historyCtx.lineTo(x, height - 20);
+                historyCtx.stroke();
+            }
+            
+            // Líneas horizontales
+            for (let i = 1; i < 5; i++) {
+                const y = 20 + (height - 40) * i / 5;
+                historyCtx.beginPath();
+                historyCtx.moveTo(50, y);
+                historyCtx.lineTo(width - 20, y);
+                historyCtx.stroke();
+            }
+            
+            // Dibujar datos de temperatura
+            if (history.temperature.length > 1) {
+                historyCtx.strokeStyle = '#f44336';
+                historyCtx.lineWidth = 2;
+                historyCtx.beginPath();
+                
+                const maxTemp = Math.max(...history.temperature);
+                const minTemp = Math.min(...history.temperature);
+                const tempRange = maxTemp - minTemp || 1;
+                
+                history.temperature.forEach((temp, index) => {
+                    const x = 50 + (width - 70) * index / (history.temperature.length - 1);
+                    const y = height - 20 - (height - 40) * (temp - minTemp) / tempRange;
+                    
+                    if (index === 0) {
+                        historyCtx.moveTo(x, y);
+                    } else {
+                        historyCtx.lineTo(x, y);
+                    }
+                });
+                
+                historyCtx.stroke();
+            }
+            
+            // Dibujar datos de presión
+            if (history.pressure.length > 1) {
+                historyCtx.strokeStyle = '#2196f3';
+                historyCtx.lineWidth = 2;
+                historyCtx.beginPath();
+                
+                const maxPressure = Math.max(...history.pressure);
+                const minPressure = Math.min(...history.pressure);
+                const pressureRange = maxPressure - minPressure || 1;
+                
+                history.pressure.forEach((pressure, index) => {
+                    const x = 50 + (width - 70) * index / (history.pressure.length - 1);
+                    const y = height - 20 - (height - 40) * (pressure - minPressure) / pressureRange;
+                    
+                    if (index === 0) {
+                        historyCtx.moveTo(x, y);
+                    } else {
+                        historyCtx.lineTo(x, y);
+                    }
+                });
+                
+                historyCtx.stroke();
+            }
+            
+            // Etiquetas
+            historyCtx.fillStyle = '#ffffff';
+            historyCtx.font = '12px Arial';
+            historyCtx.fillText('Tiempo', width / 2, height - 5);
+            historyCtx.save();
+            historyCtx.translate(10, height / 2);
+            historyCtx.rotate(-Math.PI / 2);
+            historyCtx.fillText('Temperatura (rojo) / Presión (azul)', 0, 0);
+            historyCtx.restore();
+            
+            // Leyenda
+            historyCtx.fillStyle = '#f44336';
+            historyCtx.fillRect(width - 120, 30, 10, 10);
+            historyCtx.fillStyle = '#ffffff';
+            historyCtx.fillText('Temperatura', width - 105, 38);
+            
+            historyCtx.fillStyle = '#2196f3';
+            historyCtx.fillRect(width - 120, 50, 10, 10);
+            historyCtx.fillStyle = '#ffffff';
+            historyCtx.fillText('Presión', width - 105, 58);
+        }
+        
+        // Dibujar gráfico P-V
+        function drawPVGraph() {
+            const width = pvCanvas.width;
+            const height = pvCanvas.height;
+            
+            // Limpiar canvas
+            pvCtx.clearRect(0, 0, width, height);
+            
+            // Dibujar fondo
+            pvCtx.fillStyle = 'rgba(15, 12, 41, 0.5)';
+            pvCtx.fillRect(0, 0, width, height);
+            
+            // Dibujar ejes
+            pvCtx.strokeStyle = '#64b5f6';
+            pvCtx.lineWidth = 1;
+            pvCtx.beginPath();
+            pvCtx.moveTo(50, 20);
+            pvCtx.lineTo(50, height - 20);
+            pvCtx.lineTo(width - 20, height - 20);
+            pvCtx.stroke();
+            
+            // Etiquetas de ejes
+            pvCtx.fillStyle = '#ffffff';
+            pvCtx.font = '12px Arial';
+            pvCtx.fillText('Volumen (L)', width / 2, height - 5);
+            pvCtx.save();
+            pvCtx.translate(10, height / 2);
+            pvCtx.rotate(-Math.PI / 2);
+            pvCtx.fillText('Presión (atm)', 0, 0);
+            pvCtx.restore();
+            
+            // Agregar punto actual a los datos P-V
+            pvData.push({volume: volume, pressure: pressure});
+            if (pvData.length > 50) {
+                pvData.shift();
+            }
+            
+            // Dibujar curva P-V
+            if (pvData.length > 1) {
+                pvCtx.strokeStyle = '#4CAF50';
+                pvCtx.lineWidth = 2;
+                pvCtx.beginPath();
+                
+                const maxVolume = Math.max(...pvData.map(p => p.volume));
+                const minVolume = Math.min(...pvData.map(p => p.volume));
+                const volumeRange = maxVolume - minVolume || 1;
+                
+                const maxPressure = Math.max(...pvData.map(p => p.pressure));
+                const minPressure = Math.min(...pvData.map(p => p.pressure));
+                const pressureRange = maxPressure - minPressure || 1;
+                
+                pvData.forEach((point, index) => {
+                    const x = 50 + (width - 70) * (point.volume - minVolume) / volumeRange;
+                    const y = height - 20 - (height - 40) * (point.pressure - minPressure) / pressureRange;
+                    
+                    if (index === 0) {
+                        pvCtx.moveTo(x, y);
+                    } else {
+                        pvCtx.lineTo(x, y);
+                    }
+                });
+                
+                pvCtx.stroke();
+                
+                // Dibujar punto actual
+                const currentPoint = pvData[pvData.length - 1];
+                const currentX = 50 + (width - 70) * (currentPoint.volume - minVolume) / volumeRange;
+                const currentY = height - 20 - (height - 40) * (currentPoint.pressure - minPressure) / pressureRange;
+                
+                pvCtx.fillStyle = '#FF9800';
+                pvCtx.beginPath();
+                pvCtx.arc(currentX, currentY, 5, 0, Math.PI * 2);
+                pvCtx.fill();
+            }
+        }
+        
+        // Actualizar datos de historial
+        function updateHistory() {
+            history.temperature.push(temperature);
+            history.pressure.push(pressure);
+            history.volume.push(volume);
+            
+            // Mantener un historial limitado
+            if (history.temperature.length > 50) {
+                history.temperature.shift();
+                history.pressure.shift();
+                history.volume.shift();
+            }
+        }
+        
+        // Actualizar presión según la ley de los gases ideales
+        function updatePressure() {
+            // PV = nRT (simplificado)
+            const n = particleCount / 10; // moles aproximados
+            const R = 0.0821; // Constante de los gases en L·atm/(mol·K)
+            
+            pressure = (n * R * temperature) / volume;
+            
+            // Actualizar valores en la interfaz
+            document.getElementById('pressureValue').textContent = pressure.toFixed(2);
+            document.getElementById('tempValue').textContent = temperature;
+            document.getElementById('volumeValue').textContent = volume.toFixed(2);
+            document.getElementById('particlesValue').textContent = particleCount;
+        }
+        
+        // Bucle de animación
+        function animate() {
+            if (simulationRunning) {
+                updateParticles();
+                drawParticles();
+                updateHistory();
+                drawHistoryGraph();
+                drawPVGraph();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Inicializar y comenzar animación
+        initParticles();
+        animate();
+        
+        // Event Listeners para controles
+        document.getElementById('tempSlider').addEventListener('input', function() {
+            temperature = parseInt(this.value);
+            document.getElementById('tempSliderValue').textContent = temperature;
+            updatePressure();
+            updateProcessInfo();
+            showNotification('Temperatura ajustada a ' + temperature + ' K');
+        });
+        
+        document.getElementById('volumeSlider').addEventListener('input', function() {
+            volume = parseFloat(this.value);
+            document.getElementById('volumeSliderValue').textContent = volume.toFixed(1);
+            updatePressure();
+            updateProcessInfo();
+            showNotification('Volumen ajustado a ' + volume.toFixed(1) + ' L');
+        });
+        
+        document.getElementById('particlesSlider').addEventListener('input', function() {
+            particleCount = parseInt(this.value);
+            document.getElementById('particlesSliderValue').textContent = particleCount;
+            initParticles();
+            updatePressure();
+            showNotification('Número de partículas ajustado a ' + particleCount);
+        });
+        
+        // Controles de procesos termodinámicos
+        document.getElementById('isothermalBtn').addEventListener('click', function() {
+            currentProcess = 'isotérmico';
+            updateProcessInfo();
+            showNotification('Proceso isotérmico activado: temperatura constante');
+        });
+        
+        document.getElementById('isobaricBtn').addEventListener('click', function() {
+            currentProcess = 'isobárico';
+            updateProcessInfo();
+            showNotification('Proceso isobárico activado: presión constante');
+        });
+        
+        document.getElementById('isochoricBtn').addEventListener('click', function() {
+            currentProcess = 'isocórico';
+            updateProcessInfo();
+            showNotification('Proceso isocórico activado: volumen constante');
+        });
+        
+        document.getElementById('adiabaticBtn').addEventListener('click', function() {
+            currentProcess = 'adiabático';
+            updateProcessInfo();
+            showNotification('Proceso adiabático activado: sin transferencia de calor');
+        });
+        
+        // Controles de acciones
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            temperature = 300;
+            volume = 1.0;
+            particleCount = 50;
+            pressure = 1.0;
+            workDone = 0;
+            heatTransferred = 0;
+            currentProcess = 'none';
+            
+            // Actualizar controles
+            document.getElementById('tempSlider').value = temperature;
+            document.getElementById('tempSliderValue').textContent = temperature;
+            document.getElementById('volumeSlider').value = volume;
+            document.getElementById('volumeSliderValue').textContent = volume.toFixed(1);
+            document.getElementById('particlesSlider').value = particleCount;
+            document.getElementById('particlesSliderValue').textContent = particleCount;
+            
+            initParticles();
+            updatePressure();
+            updateProcessInfo();
+            showNotification('Sistema reiniciado a condiciones iniciales');
+        });
+        
+        document.getElementById('heatBtn').addEventListener('click', function() {
+            temperature += 50;
+            if (temperature > 500) temperature = 500;
+            document.getElementById('tempSlider').value = temperature;
+            document.getElementById('tempSliderValue').textContent = temperature;
+            heatTransferred += 100;
+            document.getElementById('heatTransferred').textContent = heatTransferred;
+            updatePressure();
+            
+            // Efecto visual de calor
+            document.getElementById('heatFlowBottom').classList.add('active');
+            setTimeout(() => {
+                document.getElementById('heatFlowBottom').classList.remove('active');
+            }, 1000);
+            
+            showNotification('Calor añadido al sistema');
+        });
+        
+        document.getElementById('coolBtn').addEventListener('click', function() {
+            temperature -= 50;
+            if (temperature < 100) temperature = 100;
+            document.getElementById('tempSlider').value = temperature;
+            document.getElementById('tempSliderValue').textContent = temperature;
+            heatTransferred -= 100;
+            document.getElementById('heatTransferred').textContent = heatTransferred;
+            updatePressure();
+            
+            showNotification('Calor removido del sistema');
+        });
+        
+        // Presets
+        document.getElementById('roomTempBtn').addEventListener('click', function() {
+            temperature = 300;
+            document.getElementById('tempSlider').value = temperature;
+            document.getElementById('tempSliderValue').textContent = temperature;
+            updatePressure();
+            showNotification('Temperatura ambiente establecida (300 K)');
+        });
+        
+        document.getElementById('highTempBtn').addEventListener('click', function() {
+            temperature = 450;
+            document.getElementById('tempSlider').value = temperature;
+            document.getElementById('tempSliderValue').textContent = temperature;
+            updatePressure();
+            showNotification('Alta temperatura establecida (450 K)');
+        });
+        
+        document.getElementById('lowTempBtn').addEventListener('click', function() {
+            temperature = 150;
+            document.getElementById('tempSlider').value = temperature;
+            document.getElementById('tempSliderValue').textContent = temperature;
+            updatePressure();
+            showNotification('Baja temperatura establecida (150 K)');
+        });
+        
+        document.getElementById('highPressureBtn').addEventListener('click', function() {
+            volume = 0.6;
+            document.getElementById('volumeSlider').value = volume;
+            document.getElementById('volumeSliderValue').textContent = volume.toFixed(1);
+            updatePressure();
+            showNotification('Alta presión establecida (volumen reducido)');
+        });
+        
+        // Controles avanzados
+        document.getElementById('particleSizeSlider').addEventListener('input', function() {
+            particleSize = parseInt(this.value);
+            particles.forEach(p => p.radius = particleSize);
+            showNotification('Tamaño de partículas ajustado');
+        });
+        
+        document.getElementById('simulationSpeedSlider').addEventListener('input', function() {
+            simulationSpeed = parseFloat(this.value);
+            showNotification('Velocidad de simulación ajustada');
+        });
+        
+        document.getElementById('showTrailsCheckbox').addEventListener('change', function() {
+            showTrails = this.checked;
+            if (!showTrails) {
+                particles.forEach(p => p.trail = []);
+            }
+        });
+        
+        document.getElementById('showStatsCheckbox').addEventListener('change', function() {
+            showStats = this.checked;
+        });
+        
+        // Modos de visualización
+        document.getElementById('basicModeBtn').addEventListener('click', function() {
+            currentMode = 'basic';
+            updateModeDisplay();
+            showNotification('Modo básico activado');
+        });
+        
+        document.getElementById('advancedModeBtn').addEventListener('click', function() {
+            currentMode = 'advanced';
+            updateModeDisplay();
+            showNotification('Modo avanzado activado');
+        });
+        
+        document.getElementById('comparisonModeBtn').addEventListener('click', function() {
+            currentMode = 'comparison';
+            updateModeDisplay();
+            showNotification('Modo comparación activado');
+        });
+        
+        function updateModeDisplay() {
+            // Actualizar botones de modo
+            document.getElementById('basicModeBtn').classList.toggle('active', currentMode === 'basic');
+            document.getElementById('advancedModeBtn').classList.toggle('active', currentMode === 'advanced');
+            document.getElementById('comparisonModeBtn').classList.toggle('active', currentMode === 'comparison');
+            
+            // Mostrar/ocultar controles avanzados
+            document.getElementById('advancedControls').style.display = currentMode === 'advanced' ? 'block' : 'none';
+            
+            // Mostrar/ocultar modo comparación
+            document.getElementById('comparisonMode').style.display = currentMode === 'comparison' ? 'block' : 'none';
+        }
+        
+        // Pestañas informativas
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Actualizar botones de pestaña
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Actualizar contenido de pestañas
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabId + '-tab').classList.add('active');
+            });
+        });
+        
+        // Descargar datos y gráficas
+        document.getElementById('downloadGraphBtn').addEventListener('click', function() {
+            // Crear un canvas combinado con ambas gráficas
+            const combinedCanvas = document.createElement('canvas');
+            combinedCanvas.width = 800;
+            combinedCanvas.height = 600;
+            const combinedCtx = combinedCanvas.getContext('2d');
+            
+            // Fondo
+            combinedCtx.fillStyle = '#0f0c29';
+            combinedCtx.fillRect(0, 0, 800, 600);
+            
+            // Título
+            combinedCtx.fillStyle = '#ffffff';
+            combinedCtx.font = 'bold 20px Arial';
+            combinedCtx.fillText('Datos del Simulador Termodinámico', 50, 30);
+            
+            // Información del sistema
+            combinedCtx.font = '14px Arial';
+            combinedCtx.fillText(`Temperatura: ${temperature} K`, 50, 60);
+            combinedCtx.fillText(`Presión: ${pressure.toFixed(2)} atm`, 50, 80);
+            combinedCtx.fillText(`Volumen: ${volume.toFixed(2)} L`, 50, 100);
+            combinedCtx.fillText(`Partículas: ${particleCount}`, 50, 120);
+            combinedCtx.fillText(`Proceso: ${currentProcess}`, 50, 140);
+            
+            // Gráfica de historial (simplificada)
+            combinedCtx.strokeStyle = '#2196f3';
+            combinedCtx.lineWidth = 2;
+            combinedCtx.beginPath();
+            combinedCtx.moveTo(50, 300);
+            combinedCtx.lineTo(750, 300);
+            combinedCtx.stroke();
+            
+            combinedCtx.fillStyle = '#ffffff';
+            combinedCtx.fillText('Gráfica de Historial', 350, 320);
+            
+            // Gráfica P-V (simplificada)
+            combinedCtx.strokeStyle = '#4CAF50';
+            combinedCtx.lineWidth = 2;
+            combinedCtx.beginPath();
+            combinedCtx.moveTo(50, 450);
+            combinedCtx.lineTo(750, 450);
+            combinedCtx.stroke();
+            
+            combinedCtx.fillStyle = '#ffffff';
+            combinedCtx.fillText('Diagrama P-V', 350, 470);
+            
+            // Firma
+            combinedCtx.fillStyle = '#64b5f6';
+            combinedCtx.font = '12px Arial';
+            combinedCtx.fillText('Generado por el Simulador Avanzado de Termodinámica', 50, 580);
+            
+            // Convertir a imagen y descargar
+            const link = document.createElement('a');
+            link.download = 'datos-termodinamica.png';
+            link.href = combinedCanvas.toDataURL();
+            link.click();
+            
+            showNotification('Datos y gráficas descargados');
+        });
+        
+        // Actualizar información del proceso
+        function updateProcessInfo() {
+            const processInfo = document.getElementById('processInfo');
+            const processName = document.getElementById('currentProcessName');
+            const processDescription = document.getElementById('processDescription');
+            const realWorldText = document.getElementById('realWorldText');
+            const stepByStepContent = document.getElementById('stepByStepContent');
+            
+            processInfo.classList.add('active');
+            
+            switch(currentProcess) {
+                case 'isotérmico':
+                    processName.textContent = 'Isotérmico';
+                    processDescription.textContent = 'Proceso a temperatura constante. Según la ley de Boyle, la presión y el volumen son inversamente proporcionales: P₁V₁ = P₂V₂.';
+                    realWorldText.textContent = 'Ejemplo: Compresión lenta de un gas en un cilindro sumergido en un baño térmico para mantener la temperatura constante.';
+                    stepByStepContent.innerHTML = `
+                        <div class="step">1. La temperatura se mantiene constante durante todo el proceso.</div>
+                        <div class="step">2. Al comprimir el gas (disminuir volumen), la presión aumenta.</div>
+                        <div class="step">3. Al expandir el gas (aumentar volumen), la presión disminuye.</div>
+                        <div class="step">4. El trabajo realizado es igual al calor transferido: W = Q.</div>
+                    `;
+                    break;
+                    
+                case 'isobárico':
+                    processName.textContent = 'Isobárico';
+                    processDescription.textContent = 'Proceso a presión constante. Según la ley de Charles, el volumen y la temperatura son directamente proporcionales: V₁/T₁ = V₂/T₂.';
+                    realWorldText.textContent = 'Ejemplo: Calentamiento de aire en un cilindro con un pistón móvil que permite la expansión a presión constante.';
+                    stepByStepContent.innerHTML = `
+                        <div class="step">1. La presión se mantiene constante durante todo el proceso.</div>
+                        <div class="step">2. Al aumentar la temperatura, el volumen aumenta (expansión).</div>
+                        <div class="step">3. Al disminuir la temperatura, el volumen disminuye (compresión).</div>
+                        <div class="step">4. El calor transferido cambia la energía interna y realiza trabajo: Q = ΔU + W.</div>
+                    `;
+                    break;
+                    
+                case 'isocórico':
+                    processName.textContent = 'Isocórico';
+                    processDescription.textContent = 'Proceso a volumen constante. Según la ley de Gay-Lussac, la presión y la temperatura son directamente proporcionales: P₁/T₁ = P₂/T₂.';
+                    realWorldText.textContent = 'Ejemplo: Calentamiento de un gas en un recipiente rígido y sellado, como una olla a presión.';
+                    stepByStepContent.innerHTML = `
+                        <div class="step">1. El volumen se mantiene constante durante todo el proceso.</div>
+                        <div class="step">2. Al aumentar la temperatura, la presión aumenta.</div>
+                        <div class="step">3. Al disminuir la temperatura, la presión disminuye.</div>
+                        <div class="step">4. No se realiza trabajo (W=0), todo el calor cambia la energía interna: Q = ΔU.</div>
+                    `;
+                    break;
+                    
+                case 'adiabático':
+                    processName.textContent = 'Adiabático';
+                    processDescription.textContent = 'Proceso sin transferencia de calor (Q=0). La presión, el volumen y la temperatura están relacionados por PV^γ = constante, donde γ es la razón de capacidades caloríficas.';
+                    realWorldText.textContent = 'Ejemplo: Compresión rápida de aire en una bomba de bicicleta, donde el proceso es tan rápido que no hay tiempo para transferencia de calor.';
+                    stepByStepContent.innerHTML = `
+                        <div class="step">1. No hay transferencia de calor con el entorno (Q=0).</div>
+                        <div class="step">2. Al comprimir el gas, tanto la presión como la temperatura aumentan.</div>
+                        <div class="step">3. Al expandir el gas, tanto la presión como la temperatura disminuyen.</div>
+                        <div class="step">4. El cambio en energía interna es igual al trabajo realizado: ΔU = -W.</div>
+                    `;
+                    break;
+                    
+                default:
+                    processInfo.classList.remove('active');
+                    document.getElementById('realWorldExample').style.display = 'none';
+                    document.getElementById('stepByStep').style.display = 'none';
+                    return;
+            }
+            
+            document.getElementById('realWorldExample').style.display = 'block';
+            document.getElementById('stepByStep').style.display = 'block';
+        }
+        
+        // Mostrar notificación
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Actualizar estado del sistema
+        function updateSystemStatus() {
+            const statusIndicator = document.getElementById('systemStatus');
+            const statusText = document.getElementById('systemStatusText');
+            
+            if (isHeating || isCooling) {
+                statusIndicator.className = 'status-indicator status-active';
+                statusText.textContent = 'Procesando';
+            } else {
+                statusIndicator.className = 'status-indicator status-inactive';
+                statusText.textContent = 'En reposo';
+            }
+            
+            // Actualizar eficiencia (simplificación)
+            const efficiency = Math.min(100, Math.max(0, (workDone / (heatTransferred || 1)) * 100));
+            document.getElementById('efficiencyDisplay').textContent = efficiency.toFixed(1) + '%';
+        }
+        
+        // Inicializar
+        updatePressure();
+        updateModeDisplay();
+        updateSystemStatus();
+        
+        // Actualizar estado del sistema periódicamente
+        setInterval(updateSystemStatus, 1000);
+    </script>
+</body>
+</html>

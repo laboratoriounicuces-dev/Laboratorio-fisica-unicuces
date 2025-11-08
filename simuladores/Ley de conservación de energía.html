@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Avanzado - Ley de Conservación de Energía</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a237e;
+            --primary-dark: #0d1440;
+            --primary-light: #534bae;
+            --secondary: #00bcd4;
+            --accent: #ff4081;
+            --light: #e8eaf6;
+            --dark: #121212;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --text: #ffffff;
+            --text-secondary: #b0b0b0;
+            --card-bg: rgba(30, 30, 60, 0.8);
+            --card-border: rgba(100, 100, 200, 0.4);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0 20px 0; /* Reducido el padding superior e inferior */
+            background: var(--card-bg);
+            border-radius: 20px;
+            margin-bottom: 20px; /* Reducido el margen inferior */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--success), var(--secondary), var(--accent));
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 3.2rem; /* Reducido ligeramente el tamaño */
+            background: linear-gradient(90deg, var(--secondary), var(--light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px; /* Reducido el margen inferior */
+        }
+        
+        .subtitle {
+            font-size: 1.4rem; /* Reducido ligeramente el tamaño */
+            opacity: 0.9;
+            font-weight: 300;
+            max-width: 800px;
+            margin: 0 auto 15px; /* Reducido el margen inferior */
+        }
+        
+        .author {
+            font-size: 1rem; /* Reducido ligeramente el tamaño */
+            color: var(--secondary);
+            margin-top: 8px; /* Reducido el margen superior */
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 25px; /* Reducido el gap */
+            margin-bottom: 25px; /* Reducido el margen inferior */
+        }
+        
+        .panel {
+            background: var(--card-bg);
+            padding: 25px; /* Reducido el padding */
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        .simulation-container {
+            position: relative;
+        }
+        
+        .simulation-area {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: rgba(20, 20, 40, 0.8);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+            margin-bottom: 20px;
+        }
+        
+        .data-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px; /* Reducido el gap */
+            margin-bottom: 25px; /* Reducido el margen inferior */
+        }
+        
+        .data-card {
+            background: var(--card-bg);
+            padding: 20px; /* Reducido el padding */
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        .data-label {
+            font-size: 0.95rem; /* Reducido ligeramente el tamaño */
+            opacity: 0.8;
+            margin-bottom: 8px; /* Reducido el margen inferior */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .data-value {
+            font-size: 2rem; /* Reducido ligeramente el tamaño */
+            font-weight: bold;
+            margin: 12px 0; /* Reducido el margen */
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .data-unit {
+            font-size: 0.85rem; /* Reducido ligeramente el tamaño */
+            opacity: 0.7;
+        }
+        
+        .section {
+            background: rgba(30, 30, 50, 0.6);
+            padding: 20px; /* Reducido el padding */
+            border-radius: 15px;
+            margin-bottom: 20px; /* Reducido el margen inferior */
+            border: 1px solid var(--card-border);
+        }
+        
+        .section-title {
+            font-size: 1.4rem; /* Reducido ligeramente el tamaño */
+            margin-bottom: 15px; /* Reducido el margen inferior */
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px; /* Reducido el gap */
+        }
+        
+        .input-group {
+            margin-bottom: 15px; /* Reducido el margen inferior */
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px; /* Reducido el margen inferior */
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px; /* Reducido el padding */
+            border: none;
+            border-radius: 10px;
+            background: rgba(20, 20, 40, 0.8);
+            color: var(--text);
+            font-size: 1rem;
+            border: 1px solid var(--card-border);
+            transition: all 0.3s;
+        }
+        
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.3);
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(20, 20, 40, 0.8);
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--secondary);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
+            border: 2px solid white;
+        }
+        
+        .system-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px; /* Reducido el gap */
+            margin-bottom: 15px; /* Reducido el margen inferior */
+        }
+        
+        .system-option {
+            padding: 18px; /* Reducido el padding */
+            text-align: center;
+            background: rgba(20, 20, 40, 0.8);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .system-option.active {
+            background: var(--primary-light);
+            border-color: var(--secondary);
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.5);
+        }
+        
+        .system-icon {
+            font-size: 2.2rem; /* Reducido ligeramente el tamaño */
+            margin-bottom: 8px; /* Reducido el margen inferior */
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px; /* Reducido el gap */
+            margin-top: 20px; /* Reducido el margen superior */
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px; /* Reducido el padding */
+            border: none;
+            border-radius: 12px;
+            background: var(--primary-light);
+            color: white;
+            font-size: 1rem; /* Reducido ligeramente el tamaño */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        #startBtn {
+            background: linear-gradient(135deg, var(--success), #2e7d32);
+        }
+        
+        #resetBtn {
+            background: linear-gradient(135deg, var(--error), #c62828);
+        }
+        
+        #pauseBtn {
+            background: linear-gradient(135deg, var(--warning), #ef6c00);
+        }
+        
+        .energy-visualization {
+            margin-top: 20px; /* Reducido el margen superior */
+        }
+        
+        .energy-bar-container {
+            margin-bottom: 15px; /* Reducido el margen inferior */
+        }
+        
+        .energy-bar {
+            height: 30px;
+            background: linear-gradient(90deg, var(--success), #ffeb3b, var(--warning));
+            border-radius: 15px;
+            margin: 12px 0; /* Reducido el margen */
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .energy-marker {
+            position: absolute;
+            top: -8px;
+            width: 45px;
+            height: 45px;
+            background: var(--primary-dark);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border: 3px solid var(--secondary);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .energy-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem; /* Reducido ligeramente el tamaño */
+            margin-top: 8px; /* Reducido el margen superior */
+        }
+        
+        .graph-container {
+            background: var(--card-bg);
+            padding: 25px; /* Reducido el padding */
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            margin-bottom: 25px; /* Reducido el margen inferior */
+        }
+        
+        .graph-tabs {
+            display: flex;
+            margin-bottom: 15px; /* Reducido el margen inferior */
+            border-bottom: 1px solid var(--card-border);
+        }
+        
+        .graph-tab {
+            padding: 10px 20px; /* Reducido el padding */
+            background: rgba(20, 20, 40, 0.8);
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+        }
+        
+        .graph-tab.active {
+            background: var(--primary-light);
+            color: white;
+        }
+        
+        .graph-content {
+            display: none;
+        }
+        
+        .graph-content.active {
+            display: block;
+        }
+        
+        .topics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px; /* Reducido el gap */
+        }
+        
+        .topic-card {
+            background: var(--card-bg);
+            padding: 25px; /* Reducido el padding */
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .topic-card h3 {
+            margin-top: 0;
+            color: var(--secondary);
+            font-size: 1.4rem; /* Reducido ligeramente el tamaño */
+            margin-bottom: 15px; /* Reducido el margen inferior */
+            border-bottom: 2px solid rgba(0, 188, 212, 0.3);
+            padding-bottom: 12px; /* Reducido el padding inferior */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .topic-card p {
+            margin-bottom: 15px; /* Reducido el margen inferior */
+            line-height: 1.7;
+        }
+        
+        .formula {
+            background: rgba(20, 20, 40, 0.8);
+            padding: 18px; /* Reducido el padding */
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin: 15px 0; /* Reducido el margen */
+            border: 1px solid var(--card-border);
+            font-size: 1.1rem; /* Reducido ligeramente el tamaño */
+            font-weight: bold;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px; /* Reducido el margen superior */
+            padding: 20px; /* Reducido el padding */
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(0, 188, 212, 0.5);
+            pointer-events: none;
+        }
+        
+        .time-display {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(20, 20, 40, 0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 1rem;
+            border: 1px solid var(--card-border);
+            z-index: 10;
+        }
+        
+        .simulation-title {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(20, 20, 40, 0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 1rem;
+            border: 1px solid var(--card-border);
+            z-index: 10;
+        }
+        
+        .data-controls {
+            margin-top: 20px; /* Reducido el margen superior */
+            padding-top: 15px; /* Reducido el padding superior */
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .data-buttons {
+            display: flex;
+            gap: 12px; /* Reducido el gap */
+        }
+        
+        .testimonials {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px; /* Reducido el gap */
+            margin-top: 25px; /* Reducido el margen superior */
+        }
+        
+        .testimonial-card {
+            background: var(--card-bg);
+            padding: 18px; /* Reducido el padding */
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 12px; /* Reducido el margen inferior */
+        }
+        
+        .testimonial-author {
+            text-align: right;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-panel {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .topics {
+                grid-template-columns: 1fr;
+            }
+            
+            .testimonials {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-panel {
+                grid-template-columns: 1fr;
+            }
+            
+            .system-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2rem; /* Ajustado para móviles */
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <!-- LOGO ELIMINADO - ESPACIO OPTIMIZADO -->
+            <h1><i class="fas fa-atom"></i> LEY DE CONSERVACIÓN DE ENERGÍA</h1>
+            <p class="subtitle">Simulador Interactivo - Descubre cómo la energía se transforma pero nunca se destruye</p>
+            <p class="author">Creado por: Leslie Marcela Gonzalez Quintero</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="panel">
+                <div class="section">
+                    <h2 class="section-title"><i class="fas fa-cogs"></i> CONFIGURACIÓN DEL SISTEMA</h2>
+                    
+                    <div class="system-selector">
+                        <div class="system-option active" data-system="pendulum">
+                            <div class="system-icon"><i class="fas fa-clock"></i></div>
+                            <div>PÉNDULO SIMPLE</div>
+                        </div>
+                        <div class="system-option" data-system="spring">
+                            <div class="system-icon"><i class="fas fa-expand-alt"></i></div>
+                            <div>RESORTE-MASA</div>
+                        </div>
+                        <div class="system-option" data-system="ramp">
+                            <div class="system-icon"><i class="fas fa-chart-line"></i></div>
+                            <div>PLANO INCLINADO</div>
+                        </div>
+                        <div class="system-option" data-system="freefall">
+                            <div class="system-icon"><i class="fas fa-arrow-down"></i></div>
+                            <div>CAÍDA LIBRE</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title"><i class="fas fa-sliders-h"></i> PARÁMETROS FÍSICOS</h2>
+                    
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label for="mass"><i class="fas fa-weight-hanging"></i> Masa (kg): <span id="massValue">2.0</span></label>
+                            <input type="range" id="mass" min="0.1" max="10" step="0.1" value="2">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="height"><i class="fas fa-ruler-vertical"></i> Altura Inicial (m): <span id="heightValue">5.0</span></label>
+                            <input type="range" id="height" min="1" max="20" step="0.1" value="5">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="gravity"><i class="fas fa-globe-americas"></i> Gravedad (m/s²): <span id="gravityValue">9.8</span></label>
+                            <input type="range" id="gravity" min="1" max="15" step="0.1" value="9.8">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="friction"><i class="fas fa-wind"></i> Fricción: <span id="frictionValue">0.0</span></label>
+                            <input type="range" id="friction" min="0" max="0.2" step="0.01" value="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title"><i class="fas fa-gamepad"></i> CONTROLES</h2>
+                    
+                    <div class="controls">
+                        <button id="startBtn"><i class="fas fa-play"></i> INICIAR</button>
+                        <button id="pauseBtn"><i class="fas fa-pause"></i> PAUSAR</button>
+                        <button id="resetBtn"><i class="fas fa-redo"></i> REINICIAR</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title"><i class="fas fa-chart-pie"></i> DISTRIBUCIÓN DE ENERGÍA</h2>
+                    
+                    <div class="energy-visualization">
+                        <div class="energy-bar-container">
+                            <div class="energy-bar">
+                                <div class="energy-marker" id="energyMarker" style="left: 0%;">EP</div>
+                            </div>
+                            <div class="energy-labels">
+                                <span>POTENCIAL</span>
+                                <span>CINÉTICA</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-controls">
+                    <h2 class="section-title"><i class="fas fa-database"></i> GESTIÓN DE DATOS</h2>
+                    
+                    <div class="data-buttons">
+                        <button id="exportDataBtn"><i class="fas fa-download"></i> EXPORTAR DATOS</button>
+                        <button id="clearDataBtn"><i class="fas fa-trash"></i> LIMPIAR DATOS</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel simulation-container">
+                <h2 class="section-title"><i class="fas fa-desktop"></i> SIMULACIÓN EN TIEMPO REAL</h2>
+                
+                <div class="simulation-area" id="simulationArea">
+                    <div class="time-display"><i class="fas fa-clock"></i> Tiempo: <span id="timeValue">0.0</span> s</div>
+                    <div class="simulation-title" id="simulationTitle">PÉNDULO SIMPLE</div>
+                    <canvas id="simulationCanvas"></canvas>
+                </div>
+                
+                <div class="data-panel">
+                    <div class="data-card">
+                        <div class="data-label"><i class="fas fa-battery-full"></i> ENERGÍA POTENCIAL</div>
+                        <div class="data-value" id="potentialEnergy">98.0</div>
+                        <div class="data-unit">Joules (J)</div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-label"><i class="fas fa-bolt"></i> ENERGÍA CINÉTICA</div>
+                        <div class="data-value" id="kineticEnergy">0.0</div>
+                        <div class="data-unit">Joules (J)</div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-label"><i class="fas fa-link"></i> ENERGÍA TOTAL</div>
+                        <div class="data-value" id="totalEnergy">98.0</div>
+                        <div class="data-unit">Joules (J)</div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-label"><i class="fas fa-tachometer-alt"></i> VELOCIDAD</div>
+                        <div class="data-value" id="currentVelocity">0.0</div>
+                        <div class="data-unit">m/s</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="graph-container">
+            <h2 class="section-title"><i class="fas fa-chart-line"></i> GRÁFICAS DE SIMULACIÓN</h2>
+            
+            <div class="graph-tabs">
+                <button class="graph-tab active" data-tab="energy">Energías</button>
+                <button class="graph-tab" data-tab="motion">Movimiento</button>
+                <button class="graph-tab" data-tab="velocity">Velocidad</button>
+            </div>
+            
+            <div class="graph-content active" id="energy-graph">
+                <canvas id="energyChart"></canvas>
+            </div>
+            
+            <div class="graph-content" id="motion-graph">
+                <canvas id="motionChart"></canvas>
+            </div>
+            
+            <div class="graph-content" id="velocity-graph">
+                <canvas id="velocityChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="topics">
+            <div class="topic-card">
+                <h3><i class="fas fa-mountain"></i> ENERGÍA POTENCIAL GRAVITATORIA</h3>
+                <p>La energía almacenada en un objeto debido a su posición en un campo gravitatorio. Depende de la masa del objeto, la aceleración gravitatoria y la altura sobre un punto de referencia.</p>
+                <div class="formula">E<sub>p</sub> = m · g · h</div>
+                <p>Donde <strong>m</strong> es la masa, <strong>g</strong> es la gravedad y <strong>h</strong> es la altura. Esta energía representa la capacidad de realizar trabajo debido a la posición del objeto.</p>
+            </div>
+            <div class="topic-card">
+                <h3><i class="fas fa-running"></i> ENERGÍA CINÉTICA</h3>
+                <p>La energía que posee un objeto debido a su movimiento. Aumenta con la masa del objeto y con el cuadrado de su velocidad.</p>
+                <div class="formula">E<sub>c</sub> = ½ · m · v²</div>
+                <p>Donde <strong>m</strong> es la masa y <strong>v</strong> es la velocidad del objeto. Esta energía representa la capacidad de realizar trabajo debido al movimiento.</p>
+            </div>
+            <div class="topic-card">
+                <h3><i class="fas fa-balance-scale"></i> CONSERVACIÓN DE LA ENERGÍA MECÁNICA</h3>
+                <p>En un sistema conservativo (sin fricción), la suma de la energía potencial y cinética permanece constante a lo largo del tiempo.</p>
+                <div class="formula">E<sub>p</sub> + E<sub>c</sub> = constante</div>
+                <p>La energía se transforma entre sus diferentes formas, pero no se crea ni se destruye. Este principio fundamental gobierna todos los sistemas físicos aislados.</p>
+            </div>
+            <div class="topic-card">
+                <h3><i class="fas fa-exchange-alt"></i> TRANSFORMACIONES ENERGÉTICAS</h3>
+                <p>En los sistemas físicos, la energía se transforma continuamente entre potencial y cinética. En puntos de máxima altura, la energía es principalmente potencial, mientras que en puntos de mínima altura, es principalmente cinética.</p>
+                <div class="formula">ΔE<sub>p</sub> = -ΔE<sub>c</sub></div>
+                <p>El cambio en energía potencial es igual al cambio negativo en energía cinética. Esta relación garantiza que la energía total del sistema se mantenga constante.</p>
+            </div>
+        </div>
+        
+        <div class="testimonials">
+            <div class="testimonial-card">
+                <p class="testimonial-text">"Este simulador ha transformado la forma en que enseño la conservación de energía. Los estudiantes ahora comprenden visualmente los conceptos."</p>
+                <p class="testimonial-author">- Prof. Carlos Mendez</p>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-text">"La interfaz intuitiva y las gráficas en tiempo real hacen que aprender física sea una experiencia interactiva y divertida."</p>
+                <p class="testimonial-author">- Est. Ana Rodriguez</p>
+            </div>
+            <div class="testimonial-card">
+                <p class="testimonial-text">"Como herramienta educativa, este simulador supera todas las expectativas. La precisión de los cálculos y la presentación visual son excepcionales."</p>
+                <p class="testimonial-author">- Dr. Luis Fernandez</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Simulador Interactivo de Física - Ley de Conservación de Energía</p>
+            <p>Creado por Leslie Marcela Gonzalez Quintero | © 2023 Todos los derechos reservados</p>
+        </footer>
+    </div>
+
+    <script>
+        // Clase principal del simulador para mejor encapsulación
+        class EnergyConservationSimulator {
+            constructor() {
+                this.canvas = null;
+                this.ctx = null;
+                this.simulationRunning = false;
+                this.animationId = null;
+                this.time = 0;
+                this.currentSystem = 'pendulum';
+                this.particles = [];
+                this.totalDissipatedEnergy = 0;
+                this.initialTotalEnergy = 0;
+                
+                // Datos para los gráficos
+                this.energyData = {
+                    labels: [],
+                    potential: [],
+                    kinetic: [],
+                    total: []
+                };
+                
+                this.motionData = {
+                    labels: [],
+                    position: [],
+                    height: [],
+                    trajectory: []
+                };
+                
+                this.velocityData = {
+                    labels: [],
+                    velocity: [],
+                    speed: []
+                };
+                
+                // Referencias a los gráficos
+                this.energyChart = null;
+                this.motionChart = null;
+                this.velocityChart = null;
+                
+                // Elementos del DOM
+                this.domElements = {};
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupDOMReferences();
+                this.setupEventListeners();
+                this.initializeCharts();
+                this.createBackgroundParticles();
+                this.updateSimulationTitle();
+                this.resizeCanvas();
+                this.drawSystem();
+            }
+            
+            setupDOMReferences() {
+                // Referencias a elementos del DOM
+                this.canvas = document.getElementById('simulationCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.domElements = {
+                    systemOptions: document.querySelectorAll('.system-option'),
+                    massSlider: document.getElementById('mass'),
+                    heightSlider: document.getElementById('height'),
+                    gravitySlider: document.getElementById('gravity'),
+                    frictionSlider: document.getElementById('friction'),
+                    massValue: document.getElementById('massValue'),
+                    heightValue: document.getElementById('heightValue'),
+                    gravityValue: document.getElementById('gravityValue'),
+                    frictionValue: document.getElementById('frictionValue'),
+                    startBtn: document.getElementById('startBtn'),
+                    resetBtn: document.getElementById('resetBtn'),
+                    pauseBtn: document.getElementById('pauseBtn'),
+                    exportDataBtn: document.getElementById('exportDataBtn'),
+                    clearDataBtn: document.getElementById('clearDataBtn'),
+                    potentialEnergyDisplay: document.getElementById('potentialEnergy'),
+                    kineticEnergyDisplay: document.getElementById('kineticEnergy'),
+                    totalEnergyDisplay: document.getElementById('totalEnergy'),
+                    currentVelocityDisplay: document.getElementById('currentVelocity'),
+                    energyMarker: document.getElementById('energyMarker'),
+                    timeValue: document.getElementById('timeValue'),
+                    simulationTitle: document.getElementById('simulationTitle'),
+                    graphTabs: document.querySelectorAll('.graph-tab'),
+                    graphContents: document.querySelectorAll('.graph-content'),
+                    simulationArea: document.getElementById('simulationArea')
+                };
+            }
+            
+            setupEventListeners() {
+                // Event listeners para controles
+                this.domElements.startBtn.addEventListener('click', () => this.startSimulation());
+                this.domElements.resetBtn.addEventListener('click', () => this.resetSimulation());
+                this.domElements.pauseBtn.addEventListener('click', () => this.pauseSimulation());
+                this.domElements.exportDataBtn.addEventListener('click', () => this.exportData());
+                this.domElements.clearDataBtn.addEventListener('click', () => this.clearData());
+                
+                // Event listeners para selectores de sistema
+                this.domElements.systemOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        this.domElements.systemOptions.forEach(opt => opt.classList.remove('active'));
+                        option.classList.add('active');
+                        this.currentSystem = option.getAttribute('data-system');
+                        this.updateSimulationTitle();
+                        this.resetSimulation();
+                    });
+                });
+                
+                // Event listeners para sliders
+                this.domElements.massSlider.addEventListener('input', () => {
+                    this.domElements.massValue.textContent = this.domElements.massSlider.value;
+                    if (!this.simulationRunning) this.drawSystem();
+                });
+                
+                this.domElements.heightSlider.addEventListener('input', () => {
+                    this.domElements.heightValue.textContent = this.domElements.heightSlider.value;
+                    if (!this.simulationRunning) this.drawSystem();
+                });
+                
+                this.domElements.gravitySlider.addEventListener('input', () => {
+                    this.domElements.gravityValue.textContent = this.domElements.gravitySlider.value;
+                    if (!this.simulationRunning) this.drawSystem();
+                });
+                
+                this.domElements.frictionSlider.addEventListener('input', () => {
+                    this.domElements.frictionValue.textContent = this.domElements.frictionSlider.value;
+                });
+                
+                // Event listeners para pestañas de gráficos
+                this.domElements.graphTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        this.domElements.graphTabs.forEach(t => t.classList.remove('active'));
+                        this.domElements.graphContents.forEach(c => c.classList.remove('active'));
+                        
+                        tab.classList.add('active');
+                        const tabId = tab.getAttribute('data-tab');
+                        document.getElementById(`${tabId}-graph`).classList.add('active');
+                    });
+                });
+                
+                // Event listener para redimensionamiento de ventana
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+            
+            // Funciones de cálculo
+            calculatePotentialEnergy(mass, height, gravity) {
+                return mass * gravity * height;
+            }
+            
+            calculateKineticEnergy(mass, velocity) {
+                return 0.5 * mass * velocity * velocity;
+            }
+            
+            // Sistema de partículas para efectos visuales
+            createParticles(x, y, count, color) {
+                for (let i = 0; i < count; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        size: Math.random() * 3 + 1,
+                        speedX: (Math.random() - 0.5) * 4,
+                        speedY: (Math.random() - 0.5) * 4,
+                        color: color,
+                        life: 1,
+                        decay: Math.random() * 0.02 + 0.01
+                    });
+                }
+            }
+            
+            updateParticles() {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    p.life -= p.decay;
+                    
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+            
+            drawParticles() {
+                this.particles.forEach(p => {
+                    this.ctx.globalAlpha = p.life;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+                this.ctx.globalAlpha = 1;
+            }
+            
+            // Función para dibujar el sistema seleccionado
+            drawSystem() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                const mass = parseFloat(this.domElements.massSlider.value);
+                const initialHeight = parseFloat(this.domElements.heightSlider.value);
+                const gravity = parseFloat(this.domElements.gravitySlider.value);
+                const friction = parseFloat(this.domElements.frictionSlider.value);
+                
+                // Calcular valores actuales según el sistema
+                let currentHeight, currentVelocity, currentPosition, currentTrajectory, potentialEnergy, kineticEnergy, totalEnergy;
+                
+                if (this.currentSystem === 'pendulum') {
+                    const angle = Math.PI / 3 * Math.sin(this.time * 1.5);
+                    currentHeight = initialHeight * (1 - Math.cos(angle));
+                    currentPosition = Math.sin(angle) * 200;
+                    currentTrajectory = Math.sqrt(currentPosition * currentPosition + currentHeight * currentHeight);
+                    currentVelocity = Math.sqrt(2 * gravity * initialHeight) * Math.cos(this.time * 1.5);
+                } else if (this.currentSystem === 'spring') {
+                    const displacement = initialHeight * Math.sin(this.time * 2);
+                    currentHeight = Math.max(0, initialHeight - Math.abs(displacement));
+                    currentPosition = displacement;
+                    currentTrajectory = Math.abs(displacement);
+                    currentVelocity = Math.sqrt(2 * gravity * initialHeight) * Math.cos(this.time * 2);
+                } else if (this.currentSystem === 'ramp') {
+                    currentHeight = initialHeight * (1 - (this.time % 2) / 2);
+                    currentPosition = (initialHeight - currentHeight) * 20;
+                    currentTrajectory = Math.sqrt(currentPosition * currentPosition + currentHeight * currentHeight);
+                    currentVelocity = Math.sqrt(2 * gravity * (initialHeight - currentHeight));
+                } else { // freefall
+                    currentHeight = Math.max(0, initialHeight - 0.5 * gravity * this.time * this.time);
+                    currentPosition = currentHeight;
+                    currentTrajectory = currentHeight;
+                    currentVelocity = gravity * this.time;
+                }
+                
+                // Aplicar fricción
+                if (friction > 0) {
+                    const energyLoss = friction * this.time;
+                    currentHeight = Math.max(0, currentHeight * (1 - energyLoss/10));
+                    currentPosition = currentPosition * (1 - energyLoss/10);
+                    currentTrajectory = currentTrajectory * (1 - energyLoss/10);
+                    currentVelocity = Math.max(0, currentVelocity * (1 - energyLoss/10));
+                }
+                
+                potentialEnergy = this.calculatePotentialEnergy(mass, currentHeight, gravity);
+                kineticEnergy = this.calculateKineticEnergy(mass, currentVelocity);
+                totalEnergy = potentialEnergy + kineticEnergy;
+                
+                // Calcular energía disipada
+                if (this.initialTotalEnergy === 0) this.initialTotalEnergy = totalEnergy;
+                const dissipatedEnergy = this.initialTotalEnergy - totalEnergy;
+                this.totalDissipatedEnergy = Math.max(0, dissipatedEnergy);
+                
+                // Actualizar displays
+                this.domElements.potentialEnergyDisplay.textContent = potentialEnergy.toFixed(2);
+                this.domElements.kineticEnergyDisplay.textContent = kineticEnergy.toFixed(2);
+                this.domElements.totalEnergyDisplay.textContent = totalEnergy.toFixed(2);
+                this.domElements.currentVelocityDisplay.textContent = Math.abs(currentVelocity).toFixed(2);
+                this.domElements.timeValue.textContent = this.time.toFixed(1);
+                
+                // Actualizar marcador de energía
+                const kineticPercentage = (kineticEnergy / this.initialTotalEnergy) * 100;
+                const dissipatedPercentage = (this.totalDissipatedEnergy / this.initialTotalEnergy) * 100;
+                this.domElements.energyMarker.style.left = `${Math.min(100, kineticPercentage + dissipatedPercentage)}%`;
+                this.domElements.energyMarker.textContent = kineticPercentage > 50 ? "EC" : "EP";
+                
+                // Dibujar según el sistema seleccionado
+                switch(this.currentSystem) {
+                    case 'pendulum':
+                        this.drawPendulum(currentHeight, initialHeight, currentPosition);
+                        break;
+                    case 'spring':
+                        this.drawSpringMass(currentHeight, initialHeight, currentPosition);
+                        break;
+                    case 'ramp':
+                        this.drawRamp(currentHeight, initialHeight, currentPosition);
+                        break;
+                    case 'freefall':
+                        this.drawFreefall(currentHeight, initialHeight, currentPosition);
+                        break;
+                }
+                
+                // Dibujar partículas
+                this.updateParticles();
+                this.drawParticles();
+                
+                // Actualizar datos de los gráficos SOLO si la simulación está corriendo
+                if (this.simulationRunning) {
+                    // Datos de energía
+                    this.energyData.labels.push(this.time.toFixed(1));
+                    this.energyData.potential.push(potentialEnergy);
+                    this.energyData.kinetic.push(kineticEnergy);
+                    this.energyData.total.push(totalEnergy);
+                    
+                    // Datos de movimiento
+                    this.motionData.labels.push(this.time.toFixed(1));
+                    this.motionData.position.push(currentPosition);
+                    this.motionData.height.push(currentHeight);
+                    this.motionData.trajectory.push(currentTrajectory);
+                    
+                    // Datos de velocidad
+                    this.velocityData.labels.push(this.time.toFixed(1));
+                    this.velocityData.velocity.push(currentVelocity);
+                    this.velocityData.speed.push(Math.abs(currentVelocity));
+                    
+                    // Mantener solo los últimos 100 puntos de datos
+                    const maxDataPoints = 100;
+                    if (this.energyData.labels.length > maxDataPoints) {
+                        this.energyData.labels.shift();
+                        this.energyData.potential.shift();
+                        this.energyData.kinetic.shift();
+                        this.energyData.total.shift();
+                        
+                        this.motionData.labels.shift();
+                        this.motionData.position.shift();
+                        this.motionData.height.shift();
+                        this.motionData.trajectory.shift();
+                        
+                        this.velocityData.labels.shift();
+                        this.velocityData.velocity.shift();
+                        this.velocityData.speed.shift();
+                    }
+                    
+                    // Actualizar gráficos
+                    this.energyChart.update('none');
+                    this.motionChart.update('none');
+                    this.velocityChart.update('none');
+                    
+                    this.time += 0.05;
+                }
+            }
+            
+            drawPendulum(currentHeight, initialHeight, currentPosition) {
+                const centerX = this.canvas.width / 2;
+                const centerY = 80;
+                const stringLength = 250;
+                const angle = Math.PI / 3 * Math.sin(this.time * 1.5);
+                const ballX = centerX + stringLength * Math.sin(angle);
+                const ballY = centerY + stringLength * Math.cos(angle);
+                const ballRadius = 20 + parseFloat(this.domElements.massSlider.value) * 3;
+                
+                // Dibujar soporte
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX - 60, centerY);
+                this.ctx.lineTo(centerX + 60, centerY);
+                this.ctx.strokeStyle = '#c5cae9';
+                this.ctx.lineWidth = 4;
+                this.ctx.stroke();
+                
+                // Dibujar cuerda
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX, centerY);
+                this.ctx.lineTo(ballX, ballY);
+                this.ctx.strokeStyle = '#c5cae9';
+                this.ctx.lineWidth = 3;
+                this.ctx.stroke();
+                
+                // Dibujar bola con gradiente
+                const gradient = this.ctx.createRadialGradient(ballX, ballY, 0, ballX, ballY, ballRadius);
+                gradient.addColorStop(0, '#3949ab');
+                gradient.addColorStop(1, '#1a237e');
+                
+                this.ctx.beginPath();
+                this.ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+                this.ctx.fillStyle = gradient;
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#536dfe';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                // Dibujar trayectoria punteada
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, stringLength, Math.PI - Math.PI/3, Math.PI + Math.PI/3);
+                this.ctx.strokeStyle = 'rgba(197, 202, 233, 0.3)';
+                this.ctx.lineWidth = 1;
+                this.ctx.setLineDash([5, 5]);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+                
+                // Crear partículas en el punto más bajo
+                if (Math.abs(angle) < 0.1 && this.simulationRunning) {
+                    this.createParticles(ballX, ballY, 3, '#ff9800');
+                }
+            }
+            
+            drawSpringMass(currentHeight, initialHeight, currentPosition) {
+                const springX = this.canvas.width / 2;
+                const springTopY = 80;
+                const equilibriumY = springTopY + 200;
+                const displacement = currentPosition;
+                const springBottomY = equilibriumY + displacement;
+                const massWidth = 80;
+                const massHeight = 50;
+                
+                // Dibujar soporte
+                this.ctx.beginPath();
+                this.ctx.moveTo(springX - 70, springTopY);
+                this.ctx.lineTo(springX + 70, springTopY);
+                this.ctx.strokeStyle = '#c5cae9';
+                this.ctx.lineWidth = 4;
+                this.ctx.stroke();
+                
+                // Dibujar resorte
+                this.ctx.beginPath();
+                this.ctx.moveTo(springX, springTopY);
+                
+                const coils = 10;
+                const springLength = springBottomY - springTopY;
+                const coilHeight = springLength / coils;
+                
+                for (let i = 0; i < coils; i++) {
+                    const y = springTopY + i * coilHeight;
+                    const amplitude = 15;
+                    const x1 = springX - amplitude;
+                    const x2 = springX + amplitude;
+                    
+                    if (i % 2 === 0) {
+                        this.ctx.lineTo(x1, y + coilHeight / 2);
+                        this.ctx.lineTo(x2, y + coilHeight);
+                    } else {
+                        this.ctx.lineTo(x2, y + coilHeight / 2);
+                        this.ctx.lineTo(x1, y + coilHeight);
+                    }
+                }
+                
+                this.ctx.strokeStyle = '#c5cae9';
+                this.ctx.lineWidth = 3;
+                this.ctx.stroke();
+                
+                // Dibujar masa con gradiente
+                const massGradient = this.ctx.createLinearGradient(
+                    springX - massWidth/2, springBottomY,
+                    springX - massWidth/2, springBottomY + massHeight
+                );
+                massGradient.addColorStop(0, '#3949ab');
+                massGradient.addColorStop(1, '#1a237e');
+                
+                this.ctx.fillStyle = massGradient;
+                this.ctx.fillRect(springX - massWidth/2, springBottomY, massWidth, massHeight);
+                this.ctx.strokeStyle = '#536dfe';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(springX - massWidth/2, springBottomY, massWidth, massHeight);
+                
+                // Dibujar línea de equilibrio
+                this.ctx.beginPath();
+                this.ctx.moveTo(springX - 120, equilibriumY);
+                this.ctx.lineTo(springX + 120, equilibriumY);
+                this.ctx.strokeStyle = 'rgba(197, 202, 233, 0.5)';
+                this.ctx.lineWidth = 1;
+                this.ctx.setLineDash([5, 5]);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+                
+                // Crear partículas en el punto de máxima compresión/estiramiento
+                if (Math.abs(displacement) > 180 && this.simulationRunning) {
+                    this.createParticles(springX, springBottomY, 3, '#ff9800');
+                }
+            }
+            
+            drawRamp(currentHeight, initialHeight, currentPosition) {
+                const rampHeight = 250;
+                const rampLength = 400;
+                const rampAngle = Math.atan2(rampHeight, rampLength);
+                const startX = 100;
+                const startY = this.canvas.height - 80;
+                
+                // Dibujar rampa con gradiente
+                const rampGradient = this.ctx.createLinearGradient(startX, startY, startX + rampLength, startY - rampHeight);
+                rampGradient.addColorStop(0, 'rgba(197, 202, 233, 0.3)');
+                rampGradient.addColorStop(1, 'rgba(197, 202, 233, 0.7)');
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(startX, startY);
+                this.ctx.lineTo(startX + rampLength, startY - rampHeight);
+                this.ctx.lineTo(startX + rampLength, startY);
+                this.ctx.closePath();
+                this.ctx.fillStyle = rampGradient;
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#c5cae9';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                // Dibujar objeto
+                const objectSize = 35 + parseFloat(this.domElements.massSlider.value) * 3;
+                const travelDistance = currentPosition;
+                const objectX = startX + travelDistance;
+                const objectY = startY - (travelDistance / rampLength) * rampHeight;
+                
+                const objectGradient = this.ctx.createRadialGradient(objectX, objectY, 0, objectX, objectY, objectSize/2);
+                objectGradient.addColorStop(0, '#3949ab');
+                objectGradient.addColorStop(1, '#1a237e');
+                
+                this.ctx.fillStyle = objectGradient;
+                this.ctx.beginPath();
+                this.ctx.arc(objectX, objectY, objectSize/2, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#536dfe';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                // Crear partículas cuando llega al final
+                if (travelDistance > rampLength - 50 && this.simulationRunning) {
+                    this.createParticles(objectX, objectY, 5, '#ff9800');
+                }
+            }
+            
+            drawFreefall(currentHeight, initialHeight, currentPosition) {
+                const groundY = this.canvas.height - 80;
+                const objectY = groundY - currentPosition;
+                const objectSize = 35 + parseFloat(this.domElements.massSlider.value) * 3;
+                
+                // Dibujar suelo con gradiente
+                const groundGradient = this.ctx.createLinearGradient(50, groundY, this.canvas.width - 50, groundY);
+                groundGradient.addColorStop(0, 'rgba(197, 202, 233, 0.3)');
+                groundGradient.addColorStop(1, 'rgba(197, 202, 233, 0.7)');
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(50, groundY);
+                this.ctx.lineTo(this.canvas.width - 50, groundY);
+                this.ctx.strokeStyle = groundGradient;
+                this.ctx.lineWidth = 4;
+                this.ctx.stroke();
+                
+                // Dibujar objeto con gradiente
+                const objectGradient = this.ctx.createRadialGradient(
+                    this.canvas.width / 2, objectY, 0,
+                    this.canvas.width / 2, objectY, objectSize/2
+                );
+                objectGradient.addColorStop(0, '#3949ab');
+                objectGradient.addColorStop(1, '#1a237e');
+                
+                this.ctx.fillStyle = objectGradient;
+                this.ctx.beginPath();
+                this.ctx.arc(this.canvas.width / 2, objectY, objectSize/2, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#536dfe';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                // Dibujar línea de trayectoria
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.canvas.width / 2, 100);
+                this.ctx.lineTo(this.canvas.width / 2, groundY);
+                this.ctx.strokeStyle = 'rgba(197, 202, 233, 0.3)';
+                this.ctx.lineWidth = 1;
+                this.ctx.stroke();
+                
+                // Crear partículas al impactar con el suelo
+                if (objectY > groundY - 10 && this.simulationRunning) {
+                    this.createParticles(this.canvas.width / 2, groundY, 10, '#ff9800');
+                }
+            }
+            
+            // Funciones para guardar y exportar datos
+            exportData() {
+                // Crear contenido CSV
+                let csvContent = "Tiempo (s),Energía Potencial (J),Energía Cinética (J),Energía Total (J),Posición X (m),Altura Y (m),Trayectoria (m),Velocidad (m/s)\n";
+                
+                for (let i = 0; i < this.energyData.labels.length; i++) {
+                    csvContent += `${this.energyData.labels[i]},${this.energyData.potential[i]},${this.energyData.kinetic[i]},${this.energyData.total[i]},${this.motionData.position[i]},${this.motionData.height[i]},${this.motionData.trajectory[i]},${this.velocityData.velocity[i]}\n`;
+                }
+                
+                // Crear y descargar archivo
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('hidden', '');
+                a.setAttribute('href', url);
+                a.setAttribute('download', 'datos_simulacion.csv');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+            
+            clearData() {
+                // REINICIAR COMPLETAMENTE los datos de los gráficos
+                this.energyData = {
+                    labels: [],
+                    potential: [],
+                    kinetic: [],
+                    total: []
+                };
+                
+                this.motionData = {
+                    labels: [],
+                    position: [],
+                    height: [],
+                    trajectory: []
+                };
+                
+                this.velocityData = {
+                    labels: [],
+                    velocity: [],
+                    speed: []
+                };
+                
+                // Recrear los gráficos desde cero
+                this.initializeCharts();
+            }
+            
+            // Funciones de control de simulación
+            startSimulation() {
+                if (!this.simulationRunning) {
+                    this.simulationRunning = true;
+                    this.domElements.startBtn.textContent = "EJECUTANDO";
+                    this.domElements.startBtn.disabled = true;
+                    this.animate();
+                }
+            }
+            
+            resetSimulation() {
+                this.simulationRunning = false;
+                this.time = 0;
+                this.particles = [];
+                this.totalDissipatedEnergy = 0;
+                this.initialTotalEnergy = 0;
+                
+                this.domElements.startBtn.textContent = "INICIAR";
+                this.domElements.startBtn.disabled = false;
+                
+                // Limpiar datos de los gráficos
+                this.clearData();
+                
+                this.drawSystem();
+            }
+            
+            pauseSimulation() {
+                this.simulationRunning = false;
+                this.domElements.startBtn.textContent = "REANUDAR";
+                this.domElements.startBtn.disabled = false;
+                
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+            }
+            
+            animate() {
+                this.drawSystem();
+                
+                if (this.simulationRunning) {
+                    this.animationId = requestAnimationFrame(() => this.animate());
+                }
+            }
+            
+            // Actualizar títulos de simulación
+            updateSimulationTitle() {
+                const titles = {
+                    'pendulum': 'PÉNDULO SIMPLE',
+                    'spring': 'SISTEMA MASA-RESORTE',
+                    'ramp': 'PLANO INCLINADO',
+                    'freefall': 'CAÍDA LIBRE'
+                };
+                this.domElements.simulationTitle.textContent = titles[this.currentSystem];
+            }
+            
+            // Inicializar gráficos
+            initializeCharts() {
+                // Gráfico de Energías
+                if (this.energyChart) this.energyChart.destroy();
+                const energyCtx = document.getElementById('energyChart').getContext('2d');
+                this.energyChart = new Chart(energyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: this.energyData.labels,
+                        datasets: [
+                            {
+                                label: 'Energía Potencial (J)',
+                                data: this.energyData.potential,
+                                borderColor: '#4caf50',
+                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Energía Cinética (J)',
+                                data: this.energyData.kinetic,
+                                borderColor: '#ff9800',
+                                backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Energía Total (J)',
+                                data: this.energyData.total,
+                                borderColor: '#2196f3',
+                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: false,
+                                borderDash: [5, 5]
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Evolución Temporal de las Energías',
+                                font: { size: 16, weight: 'bold' },
+                                color: '#ffffff'
+                            },
+                            legend: {
+                                labels: { font: { size: 14 }, color: '#ffffff' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Tiempo (s)',
+                                    font: { size: 14 },
+                                    color: '#ffffff'
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#ffffff' }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Energía (J)',
+                                    font: { size: 14 },
+                                    color: '#ffffff'
+                                },
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#ffffff' }
+                            }
+                        }
+                    }
+                });
+                
+                // Gráfico de Movimiento - MEJORADO
+                if (this.motionChart) this.motionChart.destroy();
+                const motionCtx = document.getElementById('motionChart').getContext('2d');
+                this.motionChart = new Chart(motionCtx, {
+                    type: 'line',
+                    data: {
+                        labels: this.motionData.labels,
+                        datasets: [
+                            {
+                                label: 'Posición (m)',
+                                data: this.motionData.position,
+                                borderColor: '#9c27b0',
+                                backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.2,
+                                fill: false,
+                                pointRadius: 0
+                            },
+                            {
+                                label: 'Altura (m)',
+                                data: this.motionData.height,
+                                borderColor: '#00bcd4',
+                                backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.2,
+                                fill: false,
+                                pointRadius: 0
+                            },
+                            {
+                                label: 'Trayectoria Total',
+                                data: this.motionData.trajectory,
+                                borderColor: '#ff9800',
+                                backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                borderWidth: 2,
+                                tension: 0,
+                                fill: false,
+                                pointRadius: 0,
+                                borderDash: [5, 5]
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Movimiento del Sistema',
+                                font: { size: 16, weight: 'bold' },
+                                color: '#ffffff'
+                            },
+                            legend: {
+                                labels: { font: { size: 14 }, color: '#ffffff' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Tiempo (s)',
+                                    font: { size: 14 },
+                                    color: '#ffffff'
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#ffffff' }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Posición/Altura (m)',
+                                    font: { size: 14 },
+                                    color: '#ffffff'
+                                },
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#ffffff' }
+                            }
+                        }
+                    }
+                });
+                
+                // Gráfico de Velocidad
+                if (this.velocityChart) this.velocityChart.destroy();
+                const velocityCtx = document.getElementById('velocityChart').getContext('2d');
+                this.velocityChart = new Chart(velocityCtx, {
+                    type: 'line',
+                    data: {
+                        labels: this.velocityData.labels,
+                        datasets: [
+                            {
+                                label: 'Velocidad (m/s)',
+                                data: this.velocityData.velocity,
+                                borderColor: '#f44336',
+                                backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Rapidez (m/s)',
+                                data: this.velocityData.speed,
+                                borderColor: '#ff9800',
+                                backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: false,
+                                borderDash: [5, 5]
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Velocidad del Sistema',
+                                font: { size: 16, weight: 'bold' },
+                                color: '#ffffff'
+                            },
+                            legend: {
+                                labels: { font: { size: 14 }, color: '#ffffff' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Tiempo (s)',
+                                    font: { size: 14 },
+                                    color: '#ffffff'
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#ffffff' }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Velocidad (m/s)',
+                                    font: { size: 14 },
+                                    color: '#ffffff'
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#ffffff' }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Efectos de partículas en el fondo
+            createBackgroundParticles() {
+                for (let i = 0; i < 15; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        size: Math.random() * 2 + 1,
+                        speedX: 0,
+                        speedY: 0,
+                        color: 'rgba(0, 188, 212, 0.3)',
+                        life: 1,
+                        decay: 0
+                    });
+                }
+            }
+            
+            // Ajustar tamaño del canvas
+            resizeCanvas() {
+                this.canvas.width = this.domElements.simulationArea.offsetWidth;
+                this.canvas.height = this.domElements.simulationArea.offsetHeight;
+                if (!this.simulationRunning) this.drawSystem();
+            }
+            
+            // Método para limpiar recursos (importante para el laboratorio virtual)
+            cleanup() {
+                this.simulationRunning = false;
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+                this.particles = [];
+                this.time = 0;
+            }
+        }
+
+        // Inicializar el simulador cuando se carga la página
+        let simulator;
+        document.addEventListener('DOMContentLoaded', () => {
+            simulator = new EnergyConservationSimulator();
+        });
+
+        // Limpiar recursos cuando se cierra la página
+        window.addEventListener('beforeunload', () => {
+            if (simulator) {
+                simulator.cleanup();
+            }
+        });
+    </script>
+</body>
+</html>

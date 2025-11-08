@@ -1,0 +1,2197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio de Simulación Unicuces - Oscilaciones y Ondas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Importación de las fuentes Rajdhani y Exo 2 -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Nueva paleta de colores */
+            --azul-oscuro: #0f0c29;
+            --azul-medio: #302b63;
+            --azul-claro: #4a3f8c;
+            --purple-light: #6a52b5;
+            --electric-blue: #2196f3;
+            --light-blue: #64b5f6;
+            --lavender: #b39ddb;
+            --blanco: #ffffff;
+            --gris-claro: #f5f7ff;
+            --naranja: #ff6b6b;
+            --verde: #4ecdc4;
+            --amarillo: #ffd166;
+            --rosa: #ef476f;
+            --morado: #a78bfa;
+        }
+        
+        body {
+            background-color: var(--azul-oscuro);
+            color: var(--blanco);
+            /* Aplicar Exo 2 como fuente principal */
+            font-family: 'Exo 2', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--electric-blue);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: radial-gradient(circle at 30% 50%, rgba(33, 150, 243, 0.1) 0%, transparent 50%);
+            z-index: -1;
+        }
+        
+        h1 {
+            color: var(--electric-blue);
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
+            background: linear-gradient(90deg, var(--electric-blue), var(--light-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+            /* Aplicar Rajdhani para títulos principales */
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px rgba(33, 150, 243, 0.5); }
+            100% { text-shadow: 0 0 20px rgba(33, 150, 243, 0.8), 0 0 30px rgba(33, 150, 243, 0.6); }
+        }
+        
+        h2 {
+            color: var(--blanco);
+            font-size: 2rem;
+            margin-top: 0;
+            position: relative;
+            display: inline-block;
+            /* Aplicar Rajdhani para subtítulos */
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        h2::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--electric-blue), transparent);
+        }
+        
+        .subtitle {
+            color: var(--lavender);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            /* Aplicar Exo 2 para subtítulos */
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 500;
+        }
+        
+        /* Pantalla de inicio */
+        .welcome-screen {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-oscuro) 100%);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(33, 150, 243, 0.2);
+        }
+        
+        .welcome-screen::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(33, 150, 243, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+            z-index: 0;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .welcome-title {
+            font-size: 2.5rem;
+            color: var(--electric-blue);
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            /* Aplicar Rajdhani para títulos de bienvenida */
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+        }
+        
+        .topic-selector {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .topic-btn {
+            background: linear-gradient(135deg, var(--azul-medio), var(--azul-oscuro));
+            color: var(--blanco);
+            border: 2px solid var(--electric-blue);
+            padding: 30px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            width: 280px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            /* Aplicar Rajdhani para botones de tema */
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .topic-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(33, 150, 243, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .topic-btn:hover::before {
+            left: 100%;
+        }
+        
+        .topic-btn:hover {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 20px 30px rgba(33, 150, 243, 0.4);
+            background: linear-gradient(135deg, var(--electric-blue), var(--light-blue));
+            color: var(--azul-oscuro);
+            border-color: var(--light-blue);
+        }
+        
+        .topic-btn i {
+            display: block;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 5px rgba(33, 150, 243, 0.5));
+        }
+        
+        /* Secciones de contenido */
+        .content-section {
+            display: none;
+            animation: fadeIn 0.8s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .simulator-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .controls {
+            flex: 1;
+            min-width: 320px;
+            background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-oscuro) 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(33, 150, 243, 0.1);
+        }
+        
+        .visualization {
+            flex: 2;
+            min-width: 500px;
+            background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-oscuro) 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            border: 1px solid rgba(33, 150, 243, 0.1);
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .control-group::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(33, 150, 243, 0.3), transparent);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--electric-blue);
+            font-weight: bold;
+            font-size: 1.1rem;
+            /* Aplicar Exo 2 para etiquetas */
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 600;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 10px;
+            -webkit-appearance: none;
+            height: 10px;
+            border-radius: 5px;
+            background: var(--azul-oscuro);
+            outline: none;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--electric-blue);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.8);
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--light-blue);
+            transform: scale(1.2);
+        }
+        
+        .value-display {
+            color: var(--blanco);
+            font-weight: bold;
+            text-align: center;
+            margin-top: 8px;
+            font-size: 1.1rem;
+            text-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+            /* Aplicar Exo 2 para valores */
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 500;
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--electric-blue), var(--light-blue));
+            color: var(--azul-oscuro);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-right: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+            position: relative;
+            overflow: hidden;
+            /* Aplicar Exo 2 para botones */
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 600;
+        }
+        
+        button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover::before {
+            left: 100%;
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, var(--light-blue), var(--electric-blue));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(33, 150, 243, 0.5);
+        }
+        
+        .demo-btn {
+            background: linear-gradient(135deg, var(--naranja), var(--rosa));
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .demo-btn:hover {
+            background: linear-gradient(135deg, var(--rosa), var(--naranja));
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.5);
+        }
+        
+        .wave-type-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .wave-type-btn {
+            flex: 1;
+            min-width: 140px;
+        }
+        
+        .active {
+            background: linear-gradient(135deg, var(--blanco), var(--electric-blue));
+            color: var(--azul-oscuro);
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.7);
+        }
+        
+        canvas {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            background: var(--azul-oscuro);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .info-panel {
+            background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-oscuro) 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(33, 150, 243, 0.1);
+        }
+        
+        .info-panel h3 {
+            color: var(--electric-blue);
+            margin-top: 0;
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(33, 150, 243, 0.3);
+            padding-bottom: 10px;
+            /* Aplicar Rajdhani para títulos de paneles */
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+        }
+        
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: var(--azul-oscuro);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 1.3rem;
+            border: 1px solid rgba(33, 150, 243, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            color: var(--electric-blue);
+        }
+        
+        /* Ejemplos interactivos */
+        .examples-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .example-card {
+            flex: 1;
+            min-width: 350px;
+            background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-oscuro) 100%);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+            border: 1px solid rgba(33, 150, 243, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .example-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--electric-blue), var(--light-blue), var(--naranja), var(--rosa));
+        }
+        
+        .example-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(33, 150, 243, 0.2);
+        }
+        
+        .example-card h4 {
+            color: var(--electric-blue);
+            margin-top: 0;
+            border-bottom: 1px solid rgba(33, 150, 243, 0.3);
+            padding-bottom: 12px;
+            font-size: 1.4rem;
+            /* Aplicar Rajdhani para títulos de ejemplos */
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+        }
+        
+        .example-card p {
+            /* Aplicar Exo 2 para texto de ejemplos */
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 400;
+        }
+        
+        .example-visual {
+            height: 250px;
+            background: var(--azul-oscuro);
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Estilos específicos para cada demo */
+        .pendulum-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .pendulum-pivot {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background: var(--blanco);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+        
+        .pendulum-string {
+            position: absolute;
+            top: 20px; 
+            left: 50%;
+            width: 3px;
+            height: 160px; 
+            background: linear-gradient(to bottom, var(--blanco), var(--lavender));
+            transform-origin: top center;
+            z-index: 5;
+        }
+        
+        /* Péndulo: La bola es rotada junto con la cuerda (mismo origen) y luego trasladada. */
+        .pendulum-bob {
+            position: absolute;
+            top: 20px; 
+            left: 50%;
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle at 30% 30%, var(--naranja), #d45c4a);
+            border-radius: 50%;
+            transform: translateX(-50%); 
+            transform-origin: 50% 0; /* Origen en el centro-tope de la bola (coincide con el pivot de rotación) */
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.7);
+            transition: all 0.2s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .spring-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .spring-top {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            width: 120px;
+            height: 4px;
+            background: var(--blanco);
+            transform: translateX(-50%);
+            border-radius: 2px;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        
+        /* AJUSTE 3: Reducción de largo (120px -> 90px) */
+        .spring-coil {
+            position: absolute;
+            top: 34px;
+            left: 50%;
+            width: 40px; 
+            height: 90px; /* NUEVA ALTURA */
+            border: none;
+            background: transparent;
+            transform: translateX(-50%);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            border-left: 3px solid var(--blanco);
+            border-right: 3px solid var(--blanco);
+            background-image: repeating-linear-gradient(
+                135deg,
+                var(--blanco) 0,
+                var(--blanco) 2px,
+                transparent 2px,
+                transparent 8px
+            );
+            background-size: 100% 16px;
+            box-sizing: border-box;
+        }
+        
+        /* AJUSTE 3: Ajuste de posición de la masa (154px -> 124px) */
+        .spring-mass {
+            position: absolute;
+            top: 124px; /* NUEVO TOP (34px + 90px) */
+            left: 50%;
+            width: 80px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--verde), #3aa89d);
+            border-radius: 10px;
+            transform: translateX(-50%);
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.7);
+            transition: all 0.2s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--azul-oscuro);
+            font-weight: bold;
+            /* Aplicar Exo 2 para texto de masa */
+            font-family: 'Exo 2', sans-serif;
+        }
+        
+        .damped-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .damped-track {
+            position: absolute;
+            top: 50%;
+            left: 5%;
+            width: 90%;
+            height: 8px;
+            background: linear-gradient(90deg, var(--lavender), var(--blanco), var(--lavender));
+            transform: translateY(-50%);
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        
+        .damped-oscillator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, var(--rosa), #c93c63);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(239, 71, 111, 0.7);
+            transition: all 0.2s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Experimentos caseros */
+        .experiments-container {
+            background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-oscuro) 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(33, 150, 243, 0.1);
+        }
+        
+        .experiment-card {
+            background: var(--azul-oscuro);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--amarillo);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .experiment-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .experiment-card h4 {
+            color: var(--amarillo);
+            margin-top: 0;
+            font-size: 1.3rem;
+            /* Aplicar Rajdhani para títulos de experimentos */
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+        }
+        
+        .experiment-materials {
+            font-style: italic;
+            color: var(--lavender);
+            margin: 12px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            /* Aplicar Exo 2 para materiales */
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 400;
+        }
+        
+        .experiment-card p {
+            /* Aplicar Exo 2 para descripciones de experimentos */
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 400;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, var(--lavender), #9c8bc2);
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .back-btn:hover {
+            background: linear-gradient(135deg, var(--blanco), var(--lavender));
+        }
+        
+        /* Indicadores de arrastre */
+        .drag-indicator {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: var(--electric-blue);
+            font-size: 0.9rem;
+            opacity: 0.8;
+            /* Aplicar Exo 2 para indicadores */
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 400;
+        }
+        
+        .demo-controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        /* Sección de exportación de datos */
+        .export-panel {
+            background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-oscuro) 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(33, 150, 243, 0.1);
+        }
+        
+        .export-panel h3 {
+            color: var(--electric-blue);
+            margin-top: 0;
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(33, 150, 243, 0.3);
+            padding-bottom: 10px;
+            /* Aplicar Rajdhani para títulos de exportación */
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+        }
+        
+        .export-panel p {
+            /* Aplicar Exo 2 para texto de exportación */
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 400;
+        }
+        
+        .export-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .export-btn {
+            background: linear-gradient(135deg, var(--verde), #3aa89d);
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+        }
+        
+        .export-btn:hover {
+            background: linear-gradient(135deg, #3aa89d, var(--verde));
+            box-shadow: 0 8px 20px rgba(78, 205, 196, 0.5);
+        }
+        
+        .data-preview {
+            background: var(--azul-oscuro);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid rgba(33, 150, 243, 0.2);
+        }
+        
+        .data-preview table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-preview th, .data-preview td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .data-preview th {
+            color: var(--electric-blue);
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .simulator-container {
+                flex-direction: column;
+            }
+            
+            .controls, .visualization {
+                min-width: 100%;
+            }
+            
+            .topic-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .topic-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .examples-container {
+                flex-direction: column;
+            }
+            
+            .example-card {
+                min-width: 100%;
+            }
+            
+            .export-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Laboratorio de Simulación Unicuces</h1>
+            <h2>Explora el Mundo de las Oscilaciones y Ondas</h2>
+            <p class="subtitle">Sumérgete en una experiencia interactiva para comprender los principios fundamentales de la física a través de simulaciones realistas y experimentos virtuales</p>
+        </header>
+        
+        <div id="welcome-screen" class="welcome-screen">
+            <div class="topic-selector">
+                <button id="oscillations-btn" class="topic-btn">
+                    <i>◯</i>
+                    Oscilaciones
+                </button>
+                <button id="waves-btn" class="topic-btn">
+                    <i>~</i>
+                    Ondas
+                </button>
+            </div>
+        </div>
+        
+        <div id="oscillations-section" class="content-section">
+            <button id="back-from-oscillations" class="back-btn">← Volver al Inicio</button>
+            <h2>Oscilaciones</h2>
+            <p class="subtitle">Descubre el fascinante mundo de los movimientos repetitivos y periódicos</p>
+            
+            <div class="examples-container">
+                <div class="example-card">
+                    <h4>Péndulo Simple</h4>
+                    <p>Un péndulo es un ejemplo clásico de movimiento armónico simple cuando el ángulo de oscilación es pequeño. La fuerza restauradora es proporcional al desplazamiento angular.</p>
+                    <div class="example-visual">
+                        <div class="pendulum-container">
+                            <div class="pendulum-pivot"></div>
+                            <div class="pendulum-string" id="pendulum-string"></div>
+                            <div class="pendulum-bob" id="pendulum-bob"></div>
+                        </div>
+                    </div>
+                    <div class="demo-controls">
+                        <button id="pendulum-demo-btn" class="demo-btn">Ver Demo</button>
+                    </div>
+                    <div class="drag-indicator">Presiona "Ver Demo" para observar el movimiento oscilatorio del péndulo</div>
+                </div>
+                
+                <div class="example-card">
+                    <h4>Resorte y Masa</h4>
+                    <p>Un sistema masa-resorte oscila cuando se estira o comprime el resorte desde su posición de equilibrio. La fuerza restauradora sigue la Ley de Hooke (F = -kx).</p>
+                    <div class="example-visual">
+                        <div class="spring-container">
+                            <div class="spring-top"></div>
+                            <div class="spring-coil" id="spring-coil"></div>
+                            <div class="spring-mass" id="spring-mass">MASA</div>
+                        </div>
+                    </div>
+                    <div class="demo-controls">
+                        <button id="spring-demo-btn" class="demo-btn">Ver Demo</button>
+                    </div>
+                    <div class="drag-indicator">Presiona "Ver Demo" para observar la oscilación del sistema masa-resorte</div>
+                </div>
+                
+                <div class="example-card">
+                    <h4>Amortiguamiento</h4>
+                    <p>En sistemas reales, la fricción hace que las oscilaciones disminuyan con el tiempo. La amplitud decae exponencialmente debido a la disipación de energía.</p>
+                    <div class="example-visual">
+                        <div class="damped-container">
+                            <div class="damped-track"></div>
+                            <div class="damped-oscillator" id="damped-oscillator"></div>
+                        </div>
+                    </div>
+                    <div class="demo-controls">
+                        <button id="damped-demo-btn" class="demo-btn">Ver Demo</button>
+                    </div>
+                    <div class="drag-indicator">Presiona "Ver Demo" para observar cómo disminuye la amplitud con el tiempo</div>
+                </div>
+            </div>
+            
+            <div class="simulator-container">
+                <div class="controls">
+                    <div class="control-group">
+                        <h3>Tipo de Movimiento</h3>
+                        <div class="wave-type-selector">
+                            <button id="mhs-btn" class="wave-type-btn active">Movimiento Armónico Simple</button>
+                            <button id="amortiguado-btn" class="wave-type-btn">Movimiento Amortiguado</button>
+                            <button id="forzado-btn" class="wave-type-btn">Movimiento Forzado</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="amplitude">Amplitud (A):</label>
+                        <input type="range" id="amplitude" min="1" max="100" value="50">
+                        <div class="value-display" id="amplitude-value">50</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="frequency">Frecuencia (f):</label>
+                        <input type="range" id="frequency" min="1" max="100" value="20">
+                        <div class="value-display" id="frequency-value">20</div>
+                    </div>
+                    
+                    <div class="control-group" id="phase-control">
+                        <label for="phase">Fase Inicial (φ):</label>
+                        <input type="range" id="phase" min="0" max="628" value="0">
+                        <div class="value-display" id="phase-value">0 rad</div>
+                    </div>
+                    
+                    <div class="control-group" id="damping-control" style="display: none;">
+                        <label for="damping">Amortiguamiento (γ):</label>
+                        <input type="range" id="damping" min="0" max="50" value="5">
+                        <div class="value-display" id="damping-value">5</div>
+                    </div>
+                    
+                    <div class="control-group" id="force-control" style="display: none;">
+                        <label for="force-frequency">Frecuencia de Fuerza Externa (ω):</label>
+                        <input type="range" id="force-frequency" min="1" max="100" value="30">
+                        <div class="value-display" id="force-frequency-value">30</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <button id="play-btn">Iniciar Simulación</button>
+                        <button id="pause-btn">Pausar</button>
+                        <button id="reset-btn">Reiniciar</button>
+                    </div>
+                </div>
+                
+                <div class="visualization">
+                    <canvas id="oscillation-chart"></canvas>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Información del Movimiento</h3>
+                <p id="movement-description">El Movimiento Armónico Simple (MAS) es un tipo de movimiento periódico en el que un cuerpo oscila alrededor de una posición de equilibrio bajo la acción de una fuerza restauradora proporcional al desplazamiento.</p>
+                
+                <div class="formula" id="formula-display">x(t) = A·sin(ωt + φ)</div>
+                
+                <div id="parameters-display">
+                    <p><strong>Amplitud (A):</strong> <span id="param-amplitude">50</span> unidades</p>
+                    <p><strong>Frecuencia angular (ω):</strong> <span id="param-frequency">20</span> rad/s</p>
+                    <p><strong>Periodo (T):</strong> <span id="param-period">0.314</span> s</p>
+                    <p><strong>Fase inicial (φ):</strong> <span id="param-phase">0</span> rad</p>
+                </div>
+            </div>
+            
+            <!-- NUEVA SECCIÓN: Exportación de datos para Oscilaciones -->
+            <div class="export-panel">
+                <h3>Exportación de Datos - Oscilaciones</h3>
+                <p>Recolecta y exporta los datos de la simulación para su análisis posterior.</p>
+                
+                <div class="export-controls">
+                    <button id="collect-oscillation-data" class="export-btn">Recolectar Datos Actuales</button>
+                    <button id="export-oscillation-excel" class="export-btn">Exportar a Excel</button>
+                    <button id="clear-oscillation-data" class="back-btn">Limpiar Datos</button>
+                </div>
+                
+                <div class="data-preview">
+                    <h4>Vista Previa de Datos Recolectados:</h4>
+                    <div id="oscillation-data-preview">No hay datos recolectados aún. Ejecuta la simulación y haz clic en "Recolectar Datos Actuales".</div>
+                </div>
+            </div>
+            
+            <div class="experiments-container">
+                <h3>Experimentos Caseros - Oscilaciones</h3>
+                
+                <div class="experiment-card">
+                    <h4>Péndulo con Hilo y Pesas</h4>
+                    <p class="experiment-materials">Materiales: Hilo fuerte, pesa pequeña (tuerca, llave), cinta métrica, cronómetro</p>
+                    <p>Ata una pesa al extremo de un hilo de aproximadamente 50 cm. Sujeta el otro extremo a un punto fijo. 
+                    Mide el tiempo que tarda en completar 10 oscilaciones y calcula el periodo. Prueba con diferentes longitudes 
+                    de hilo y observa cómo cambia el periodo de oscilación. Verifica que el periodo es proporcional a la raíz cuadrada de la longitud.</p>
+                </div>
+                
+                <div class="experiment-card">
+                    <h4>Resorte Casero</h4>
+                    <p class="experiment-materials">Materiales: Resorte (de bolígrafo o juguete), objeto pequeño con peso, regla</p>
+                    <p>Cuelga un objeto del resorte y estíralo ligeramente hacia abajo. Suéltalo y observa cómo oscila. 
+                    Mide el tiempo de varias oscilaciones para calcular la frecuencia. Agrega más peso y observa cómo 
+                    cambia la frecuencia de oscilación. Comprueba que la frecuencia disminuye al aumentar la masa.</p>
+                </div>
+                
+                <div class="experiment-card">
+                    <h4>Amortiguamiento con Agua</h4>
+                    <p class="experiment-materials">Materiales: Vaso con agua, objeto que flote (corcho), hilo</p>
+                    <p>Crea un péndulo con un corcho atado a un hilo. Hazlo oscilar primero en el aire y luego sumerge 
+                    el corcho en un vaso con agua. Observa cómo el agua amortigua el movimiento, reduciendo la amplitud 
+                    de las oscilaciones más rápidamente. Compara el número de oscilaciones hasta que se detenga en ambos casos.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="waves-section" class="content-section">
+            <button id="back-from-waves" class="back-btn">← Volver al Inicio</button>
+            <h2>Ondas</h2>
+            <p class="subtitle">Explora cómo se propagan las perturbaciones a través del espacio y el tiempo</p>
+            
+            <div class="simulator-container">
+                <div class="controls">
+                    <div class="control-group">
+                        <h3>Tipo de Onda</h3>
+                        <div class="wave-type-selector">
+                            <button id="transverse-btn" class="wave-type-btn active">Onda Transversal</button>
+                            <button id="longitudinal-btn" class="wave-type-btn">Onda Longitudinal</button>
+                            <button id="standing-btn" class="wave-type-btn">Onda Estacionaria</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="wave-amplitude">Amplitud (A):</label>
+                        <input type="range" id="wave-amplitude" min="1" max="100" value="50">
+                        <div class="value-display" id="wave-amplitude-value">50</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="wave-frequency">Frecuencia (f):</label>
+                        <input type="range" id="wave-frequency" min="1" max="100" value="20">
+                        <div class="value-display" id="wave-frequency-value">20</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="wave-length">Longitud de Onda (λ):</label>
+                        <input type="range" id="wave-length" min="10" max="200" value="100">
+                        <div class="value-display" id="wave-length-value">100</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <button id="wave-play-btn">Iniciar Simulación</button>
+                        <button id="wave-pause-btn">Pausar</button>
+                        <button id="wave-reset-btn">Reiniciar</button>
+                    </div>
+                </div>
+                
+                <div class="visualization">
+                    <canvas id="wave-chart"></canvas>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Información de las Ondas</h3>
+                <p id="wave-description">Una onda es una perturbación que se propaga a través del espacio y el tiempo, transportando energía sin transporte neto de materia. Las ondas pueden ser transversales (vibración perpendicular a la dirección de propagación) o longitudinales (vibración paralela a la dirección de propagación).</p>
+                
+                <div class="formula" id="wave-formula-display">y(x,t) = A·sin(kx - ωt)</div>
+                
+                <div id="wave-parameters-display">
+                    <p><strong>Amplitud (A):</strong> <span id="wave-param-amplitude">50</span> unidades</p>
+                    <p><strong>Frecuencia (f):</strong> <span id="wave-param-frequency">20</span> Hz</p>
+                    <p><strong>Longitud de Onda (λ):</strong> <span id="wave-param-wavelength">100</span> unidades</p>
+                    <p><strong>Número de Onda (k):</strong> <span id="wave-param-wavenumber">0.063</span> rad/unidad</p>
+                </div>
+            </div>
+            
+            <!-- NUEVA SECCIÓN: Exportación de datos para Ondas -->
+            <div class="export-panel">
+                <h3>Exportación de Datos - Ondas</h3>
+                <p>Recolecta y exporta los datos de la simulación para su análisis posterior.</p>
+                
+                <div class="export-controls">
+                    <button id="collect-wave-data" class="export-btn">Recolectar Datos Actuales</button>
+                    <button id="export-wave-excel" class="export-btn">Exportar a Excel</button>
+                    <button id="clear-wave-data" class="back-btn">Limpiar Datos</button>
+                </div>
+                
+                <div class="data-preview">
+                    <h4>Vista Previa de Datos Recolectados:</h4>
+                    <div id="wave-data-preview">No hay datos recolectados aún. Ejecuta la simulación y haz clic en "Recolectar Datos Actuales".</div>
+                </div>
+            </div>
+            
+            <div class="experiments-container">
+                <h3>Experimentos Caseros - Ondas</h3>
+                
+                <div class="experiment-card">
+                    <h4>Ondas en una Cuerda</h4>
+                    <p class="experiment-materials">Materiales: Cuerda larga (2-3 metros), silla o punto de anclaje</p>
+                    <p>Ata un extremo de la cuerda a un punto fijo (como una silla) y sostén el otro extremo. 
+                    Mueve tu mano rápidamente hacia arriba y hacia abajo para crear ondas transversales. 
+                    Observa cómo cambia la velocidad y forma de las ondas al modificar la tensión de la cuerda.
+                    Experimenta con diferentes frecuencias y amplitudes de movimiento.</p>
+                </div>
+                
+                <div class="experiment-card">
+                    <h4>Ondas Sonoras con Globos</h4>
+                    <p class="experiment-materials">Materiales: Globo, arroz o sal, altavoz con música</p>
+                    <p>Infla un globo y coloca unos granos de arroz o sal sobre él. Acerca el globo a un 
+                    altavoz que esté reproduciendo música. Observa cómo los granos se mueven debido a las 
+                    vibraciones del sonido, mostrando visualmente las ondas sonoras. Prueba con diferentes
+                    tipos de música para ver cómo cambian los patrones de vibración.</p>
+                </div>
+                
+                <div class="experiment-card">
+                    <h4>Ondas en el Agua</h4>
+                    <p class="experiment-materials">Materiales: Recipiente con agua, corcho o objeto flotante, gotero</p>
+                    <p>Llena un recipiente con agua y coloca un corcho pequeño en la superficie. 
+                    Con un gotero, deja caer gotas de agua a intervalos regulares cerca del corcho. 
+                    Observa cómo se forman ondas circulares y cómo el corcho sube y baja sin moverse 
+                    horizontalmente, demostrando que las ondas transportan energía pero no materia.
+                    Varía la frecuencia de las gotas para crear diferentes patrones de interferencia.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elementos del DOM
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const oscillationsSection = document.getElementById('oscillations-section');
+        const wavesSection = document.getElementById('waves-section');
+        
+        const oscillationsBtn = document.getElementById('oscillations-btn');
+        const wavesBtn = document.getElementById('waves-btn');
+        
+        const backFromOscillationsBtn = document.getElementById('back-from-oscillations');
+        const backFromWavesBtn = document.getElementById('back-from-waves');
+        
+        // Elementos de oscilaciones
+        const amplitudeSlider = document.getElementById('amplitude');
+        const frequencySlider = document.getElementById('frequency');
+        const phaseSlider = document.getElementById('phase');
+        const dampingSlider = document.getElementById('damping');
+        const forceFrequencySlider = document.getElementById('force-frequency');
+        
+        const amplitudeValue = document.getElementById('amplitude-value');
+        const frequencyValue = document.getElementById('frequency-value');
+        const phaseValue = document.getElementById('phase-value');
+        const dampingValue = document.getElementById('damping-value');
+        const forceFrequencyValue = document.getElementById('force-frequency-value');
+        
+        const mhsBtn = document.getElementById('mhs-btn');
+        const amortiguadoBtn = document.getElementById('amortiguado-btn');
+        const forzadoBtn = document.getElementById('forzado-btn');
+        
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        
+        const phaseControl = document.getElementById('phase-control');
+        const dampingControl = document.getElementById('damping-control');
+        const forceControl = document.getElementById('force-control');
+        
+        const movementDescription = document.getElementById('movement-description');
+        const formulaDisplay = document.getElementById('formula-display');
+        const paramAmplitude = document.getElementById('param-amplitude');
+        const paramFrequency = document.getElementById('param-frequency');
+        const paramPeriod = document.getElementById('param-period');
+        const paramPhase = document.getElementById('param-phase');
+        
+        // Elementos de ondas
+        const transverseBtn = document.getElementById('transverse-btn');
+        const longitudinalBtn = document.getElementById('longitudinal-btn');
+        const standingBtn = document.getElementById('standing-btn');
+        
+        const waveAmplitudeSlider = document.getElementById('wave-amplitude');
+        const waveFrequencySlider = document.getElementById('wave-frequency');
+        const waveLengthSlider = document.getElementById('wave-length');
+        
+        const waveAmplitudeValue = document.getElementById('wave-amplitude-value');
+        const waveFrequencyValue = document.getElementById('wave-frequency-value');
+        const waveLengthValue = document.getElementById('wave-length-value');
+        
+        const wavePlayBtn = document.getElementById('wave-play-btn');
+        const wavePauseBtn = document.getElementById('wave-pause-btn');
+        const waveResetBtn = document.getElementById('wave-reset-btn');
+        
+        const waveDescription = document.getElementById('wave-description');
+        const waveFormulaDisplay = document.getElementById('wave-formula-display');
+        const waveParamAmplitude = document.getElementById('wave-param-amplitude');
+        const waveParamFrequency = document.getElementById('wave-param-frequency');
+        const waveParamWavelength = document.getElementById('wave-param-wavelength');
+        const waveParamWavenumber = document.getElementById('wave-param-wavenumber');
+        
+        // Botones de demo
+        const pendulumDemoBtn = document.getElementById('pendulum-demo-btn');
+        const springDemoBtn = document.getElementById('spring-demo-btn');
+        const dampedDemoBtn = document.getElementById('damped-demo-btn');
+        
+        // Elementos de exportación de datos
+        const collectOscillationDataBtn = document.getElementById('collect-oscillation-data');
+        const exportOscillationExcelBtn = document.getElementById('export-oscillation-excel');
+        const clearOscillationDataBtn = document.getElementById('clear-oscillation-data');
+        const oscillationDataPreview = document.getElementById('oscillation-data-preview');
+        
+        const collectWaveDataBtn = document.getElementById('collect-wave-data');
+        const exportWaveExcelBtn = document.getElementById('export-wave-excel');
+        const clearWaveDataBtn = document.getElementById('clear-wave-data');
+        const waveDataPreview = document.getElementById('wave-data-preview');
+        
+        // Variables de simulación
+        let currentOscillationType = 'mhs';
+        let currentWaveType = 'transverse';
+        let isOscillationPlaying = false;
+        let isWavePlaying = false;
+        let oscillationTime = 0;
+        let waveTime = 0;
+        let oscillationAnimationId;
+        let waveAnimationId;
+        
+        // Variables para demos interactivos
+        let pendulumAnimationId;
+        let springAnimationId;
+        let dampedAnimationId;
+        let isPendulumRunning = false;
+        let isSpringRunning = false;
+        let isDampedRunning = false;
+        
+        // Variables para almacenamiento de datos
+        let oscillationData = [];
+        let waveData = [];
+        
+        // Configuración del gráfico de oscilaciones
+        const oscillationCtx = document.getElementById('oscillation-chart').getContext('2d');
+        let oscillationChart;
+        
+        // Configuración del gráfico de ondas
+        const waveCtx = document.getElementById('wave-chart').getContext('2d');
+        let waveChart;
+        
+        // Inicializar gráficos
+        function initializeCharts() {
+            // Gráfico de oscilaciones
+            oscillationChart = new Chart(oscillationCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                    {
+                        label: 'Línea de Equilibrio',
+                        borderColor: '#b39ddb',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        data: [],
+                        fill: false
+                    },
+                    {
+                        label: 'Desplazamiento',
+                        borderColor: '#64b5f6',
+                        backgroundColor: 'rgba(100, 181, 246, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        data: [],
+                        fill: true
+                    },
+                    {
+                        label: 'Crestas',
+                        borderColor: '#ffd166',
+                        backgroundColor: 'rgba(255, 209, 102, 0.8)',
+                        borderWidth: 0,
+                        pointRadius: 5,
+                        data: [],
+                        showLine: false
+                    },
+                    {
+                        label: 'Valles',
+                        borderColor: '#ef476f',
+                        backgroundColor: 'rgba(239, 71, 111, 0.8)',
+                        borderWidth: 0,
+                        pointRadius: 5,
+                        data: [],
+                        showLine: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Tiempo (s)',
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(230, 241, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            min: 0,
+                            max: 10
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Desplazamiento',
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(230, 241, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            min: -100,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de ondas
+            waveChart = new Chart(waveCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                    {
+                        label: 'Línea de Equilibrio',
+                        borderColor: '#b39ddb',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        data: [],
+                        fill: false
+                    },
+                    {
+                        label: 'Onda',
+                        borderColor: '#64b5f6',
+                        backgroundColor: 'rgba(100, 181, 246, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        data: [],
+                        fill: true
+                    },
+                    {
+                        label: 'Crestas',
+                        borderColor: '#ffd166',
+                        backgroundColor: 'rgba(255, 209, 102, 0.8)',
+                        borderWidth: 0,
+                        pointRadius: 5,
+                        data: [],
+                        showLine: false
+                    },
+                    {
+                        label: 'Valles',
+                        borderColor: '#ef476f',
+                        backgroundColor: 'rgba(239, 71, 111, 0.8)',
+                        borderWidth: 0,
+                        pointRadius: 5,
+                        data: [],
+                        showLine: false
+                    },
+                    {
+                        label: 'Nodos',
+                        borderColor: '#b39ddb',
+                        backgroundColor: 'rgba(179, 157, 219, 0.8)',
+                        borderWidth: 0,
+                        pointRadius: 4,
+                        data: [],
+                        showLine: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Posición',
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(230, 241, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Amplitud',
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(230, 241, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            min: -100,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Event Listeners para navegación
+        oscillationsBtn.addEventListener('click', () => {
+            welcomeScreen.style.display = 'none';
+            oscillationsSection.style.display = 'block';
+            wavesSection.style.display = 'none';
+        });
+        
+        wavesBtn.addEventListener('click', () => {
+            welcomeScreen.style.display = 'none';
+            oscillationsSection.style.display = 'none';
+            wavesSection.style.display = 'block';
+        });
+        
+        backFromOscillationsBtn.addEventListener('click', () => {
+            welcomeScreen.style.display = 'block';
+            oscillationsSection.style.display = 'none';
+            stopOscillationSimulation();
+        });
+        
+        backFromWavesBtn.addEventListener('click', () => {
+            welcomeScreen.style.display = 'block';
+            wavesSection.style.display = 'none';
+            stopWaveSimulation();
+        });
+        
+        // Event Listeners para controles de oscilaciones
+        amplitudeSlider.addEventListener('input', updateOscillationParameters);
+        frequencySlider.addEventListener('input', updateOscillationParameters);
+        phaseSlider.addEventListener('input', updateOscillationParameters);
+        dampingSlider.addEventListener('input', updateOscillationParameters);
+        forceFrequencySlider.addEventListener('input', updateOscillationParameters);
+        
+        mhsBtn.addEventListener('click', () => {
+            setActiveOscillationType('mhs');
+            updateOscillationParameters();
+        });
+        
+        amortiguadoBtn.addEventListener('click', () => {
+            setActiveOscillationType('amortiguado');
+            updateOscillationParameters();
+        });
+        
+        forzadoBtn.addEventListener('click', () => {
+            setActiveOscillationType('forzado');
+            updateOscillationParameters();
+        });
+        
+        playBtn.addEventListener('click', startOscillationSimulation);
+        pauseBtn.addEventListener('click', pauseOscillationSimulation);
+        resetBtn.addEventListener('click', resetOscillationSimulation);
+        
+        // Event Listeners para controles de ondas
+        waveAmplitudeSlider.addEventListener('input', updateWaveParameters);
+        waveFrequencySlider.addEventListener('input', updateWaveParameters);
+        waveLengthSlider.addEventListener('input', updateWaveParameters);
+        
+        transverseBtn.addEventListener('click', () => {
+            setActiveWaveType('transverse');
+            updateWaveParameters();
+        });
+        
+        longitudinalBtn.addEventListener('click', () => {
+            setActiveWaveType('longitudinal');
+            updateWaveParameters();
+        });
+        
+        standingBtn.addEventListener('click', () => {
+            setActiveWaveType('standing');
+            updateWaveParameters();
+        });
+        
+        wavePlayBtn.addEventListener('click', startWaveSimulation);
+        wavePauseBtn.addEventListener('click', pauseWaveSimulation);
+        waveResetBtn.addEventListener('click', resetWaveSimulation);
+        
+        // Event Listeners para botones de demo
+        pendulumDemoBtn.addEventListener('click', togglePendulumDemo);
+        springDemoBtn.addEventListener('click', toggleSpringDemo);
+        dampedDemoBtn.addEventListener('click', toggleDampedDemo);
+        
+        // Event Listeners para exportación de datos
+        collectOscillationDataBtn.addEventListener('click', collectOscillationData);
+        exportOscillationExcelBtn.addEventListener('click', exportOscillationToExcel);
+        clearOscillationDataBtn.addEventListener('click', clearOscillationData);
+        
+        collectWaveDataBtn.addEventListener('click', collectWaveData);
+        exportWaveExcelBtn.addEventListener('click', exportWaveToExcel);
+        clearWaveDataBtn.addEventListener('click', clearWaveData);
+        
+        // Funciones para oscilaciones
+        function setActiveOscillationType(type) {
+            currentOscillationType = type;
+            
+            // Actualizar botones activos
+            mhsBtn.classList.remove('active');
+            amortiguadoBtn.classList.remove('active');
+            forzadoBtn.classList.remove('active');
+            
+            if (type === 'mhs') {
+                mhsBtn.classList.add('active');
+                phaseControl.style.display = 'block';
+                dampingControl.style.display = 'none';
+                forceControl.style.display = 'none';
+                movementDescription.textContent = 'El Movimiento Armónico Simple (MAS) es un tipo de movimiento periódico en el que un cuerpo oscila alrededor de una posición de equilibrio bajo la acción de una fuerza restauradora proporcional al desplazamiento.';
+                formulaDisplay.textContent = 'x(t) = A·sin(ωt + φ)';
+            } else if (type === 'amortiguado') {
+                amortiguadoBtn.classList.add('active');
+                phaseControl.style.display = 'block';
+                dampingControl.style.display = 'block';
+                forceControl.style.display = 'none';
+                movementDescription.textContent = 'El movimiento amortiguado ocurre cuando existe una fuerza de fricción que se opone al movimiento, causando que la amplitud de las oscilaciones disminuya con el tiempo.';
+                formulaDisplay.textContent = 'x(t) = A·e^(-γt)·sin(ωt + φ)';
+            } else if (type === 'forzado') {
+                forzadoBtn.classList.add('active');
+                phaseControl.style.display = 'block';
+                dampingControl.style.display = 'block';
+                forceControl.style.display = 'block';
+                movementDescription.textContent = 'El movimiento forzado ocurre cuando se aplica una fuerza externa periódica al sistema oscilatorio, lo que puede causar resonancia cuando la frecuencia de la fuerza coincide con la frecuencia natural del sistema.';
+                formulaDisplay.textContent = 'x(t) = A·sin(ωt + φ) + B·sin(ω_ext·t)';
+            }
+        }
+        
+        function updateOscillationParameters() {
+            amplitudeValue.textContent = amplitudeSlider.value;
+            frequencyValue.textContent = frequencySlider.value;
+            phaseValue.textContent = (phaseSlider.value / 100).toFixed(2) + ' rad';
+            dampingValue.textContent = dampingSlider.value;
+            forceFrequencyValue.textContent = forceFrequencySlider.value;
+            
+            paramAmplitude.textContent = amplitudeSlider.value;
+            paramFrequency.textContent = frequencySlider.value;
+            paramPeriod.textContent = (2 * Math.PI / (frequencySlider.value / 10)).toFixed(3);
+            paramPhase.textContent = (phaseSlider.value / 100).toFixed(2);
+            
+            if (isOscillationPlaying) {
+                resetOscillationSimulation();
+                startOscillationSimulation();
+            }
+        }
+        
+        function startOscillationSimulation() {
+            if (isOscillationPlaying) return;
+            
+            isOscillationPlaying = true;
+            oscillationTime = 0;
+            oscillationChart.data.labels = [];
+            oscillationChart.data.datasets[0].data = [];
+            oscillationChart.data.datasets[1].data = [];
+            oscillationChart.data.datasets[2].data = [];
+            oscillationChart.data.datasets[3].data = [];
+            oscillationChart.update();
+            
+            function animate() {
+                if (!isOscillationPlaying) return;
+                
+                oscillationTime += 0.1;
+                
+                // Calcular desplazamiento según el tipo de movimiento
+                let displacement = 0;
+                const amplitude = parseInt(amplitudeSlider.value);
+                const frequency = parseInt(frequencySlider.value) / 10;
+                const phase = parseInt(phaseSlider.value) / 100;
+                const damping = parseInt(dampingSlider.value) / 100;
+                const forceFrequency = parseInt(forceFrequencySlider.value) / 10;
+                
+                if (currentOscillationType === 'mhs') {
+                    displacement = amplitude * Math.sin(frequency * oscillationTime + phase);
+                } else if (currentOscillationType === 'amortiguado') {
+                    displacement = amplitude * Math.exp(-damping * oscillationTime) * Math.sin(frequency * oscillationTime + phase);
+                } else if (currentOscillationType === 'forzado') {
+                    displacement = amplitude * Math.sin(frequency * oscillationTime + phase) + 
+                                  (amplitude / 2) * Math.sin(forceFrequency * oscillationTime);
+                }
+                
+                // Actualizar gráfico
+                oscillationChart.data.labels.push(oscillationTime.toFixed(1));
+                
+                // Línea de equilibrio (siempre en y=0)
+                oscillationChart.data.datasets[0].data.push(0);
+                
+                // Desplazamiento
+                oscillationChart.data.datasets[1].data.push(displacement);
+                
+                // Detectar crestas y valles
+                if (oscillationChart.data.datasets[1].data.length > 2) {
+                    const current = displacement;
+                    const prev = oscillationChart.data.datasets[1].data[oscillationChart.data.datasets[1].data.length - 2];
+                    const prev2 = oscillationChart.data.datasets[1].data[oscillationChart.data.datasets[1].data.length - 3];
+                    
+                    // Cresta: punto donde la función cambia de creciente a decreciente
+                    if (prev > prev2 && prev > current) {
+                        oscillationChart.data.datasets[2].data.push({
+                            x: oscillationTime,
+                            y: prev
+                        });
+                    }
+                    // Valle: punto donde la función cambia de decreciente a creciente
+                    else if (prev < prev2 && prev < current) {
+                        oscillationChart.data.datasets[3].data.push({
+                            x: oscillationTime,
+                            y: prev
+                        });
+                    }
+                }
+                
+                // Mantener solo los últimos 100 puntos (efecto de scrolling con eje fijo)
+                if (oscillationChart.data.labels.length > 100) {
+                    oscillationChart.data.labels.shift();
+                    oscillationChart.data.datasets[0].data.shift();
+                    oscillationChart.data.datasets[1].data.shift();
+                    
+                    // Limitar también los puntos de cresta y valle
+                    if (oscillationChart.data.datasets[2].data.length > 20) {
+                        oscillationChart.data.datasets[2].data.shift();
+                    }
+                    if (oscillationChart.data.datasets[3].data.length > 20) {
+                        oscillationChart.data.datasets[3].data.shift();
+                    }
+                }
+                
+                // Ajustar el mínimo del eje X para que muestre la ventana de 10 segundos
+                if (oscillationTime >= 10) {
+                    oscillationChart.options.scales.x.min = oscillationTime - 9.9;
+                    oscillationChart.options.scales.x.max = oscillationTime + 0.1;
+                } else {
+                    oscillationChart.options.scales.x.min = 0;
+                    oscillationChart.options.scales.x.max = 10;
+                }
+
+                oscillationChart.update('none');
+                oscillationAnimationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+        
+        function pauseOscillationSimulation() {
+            isOscillationPlaying = false;
+            if (oscillationAnimationId) {
+                cancelAnimationFrame(oscillationAnimationId);
+            }
+        }
+        
+        function resetOscillationSimulation() {
+            pauseOscillationSimulation();
+            oscillationTime = 0;
+            // Restaurar la configuración inicial del eje X
+            oscillationChart.options.scales.x.min = 0; 
+            oscillationChart.options.scales.x.max = 10; 
+            oscillationChart.data.labels = [];
+            oscillationChart.data.datasets[0].data = [];
+            oscillationChart.data.datasets[1].data = [];
+            oscillationChart.data.datasets[2].data = [];
+            oscillationChart.data.datasets[3].data = [];
+            oscillationChart.update();
+        }
+        
+        function stopOscillationSimulation() {
+            isOscillationPlaying = false;
+            if (oscillationAnimationId) {
+                cancelAnimationFrame(oscillationAnimationId);
+            }
+        }
+        
+        // Funciones para ondas
+        function setActiveWaveType(type) {
+            currentWaveType = type;
+            
+            // Actualizar botones activos
+            transverseBtn.classList.remove('active');
+            longitudinalBtn.classList.remove('active');
+            standingBtn.classList.remove('active');
+            
+            if (type === 'transverse') {
+                transverseBtn.classList.add('active');
+                waveDescription.textContent = 'Las ondas transversales son aquellas en las que las partículas del medio vibran perpendicularmente a la dirección de propagación de la onda. Ejemplos incluyen ondas en una cuerda y ondas electromagnéticas.';
+                waveFormulaDisplay.textContent = 'y(x,t) = A·sin(kx - ωt)';
+            } else if (type === 'longitudinal') {
+                longitudinalBtn.classList.add('active');
+                waveDescription.textContent = 'Las ondas longitudinales son aquellas en las que las partículas del medio vibran paralelamente a la dirección de propagación de la onda. Ejemplos incluyen ondas sonoras y ondas en un resorte.';
+                waveFormulaDisplay.textContent = 'y(x,t) = A·sin(kx - ωt)';
+            } else if (type === 'standing') {
+                standingBtn.classList.add('active');
+                waveDescription.textContent = 'Las ondas estacionarias se forman por la interferencia de dos ondas de la misma frecuencia que viajan en direcciones opuestas. Presentan puntos fijos llamados nodos y puntos de máxima amplitud llamados antinodos.';
+                waveFormulaDisplay.textContent = 'y(x,t) = 2A·sin(kx)·cos(ωt)';
+            }
+        }
+        
+        function updateWaveParameters() {
+            waveAmplitudeValue.textContent = waveAmplitudeSlider.value;
+            waveFrequencyValue.textContent = waveFrequencySlider.value;
+            waveLengthValue.textContent = waveLengthSlider.value;
+            
+            waveParamAmplitude.textContent = waveAmplitudeSlider.value;
+            waveParamFrequency.textContent = waveFrequencySlider.value;
+            waveParamWavelength.textContent = waveLengthSlider.value;
+            waveParamWavenumber.textContent = (2 * Math.PI / parseInt(waveLengthSlider.value)).toFixed(3);
+            
+            if (isWavePlaying) {
+                resetWaveSimulation();
+                startWaveSimulation();
+            }
+        }
+        
+        function startWaveSimulation() {
+            if (isWavePlaying) return;
+            
+            isWavePlaying = true;
+            waveTime = 0;
+            waveChart.data.labels = [];
+            waveChart.data.datasets[0].data = [];
+            waveChart.data.datasets[1].data = [];
+            waveChart.data.datasets[2].data = [];
+            waveChart.data.datasets[3].data = [];
+            waveChart.data.datasets[4].data = [];
+            waveChart.update();
+            
+            function animate() {
+                if (!isWavePlaying) return;
+                
+                waveTime += 0.05;
+                
+                // Calcular onda según el tipo
+                const amplitude = parseInt(waveAmplitudeSlider.value);
+                const frequency = parseInt(waveFrequencySlider.value) / 10;
+                const wavelength = parseInt(waveLengthSlider.value);
+                const k = 2 * Math.PI / wavelength;
+                const omega = 2 * Math.PI * frequency;
+                
+                waveChart.data.labels = [];
+                waveChart.data.datasets[0].data = [];
+                waveChart.data.datasets[1].data = [];
+                waveChart.data.datasets[2].data = [];
+                waveChart.data.datasets[3].data = [];
+                waveChart.data.datasets[4].data = [];
+                
+                for (let x = 0; x <= 300; x += 5) {
+                    let y = 0;
+                    
+                    if (currentWaveType === 'transverse') {
+                        y = amplitude * Math.sin(k * x - omega * waveTime);
+                    } else if (currentWaveType === 'longitudinal') {
+                        // Para ondas longitudinales, mostramos compresión y rarefacción
+                        y = amplitude * Math.sin(k * x - omega * waveTime);
+                    } else if (currentWaveType === 'standing') {
+                        y = 2 * amplitude * Math.sin(k * x) * Math.cos(omega * waveTime);
+                    }
+                    
+                    waveChart.data.labels.push(x);
+                    
+                    // Línea de equilibrio (siempre en y=0)
+                    waveChart.data.datasets[0].data.push(0);
+                    
+                    // Onda
+                    waveChart.data.datasets[1].data.push(y);
+                    
+                    // Detectar crestas, valles y nodos
+                    if (x > 0 && x < 300) {
+                        const prevY = amplitude * Math.sin(k * (x-5) - omega * waveTime);
+                        const nextY = amplitude * Math.sin(k * (x+5) - omega * waveTime);
+                        
+                        // Cresta: punto máximo local
+                        if (y > prevY && y > nextY && y > amplitude * 0.7) {
+                            waveChart.data.datasets[2].data.push({
+                                x: x,
+                                y: y
+                            });
+                        }
+                        // Valle: punto mínimo local
+                        else if (y < prevY && y < nextY && y < -amplitude * 0.7) {
+                            waveChart.data.datasets[3].data.push({
+                                x: x,
+                                y: y
+                            });
+                        }
+                        // Nodo: punto donde la amplitud es cero (solo para ondas estacionarias)
+                        else if (currentWaveType === 'standing' && Math.abs(y) < amplitude * 0.1) {
+                            waveChart.data.datasets[4].data.push({
+                                x: x,
+                                y: y
+                            });
+                        }
+                    }
+                }
+                
+                waveChart.update('none');
+                waveAnimationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+        
+        function pauseWaveSimulation() {
+            isWavePlaying = false;
+            if (waveAnimationId) {
+                cancelAnimationFrame(waveAnimationId);
+            }
+        }
+        
+        function resetWaveSimulation() {
+            pauseWaveSimulation();
+            waveTime = 0;
+            waveChart.data.labels = [];
+            waveChart.data.datasets[0].data = [];
+            waveChart.data.datasets[1].data = [];
+            waveChart.data.datasets[2].data = [];
+            waveChart.data.datasets[3].data = [];
+            waveChart.data.datasets[4].data = [];
+            waveChart.update();
+        }
+        
+        function stopWaveSimulation() {
+            isWavePlaying = false;
+            if (waveAnimationId) {
+                cancelAnimationFrame(waveAnimationId);
+            }
+        }
+        
+        // Funciones para demos interactivos
+        function togglePendulumDemo() {
+            if (isPendulumRunning) {
+                stopPendulumDemo();
+                pendulumDemoBtn.textContent = "Ver Demo";
+            } else {
+                startPendulumDemo();
+                pendulumDemoBtn.textContent = "Detener Demo";
+            }
+        }
+        
+        function startPendulumDemo() {
+            const pendulumBob = document.getElementById('pendulum-bob');
+            const pendulumString = document.getElementById('pendulum-string');
+            
+            let angle = Math.PI / 6;
+            let velocity = 0;
+            const gravity = 0.5;
+            const damping = 0.995;
+            const stringLength = 160;
+            
+            isPendulumRunning = true;
+            
+            function updatePendulum() {
+                if (!isPendulumRunning) return;
+                
+                // Aplicar física del péndulo
+                const acceleration = -gravity / stringLength * Math.sin(angle);
+                velocity += acceleration;
+                velocity *= damping;
+                angle += velocity;
+                
+                // CORRECCIÓN: Sincronización perfecta entre la cuerda y la bola
+                // Ambas comparten el mismo origen de transformación
+                pendulumString.style.transform = `rotate(${angle}rad)`;
+                pendulumBob.style.transform = `translateX(-50%) rotate(${angle}rad) translateY(${stringLength}px)`;
+                
+                pendulumAnimationId = requestAnimationFrame(updatePendulum);
+            }
+            
+            updatePendulum();
+        }
+        
+        function stopPendulumDemo() {
+            isPendulumRunning = false;
+            if (pendulumAnimationId) {
+                cancelAnimationFrame(pendulumAnimationId);
+            }
+            
+            // Resetear posición
+            const pendulumBob = document.getElementById('pendulum-bob');
+            const pendulumString = document.getElementById('pendulum-string');
+            pendulumString.style.transform = `rotate(0rad)`;
+            pendulumBob.style.transform = `translateX(-50%) rotate(0rad) translateY(160px)`;
+        }
+        
+        function toggleSpringDemo() {
+            if (isSpringRunning) {
+                stopSpringDemo();
+                springDemoBtn.textContent = "Ver Demo";
+            } else {
+                startSpringDemo();
+                springDemoBtn.textContent = "Detener Demo";
+            }
+        }
+        
+        function startSpringDemo() {
+            const springMass = document.getElementById('spring-mass');
+            const springCoil = document.getElementById('spring-coil');
+            
+            // CORRECCIÓN: Aumentar el recorrido del resorte
+            let position = 40; // Aumentado de 20 a 40
+            let velocity = 0;
+            const springConstant = 0.08; // Reducido para movimiento más suave
+            const damping = 0.97;
+            const equilibrium = 0;
+            const initialCoilHeight = 90;
+            const initialMassTop = 124;
+            
+            isSpringRunning = true;
+            
+            function updateSpring() {
+                if (!isSpringRunning) return;
+                
+                // Aplicar física del resorte (Ley de Hooke)
+                const force = -springConstant * (position - equilibrium);
+                velocity += force;
+                velocity *= damping;
+                position += velocity;
+                
+                // Actualizar elementos visuales
+                springMass.style.top = `${initialMassTop + position}px`;
+                springCoil.style.height = `${initialCoilHeight + position}px`;
+                
+                springAnimationId = requestAnimationFrame(updateSpring);
+            }
+            
+            updateSpring();
+        }
+        
+        function stopSpringDemo() {
+            isSpringRunning = false;
+            if (springAnimationId) {
+                cancelAnimationFrame(springAnimationId);
+            }
+            
+            // Resetear posición
+            const springMass = document.getElementById('spring-mass');
+            const springCoil = document.getElementById('spring-coil');
+            const initialCoilHeight = 90;
+            const initialMassTop = 124;
+            
+            springMass.style.top = `${initialMassTop}px`;
+            springCoil.style.height = `${initialCoilHeight}px`;
+        }
+        
+        function toggleDampedDemo() {
+            if (isDampedRunning) {
+                stopDampedDemo();
+                dampedDemoBtn.textContent = "Ver Demo";
+            } else {
+                startDampedDemo();
+                dampedDemoBtn.textContent = "Detener Demo";
+            }
+        }
+        
+        function startDampedDemo() {
+            const dampedOscillator = document.getElementById('damped-oscillator');
+            
+            // CORRECCIÓN: Aumentar el recorrido del oscilador amortiguado
+            let position = 150; // Aumentado de 100 a 150
+            let velocity = 0;
+            const springConstant = 0.06; // Reducido para movimiento más suave
+            const damping = 0.85; // Alto amortiguamiento
+            
+            isDampedRunning = true;
+            
+            function updateDamped() {
+                if (!isDampedRunning) return;
+                
+                // Aplicar física del oscilador amortiguado
+                const force = -springConstant * position - damping * velocity;
+                velocity += force;
+                position += velocity;
+                
+                // Actualizar elemento visual
+                dampedOscillator.style.left = `calc(50% + ${position}px)`;
+                
+                dampedAnimationId = requestAnimationFrame(updateDamped);
+            }
+            
+            updateDamped();
+        }
+        
+        function stopDampedDemo() {
+            isDampedRunning = false;
+            if (dampedAnimationId) {
+                cancelAnimationFrame(dampedAnimationId);
+            }
+            
+            // Resetear posición
+            const dampedOscillator = document.getElementById('damped-oscillator');
+            dampedOscillator.style.left = `50%`;
+        }
+        
+        // Funciones para exportación de datos
+        function collectOscillationData() {
+            const labels = oscillationChart.data.labels;
+            const displacementData = oscillationChart.data.datasets[1].data;
+            
+            // Crear nuevos datos con timestamp
+            const newData = [];
+            for (let i = 0; i < labels.length; i++) {
+                newData.push({
+                    tiempo: parseFloat(labels[i]),
+                    desplazamiento: parseFloat(displacementData[i]),
+                    tipo: currentOscillationType,
+                    amplitud: parseInt(amplitudeSlider.value),
+                    frecuencia: parseInt(frequencySlider.value) / 10,
+                    fase: parseInt(phaseSlider.value) / 100,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // Agregar a los datos existentes
+            oscillationData = oscillationData.concat(newData);
+            
+            // Actualizar vista previa
+            updateOscillationDataPreview();
+            
+            // Mostrar mensaje de éxito
+            alert(`Se han recolectado ${newData.length} puntos de datos de oscilaciones. Total: ${oscillationData.length} puntos.`);
+        }
+        
+        function collectWaveData() {
+            const labels = waveChart.data.labels;
+            const waveDataPoints = waveChart.data.datasets[1].data;
+            
+            // Crear nuevos datos con timestamp
+            const newData = [];
+            for (let i = 0; i < labels.length; i++) {
+                newData.push({
+                    posicion: parseFloat(labels[i]),
+                    amplitud: parseFloat(waveDataPoints[i]),
+                    tipo: currentWaveType,
+                    amplitudOnda: parseInt(waveAmplitudeSlider.value),
+                    frecuencia: parseInt(waveFrequencySlider.value) / 10,
+                    longitudOnda: parseInt(waveLengthSlider.value),
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // Agregar a los datos existentes
+            waveData = waveData.concat(newData);
+            
+            // Actualizar vista previa
+            updateWaveDataPreview();
+            
+            // Mostrar mensaje de éxito
+            alert(`Se han recolectado ${newData.length} puntos de datos de ondas. Total: ${waveData.length} puntos.`);
+        }
+        
+        function updateOscillationDataPreview() {
+            if (oscillationData.length === 0) {
+                oscillationDataPreview.innerHTML = 'No hay datos recolectados aún. Ejecuta la simulación y haz clic en "Recolectar Datos Actuales".';
+                return;
+            }
+            
+            let html = `<p>Total de puntos recolectados: <strong>${oscillationData.length}</strong></p>`;
+            html += '<table><tr><th>Tiempo (s)</th><th>Desplazamiento</th><th>Tipo</th></tr>';
+            
+            // Mostrar solo los últimos 10 puntos para la vista previa
+            const previewData = oscillationData.slice(-10);
+            
+            previewData.forEach(point => {
+                html += `<tr>
+                    <td>${point.tiempo.toFixed(2)}</td>
+                    <td>${point.desplazamiento.toFixed(2)}</td>
+                    <td>${point.tipo}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            oscillationDataPreview.innerHTML = html;
+        }
+        
+        function updateWaveDataPreview() {
+            if (waveData.length === 0) {
+                waveDataPreview.innerHTML = 'No hay datos recolectados aún. Ejecuta la simulación y haz clic en "Recolectar Datos Actuales".';
+                return;
+            }
+            
+            let html = `<p>Total de puntos recolectados: <strong>${waveData.length}</strong></p>`;
+            html += '<table><tr><th>Posición</th><th>Amplitud</th><th>Tipo</th></tr>';
+            
+            // Mostrar solo los últimos 10 puntos para la vista previa
+            const previewData = waveData.slice(-10);
+            
+            previewData.forEach(point => {
+                html += `<tr>
+                    <td>${point.posicion.toFixed(2)}</td>
+                    <td>${point.amplitud.toFixed(2)}</td>
+                    <td>${point.tipo}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            waveDataPreview.innerHTML = html;
+        }
+        
+        function exportOscillationToExcel() {
+            if (oscillationData.length === 0) {
+                alert('No hay datos de oscilaciones para exportar. Recolecta datos primero.');
+                return;
+            }
+            
+            // Crear hoja de trabajo
+            const ws = XLSX.utils.json_to_sheet(oscillationData);
+            
+            // Crear libro de trabajo
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Datos_Oscilaciones");
+            
+            // Generar archivo y descargar
+            const fileName = `datos_oscilaciones_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            alert(`Datos de oscilaciones exportados exitosamente: ${fileName}`);
+        }
+        
+        function exportWaveToExcel() {
+            if (waveData.length === 0) {
+                alert('No hay datos de ondas para exportar. Recolecta datos primero.');
+                return;
+            }
+            
+            // Crear hoja de trabajo
+            const ws = XLSX.utils.json_to_sheet(waveData);
+            
+            // Crear libro de trabajo
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Datos_Ondas");
+            
+            // Generar archivo y descargar
+            const fileName = `datos_ondas_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            alert(`Datos de ondas exportados exitosamente: ${fileName}`);
+        }
+        
+        function clearOscillationData() {
+            if (confirm('¿Estás seguro de que quieres eliminar todos los datos de oscilaciones recolectados?')) {
+                oscillationData = [];
+                updateOscillationDataPreview();
+                alert('Datos de oscilaciones eliminados.');
+            }
+        }
+        
+        function clearWaveData() {
+            if (confirm('¿Estás seguro de que quieres eliminar todos los datos de ondas recolectados?')) {
+                waveData = [];
+                updateWaveDataPreview();
+                alert('Datos de ondas eliminados.');
+            }
+        }
+        
+        // Inicialización
+        window.onload = function() {
+            initializeCharts();
+            setActiveOscillationType('mhs');
+            setActiveWaveType('transverse');
+            updateOscillationParameters();
+            updateWaveParameters();
+            updateOscillationDataPreview();
+            updateWaveDataPreview();
+        };
+    </script>
+</body>
+</html>

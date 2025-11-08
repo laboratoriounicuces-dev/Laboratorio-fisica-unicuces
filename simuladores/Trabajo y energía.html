@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Física: Trabajo y Energía</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(74, 63, 140, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid #6a52b5;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            color: #b39ddb;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .simulation-container, .controls {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(74, 63, 140, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid #6a52b5;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #6a52b5;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(106, 82, 181, 0.5);
+            padding-bottom: 5px;
+            color: #ffffff;
+        }
+        
+        h3 {
+            color: #b39ddb;
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #b39ddb;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 10px;
+            background: #4a3f8c;
+            border-radius: 5px;
+            height: 8px;
+            outline: none;
+        }
+        
+        .value-display {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .value-display span {
+            background: rgba(106, 82, 181, 0.3);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 500;
+            color: #64b5f6;
+        }
+        
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background: #1976d2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .scenario-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .data-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px solid #6a52b5;
+        }
+        
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(106, 82, 181, 0.3);
+        }
+        
+        .data-label {
+            font-weight: 500;
+            color: #b39ddb;
+        }
+        
+        .data-value {
+            font-weight: 600;
+            color: #64b5f6;
+        }
+        
+        .explanation {
+            background: rgba(74, 63, 140, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid #6a52b5;
+        }
+        
+        .explanation h2 {
+            margin-bottom: 15px;
+        }
+        
+        .explanation p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #ffffff;
+        }
+        
+        .formula {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: #64b5f6;
+            border: 1px solid #6a52b5;
+        }
+        
+        .graphics-container {
+            background: rgba(74, 63, 140, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid #6a52b5;
+        }
+        
+        .graph-canvas-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #6a52b5;
+        }
+        
+        .graph-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Simulador de Física: Trabajo y Energía</h1>
+            <p class="subtitle">Explora la relación entre trabajo, energía cinética y energía potencial</p>
+        </header>
+        
+        <div class="content">
+            <div class="simulation-container">
+                <h2>Simulación</h2>
+                <div class="canvas-container">
+                    <canvas id="physicsCanvas"></canvas>
+                </div>
+                <div class="data-panel">
+                    <div class="data-item">
+                        <span class="data-label">Trabajo realizado (J):</span>
+                        <span class="data-value" id="workValue">0</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Energía cinética (J):</span>
+                        <span class="data-value" id="kineticEnergyValue">0</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Energía potencial (J):</span>
+                        <span class="data-value" id="potentialEnergyValue">0</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">Energía total (J):</span>
+                        <span class="data-value" id="totalEnergyValue">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <h2>Controles</h2>
+                
+                <div class="control-group">
+                    <label for="massSlider">Masa del objeto (kg):</label>
+                    <input type="range" id="massSlider" min="1" max="20" value="5">
+                    <div class="value-display">
+                        <span>Valor:</span>
+                        <span id="massValue">5 kg</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="forceSlider">Fuerza aplicada (N):</label>
+                    <input type="range" id="forceSlider" min="1" max="100" value="30">
+                    <div class="value-display">
+                        <span>Valor:</span>
+                        <span id="forceValue">30 N</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="frictionSlider">Coeficiente de fricción:</label>
+                    <input type="range" id="frictionSlider" min="0" max="1" step="0.1" value="0.2">
+                    <div class="value-display">
+                        <span>Valor:</span>
+                        <span id="frictionValue">0.2</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Escenarios</h3>
+                    <div class="scenario-buttons">
+                        <button id="horizontalScenario">Plano horizontal</button>
+                        <button id="inclinedScenario">Plano inclinado</button>
+                        <button id="springScenario">Resorte</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <button id="startBtn">Iniciar simulación</button>
+                    <button id="resetBtn">Reiniciar</button>
+                    <button id="pauseBtn">Pausar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="graphics-container">
+            <h2>Gráficas de Energía vs. Tiempo</h2>
+            <div class="graph-controls">
+                <button id="generateGraphBtn">Generar Gráfica</button>
+                <button id="downloadGraphBtn">Descargar Gráfica (PNG)</button>
+                <button id="downloadExcelBtn">Descargar Datos (Excel)</button>
+            </div>
+            <div class="graph-canvas-container">
+                <canvas id="graphCanvas"></canvas>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h2>Conceptos de Trabajo y Energía</h2>
+            <p>En física, el <strong>trabajo</strong> se define como el producto de la fuerza aplicada sobre un objeto por la distancia que recorre en la dirección de la fuerza.</p>
+            
+            <div class="formula">W = F × d × cos(θ)</div>
+            
+            <p>Donde W es el trabajo, F es la fuerza aplicada, d es la distancia recorrida y θ es el ángulo entre la fuerza y la dirección del movimiento.</p>
+            
+            <p>La <strong>energía cinética</strong> es la energía que posee un objeto debido a su movimiento:</p>
+            
+            <div class="formula">K = ½ × m × v²</div>
+            
+            <p>Donde K es la energía cinética, m es la masa del objeto y v es su velocidad.</p>
+            
+            <p>La <strong>energía potencial</strong> es la energía almacenada en un sistema debido a su posición o configuración. En este simulador, consideramos la energía potencial gravitatoria:</p>
+            
+            <div class="formula">U = m × g × h</div>
+            
+            <p>Donde U es la energía potencial, m es la masa, g es la aceleración debida a la gravedad (9.8 m/s²) y h es la altura.</p>
+            
+            <p>El <strong>principio de conservación de la energía</strong> establece que la energía total de un sistema aislado permanece constante:</p>
+            
+            <div class="formula">K₁ + U₁ = K₂ + U₂</div>
+            
+            <p>El <strong>teorema del trabajo y la energía</strong> relaciona el trabajo neto realizado sobre un objeto con el cambio en su energía cinética:</p>
+            
+            <div class="formula">W_neto = ΔK = K₂ - K₁</div>
+        </div>
+    </div>
+
+    <script>
+        // Obtener elementos del DOM
+        const canvas = document.getElementById('physicsCanvas');
+        const ctx = canvas.getContext('2d');
+        const graphCanvas = document.getElementById('graphCanvas');
+        const graphCtx = graphCanvas.getContext('2d');
+        
+        const massSlider = document.getElementById('massSlider');
+        const forceSlider = document.getElementById('forceSlider');
+        const frictionSlider = document.getElementById('frictionSlider');
+        
+        const massValue = document.getElementById('massValue');
+        const forceValue = document.getElementById('forceValue');
+        const frictionValue = document.getElementById('frictionValue');
+        
+        const workValue = document.getElementById('workValue');
+        const kineticEnergyValue = document.getElementById('kineticEnergyValue');
+        const potentialEnergyValue = document.getElementById('potentialEnergyValue');
+        const totalEnergyValue = document.getElementById('totalEnergyValue');
+        
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        
+        const horizontalScenarioBtn = document.getElementById('horizontalScenario');
+        const inclinedScenarioBtn = document.getElementById('inclinedScenario');
+        const springScenarioBtn = document.getElementById('springScenario');
+        
+        const generateGraphBtn = document.getElementById('generateGraphBtn');
+        const downloadGraphBtn = document.getElementById('downloadGraphBtn');
+        const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+        
+        // Variables de simulación
+        let simulationRunning = false;
+        let animationId;
+        let currentScenario = 'horizontal';
+        
+        // Parámetros físicos
+        let mass = 5; // kg
+        let force = 30; // N
+        let frictionCoefficient = 0.2; // coeficiente de fricción (0-1)
+        let gravity = 9.8; // m/s²
+        
+        // Estado del objeto
+        let position = { x: 50, y: 300 };
+        let velocity = 0;
+        let acceleration = 0;
+        let distance = 0;
+        
+        // Variables para resorte
+        let springNaturalLength = 100; // Longitud natural del resorte en píxeles
+        let springConstant = 2; // Constante del resorte (ajustada para simulación)
+        
+        // Variables para gráficas
+        let timeData = [];
+        let kineticData = [];
+        let potentialData = [];
+        let totalData = [];
+        let workData = [];
+        let simulationTime = 0;
+        let maxDataPoints = 200;
+        
+        // Configurar canvas
+        function setupCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            
+            graphCanvas.width = graphCanvas.parentElement.clientWidth;
+            graphCanvas.height = graphCanvas.parentElement.clientHeight;
+        }
+        
+        // Inicializar simulación
+        function initSimulation() {
+            setupCanvas();
+            
+            // Posición inicial según el escenario
+            if (currentScenario === 'spring') {
+                position = { x: 150, y: canvas.height - 100 }; // Posición inicial del objeto (longitud natural)
+            } else if (currentScenario === 'inclined') {
+                position = { x: 50, y: canvas.height - 50 }; // En la base del plano inclinado
+            } else {
+                position = { x: 50, y: 300 };
+            }
+            
+            velocity = 0;
+            acceleration = 0;
+            distance = 0;
+            simulationTime = 0;
+            
+            // Limpiar datos de gráficas
+            timeData = [];
+            kineticData = [];
+            potentialData = [];
+            totalData = [];
+            workData = [];
+            
+            updateDisplay();
+            drawScene();
+            drawGraph();
+        }
+        
+        // Actualizar valores mostrados - CORREGIDO
+        function updateDisplay() {
+            massValue.textContent = `${mass} kg`;
+            forceValue.textContent = `${force} N`;
+            frictionValue.textContent = frictionCoefficient.toFixed(1);
+            
+            // Calcular valores energéticos - FÓRMULAS CORRECTAS
+            const kineticEnergy = 0.5 * mass * velocity * velocity;
+            
+            let potentialEnergy = 0;
+            if (currentScenario === 'inclined') {
+                // Energía potencial gravitatoria en plano inclinado
+                const baseHeight = canvas.height - 50; // Altura de la base
+                const currentHeight = position.y; // Altura actual del objeto
+                const height = Math.max(0, (baseHeight - currentHeight) / 10);
+                potentialEnergy = mass * gravity * height;
+            } else if (currentScenario === 'spring') {
+                // Energía potencial elástica para resorte
+                const displacement = position.x - 150; // Desplazamiento desde posición natural
+                potentialEnergy = 0.5 * springConstant * displacement * displacement;
+            }
+            // En plano horizontal la energía potencial es 0
+            
+            const work = force * (distance / 100);
+            const totalEnergy = kineticEnergy + potentialEnergy;
+            
+            workValue.textContent = work.toFixed(2);
+            kineticEnergyValue.textContent = kineticEnergy.toFixed(2);
+            potentialEnergyValue.textContent = potentialEnergy.toFixed(2);
+            totalEnergyValue.textContent = totalEnergy.toFixed(2);
+            
+            // Guardar datos para gráficas - ACTUALIZACIÓN CONTINUA
+            if (simulationRunning) {
+                timeData.push(simulationTime);
+                kineticData.push(kineticEnergy);
+                potentialData.push(potentialEnergy);
+                totalData.push(totalEnergy);
+                workData.push(work);
+                
+                if (timeData.length > maxDataPoints) {
+                    timeData.shift();
+                    kineticData.shift();
+                    potentialData.shift();
+                    totalData.shift();
+                    workData.shift();
+                }
+                
+                simulationTime += 0.05;
+            }
+        }
+        
+        // Dibujar la escena
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar fondo según el escenario
+            switch(currentScenario) {
+                case 'horizontal':
+                    drawHorizontalScene();
+                    break;
+                case 'inclined':
+                    drawInclinedScene();
+                    break;
+                case 'spring':
+                    drawSpringScene();
+                    break;
+            }
+            
+            // Dibujar objeto
+            ctx.fillStyle = '#2196f3';
+            ctx.beginPath();
+            ctx.arc(position.x, position.y, 20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Dibujar vector de fuerza si está aplicándose
+            if (simulationRunning && position.x < canvas.width - 50) {
+                drawForceVector();
+            }
+            
+            // Dibujar información
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Arial';
+            ctx.fillText(`Velocidad: ${velocity.toFixed(2)} m/s`, 10, 20);
+            ctx.fillText(`Aceleración: ${acceleration.toFixed(2)} m/s²`, 10, 40);
+            ctx.fillText(`Distancia: ${(distance/100).toFixed(2)} m`, 10, 60);
+            ctx.fillText(`Fricción: ${frictionCoefficient.toFixed(1)}`, 10, 80);
+        }
+        
+        // Dibujar escenario de plano horizontal
+        function drawHorizontalScene() {
+            // Dibujar superficie
+            ctx.fillStyle = '#4a3f8c';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            
+            // Dibujar líneas de referencia
+            ctx.strokeStyle = '#6a52b5';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, position.y);
+            ctx.lineTo(canvas.width, position.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        // Dibujar escenario de plano inclinado
+        function drawInclinedScene() {
+            // Dibujar plano inclinado
+            ctx.fillStyle = '#4a3f8c';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(canvas.width, canvas.height - 200);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Dibujar líneas de referencia
+            ctx.strokeStyle = '#6a52b5';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, position.y);
+            ctx.lineTo(canvas.width, position.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        // Dibujar escenario de resorte - CORREGIDO
+        function drawSpringScene() {
+            // Dibujar superficie
+            ctx.fillStyle = '#4a3f8c';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            
+            // Dibujar pared izquierda
+            ctx.fillStyle = '#6a52b5';
+            ctx.fillRect(0, canvas.height - 200, 20, 150);
+            
+            // Dibujar resorte horizontal
+            const springStartX = 20; // Inicio del resorte (pared)
+            const springEndX = position.x - 20; // Fin del resorte (objeto)
+            const springY = canvas.height - 100; // Altura del resorte
+            
+            ctx.strokeStyle = '#b39ddb';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(springStartX, springY);
+            
+            // Dibujar espirales del resorte
+            const springLength = springEndX - springStartX;
+            const coils = Math.max(3, Math.floor(springLength / 15));
+            const coilWidth = springLength / coils;
+            
+            for (let i = 0; i < coils; i++) {
+                const x = springStartX + i * coilWidth;
+                ctx.bezierCurveTo(
+                    x + coilWidth/4, springY - 10,
+                    x + coilWidth*3/4, springY - 10,
+                    x + coilWidth, springY
+                );
+            }
+            
+            ctx.stroke();
+            
+            // Dibujar línea de referencia para posición natural
+            ctx.strokeStyle = '#6a52b5';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(150, canvas.height - 150);
+            ctx.lineTo(150, canvas.height - 50);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Etiqueta de posición natural
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.fillText('Posición natural', 155, canvas.height - 120);
+        }
+        
+        // Dibujar vector de fuerza
+        function drawForceVector() {
+            const vectorLength = force / 2;
+            const angle = currentScenario === 'inclined' ? Math.PI / 6 : 0;
+            
+            ctx.strokeStyle = '#64b5f6';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(position.x, position.y);
+            ctx.lineTo(
+                position.x + vectorLength * Math.cos(angle),
+                position.y - vectorLength * Math.sin(angle)
+            );
+            ctx.stroke();
+            
+            // Dibujar punta de flecha
+            ctx.fillStyle = '#64b5f6';
+            ctx.beginPath();
+            ctx.moveTo(
+                position.x + vectorLength * Math.cos(angle),
+                position.y - vectorLength * Math.sin(angle)
+            );
+            ctx.lineTo(
+                position.x + (vectorLength - 10) * Math.cos(angle) - 5 * Math.sin(angle),
+                position.y - (vectorLength - 10) * Math.sin(angle) - 5 * Math.cos(angle)
+            );
+            ctx.lineTo(
+                position.x + (vectorLength - 10) * Math.cos(angle) + 5 * Math.sin(angle),
+                position.y - (vectorLength - 10) * Math.sin(angle) + 5 * Math.cos(angle)
+            );
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // Actualizar física - CORREGIDO PARA FRICCIÓN Y RESORTE
+        function updatePhysics() {
+            if (!simulationRunning) return;
+            
+            // Calcular fuerzas según el escenario
+            let netForce = force;
+            let frictionForce = 0;
+            
+            switch(currentScenario) {
+                case 'horizontal':
+                    // Fuerza de fricción = coeficiente * masa * gravedad
+                    frictionForce = frictionCoefficient * mass * gravity;
+                    // Fuerza neta = fuerza aplicada - fricción
+                    netForce = force - frictionForce;
+                    acceleration = netForce / mass;
+                    break;
+                    
+                case 'inclined':
+                    // Componente de gravedad a lo largo del plano
+                    const gravityComponent = mass * gravity * Math.sin(Math.PI / 6);
+                    // Fuerza normal en plano inclinado
+                    const normalForce = mass * gravity * Math.cos(Math.PI / 6);
+                    // Fuerza de fricción = coeficiente * fuerza normal
+                    frictionForce = frictionCoefficient * normalForce;
+                    // Fuerza neta = fuerza aplicada - gravedad - fricción
+                    netForce = force - gravityComponent - frictionForce;
+                    acceleration = netForce / mass;
+                    break;
+                    
+                case 'spring':
+                    // Física del resorte horizontal
+                    const displacement = position.x - 150; // Desplazamiento desde posición natural
+                    const springForce = -springConstant * displacement; // Fuerza de restauración del resorte
+                    
+                    // Fuerza de fricción = coeficiente * masa * gravedad
+                    frictionForce = frictionCoefficient * mass * gravity;
+                    // La fricción se opone al movimiento, por lo que tiene signo opuesto a la velocidad
+                    const frictionDirection = (velocity > 0) ? -1 : 1;
+                    
+                    // Fuerza neta = fuerza aplicada + fuerza del resorte + fricción
+                    netForce = force + springForce + (frictionDirection * frictionForce);
+                    acceleration = netForce / mass;
+                    break;
+            }
+            
+            // Actualizar velocidad y posición
+            velocity += acceleration * 0.1;
+            
+            // Actualizar posición según el escenario
+            switch(currentScenario) {
+                case 'horizontal':
+                case 'spring':
+                    position.x += velocity * 10;
+                    break;
+                case 'inclined':
+                    position.x += velocity * 10;
+                    position.y = canvas.height - 50 - (position.x / canvas.width) * 200;
+                    break;
+            }
+            
+            // Limitar movimiento en el eje X
+            if (position.x > canvas.width - 30) {
+                position.x = canvas.width - 30;
+                velocity = 0;
+            }
+            
+            if (position.x < 50) {
+                position.x = 50;
+                velocity = 0;
+            }
+            
+            // Detener la simulación si la velocidad es muy pequeña (para evitar oscilaciones infinitas)
+            if (Math.abs(velocity) < 0.01 && Math.abs(acceleration) < 0.01) {
+                velocity = 0;
+                acceleration = 0;
+                if (currentScenario === 'spring') {
+                    simulationRunning = false;
+                }
+            }
+            
+            // Actualizar distancia recorrida
+            distance = position.x - 50;
+            
+            updateDisplay();
+            drawScene();
+            
+            // ACTUALIZAR GRÁFICA EN TIEMPO REAL
+            if (timeData.length > 1) {
+                drawGraph();
+            }
+            
+            // Continuar animación
+            if (simulationRunning && position.x < canvas.width - 30 && position.x > 30) {
+                animationId = requestAnimationFrame(updatePhysics);
+            } else {
+                simulationRunning = false;
+            }
+        }
+        
+        // Dibujar gráfica - CORREGIDO
+        function drawGraph() {
+            graphCtx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+            
+            if (timeData.length === 0) {
+                graphCtx.fillStyle = 'white';
+                graphCtx.font = '16px Arial';
+                graphCtx.textAlign = 'center';
+                graphCtx.fillText('Ejecuta la simulación para generar datos para la gráfica', graphCanvas.width / 2, graphCanvas.height / 2);
+                return;
+            }
+            
+            const margin = { top: 40, right: 40, bottom: 60, left: 60 };
+            const width = graphCanvas.width - margin.left - margin.right;
+            const height = graphCanvas.height - margin.top - margin.bottom;
+            
+            const maxTime = Math.max(...timeData) || 1;
+            let maxEnergy = Math.max(
+                Math.max(...kineticData) || 0,
+                Math.max(...potentialData) || 0,
+                Math.max(...totalData) || 0,
+                Math.max(...workData) || 0,
+                10
+            );
+            
+            const xScale = width / maxTime;
+            const yScale = height / maxEnergy;
+            
+            // Dibujar fondo
+            graphCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            graphCtx.fillRect(margin.left, margin.top, width, height);
+            
+            // Dibujar ejes
+            graphCtx.strokeStyle = '#b39ddb';
+            graphCtx.lineWidth = 2;
+            
+            graphCtx.beginPath();
+            graphCtx.moveTo(margin.left, margin.top);
+            graphCtx.lineTo(margin.left, margin.top + height);
+            graphCtx.stroke();
+            
+            graphCtx.beginPath();
+            graphCtx.moveTo(margin.left, margin.top + height);
+            graphCtx.lineTo(margin.left + width, margin.top + height);
+            graphCtx.stroke();
+            
+            // Etiquetas
+            graphCtx.fillStyle = 'white';
+            graphCtx.font = '14px Arial';
+            graphCtx.textAlign = 'center';
+            graphCtx.fillText('Tiempo (s)', margin.left + width / 2, margin.top + height + 40);
+            
+            graphCtx.save();
+            graphCtx.translate(20, margin.top + height / 2);
+            graphCtx.rotate(-Math.PI / 2);
+            graphCtx.fillText('Energía (J)', 0, 0);
+            graphCtx.restore();
+            
+            // Cuadrícula
+            graphCtx.strokeStyle = 'rgba(179, 157, 219, 0.3)';
+            graphCtx.lineWidth = 1;
+            
+            for (let i = 1; i <= 5; i++) {
+                const x = margin.left + (width / 5) * i;
+                graphCtx.beginPath();
+                graphCtx.moveTo(x, margin.top);
+                graphCtx.lineTo(x, margin.top + height);
+                graphCtx.stroke();
+                
+                graphCtx.fillStyle = 'white';
+                graphCtx.textAlign = 'center';
+                graphCtx.fillText((maxTime / 5 * i).toFixed(1), x, margin.top + height + 20);
+            }
+            
+            for (let i = 1; i <= 5; i++) {
+                const y = margin.top + (height / 5) * i;
+                graphCtx.beginPath();
+                graphCtx.moveTo(margin.left, y);
+                graphCtx.lineTo(margin.left + width, y);
+                graphCtx.stroke();
+                
+                graphCtx.fillStyle = 'white';
+                graphCtx.textAlign = 'right';
+                graphCtx.fillText((maxEnergy / 5 * i).toFixed(1), margin.left - 10, y + 5);
+            }
+            
+            // Curvas de datos
+            drawDataCurve(timeData, kineticData, '#2196f3');
+            drawDataCurve(timeData, potentialData, '#4caf50');
+            drawDataCurve(timeData, totalData, '#ff9800');
+            drawDataCurve(timeData, workData, '#e91e63');
+            
+            // Leyenda
+            const legendItems = [
+                { color: '#2196f3', label: 'Energía Cinética' },
+                { color: '#4caf50', label: 'Energía Potencial' },
+                { color: '#ff9800', label: 'Energía Total' },
+                { color: '#e91e63', label: 'Trabajo' }
+            ];
+            
+            const legendX = margin.left + width - 150;
+            const legendY = margin.top + 10;
+            
+            legendItems.forEach((item, index) => {
+                graphCtx.fillStyle = item.color;
+                graphCtx.fillRect(legendX, legendY + index * 20, 15, 10);
+                
+                graphCtx.fillStyle = 'white';
+                graphCtx.font = '12px Arial';
+                graphCtx.textAlign = 'left';
+                graphCtx.fillText(item.label, legendX + 20, legendY + index * 20 + 9);
+            });
+            
+            function drawDataCurve(xData, yData, color) {
+                if (xData.length === 0 || yData.length === 0) return;
+                
+                graphCtx.strokeStyle = color;
+                graphCtx.lineWidth = 2;
+                graphCtx.beginPath();
+                
+                for (let i = 0; i < xData.length; i++) {
+                    const x = margin.left + xData[i] * xScale;
+                    const y = margin.top + height - (yData[i] * yScale);
+                    
+                    if (i === 0) {
+                        graphCtx.moveTo(x, y);
+                    } else {
+                        graphCtx.lineTo(x, y);
+                    }
+                }
+                
+                graphCtx.stroke();
+            }
+        }
+        
+        // Descargar gráfica como PNG
+        function downloadGraph() {
+            if (timeData.length === 0) {
+                alert('No hay datos para descargar. Ejecuta la simulación primero.');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = `grafica_energia_${currentScenario}_${new Date().toISOString().slice(0, 19)}.png`;
+            link.href = graphCanvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Descargar datos como Excel (.xlsx)
+        function downloadExcel() {
+            if (timeData.length === 0) {
+                alert('No hay datos para descargar. Ejecuta la simulación primero.');
+                return;
+            }
+            
+            try {
+                // Crear libro de trabajo
+                const wb = XLSX.utils.book_new();
+                
+                // Preparar datos para la hoja
+                const excelData = [
+                    ['Datos de Simulación - Trabajo y Energía'],
+                    ['Escenario:', currentScenario],
+                    ['Masa (kg):', mass],
+                    ['Fuerza (N):', force],
+                    ['Coeficiente de fricción:', frictionCoefficient],
+                    [''],
+                    ['Tiempo (s)', 'Energía Cinética (J)', 'Energía Potencial (J)', 'Energía Total (J)', 'Trabajo (J)']
+                ];
+                
+                // Agregar los datos
+                for (let i = 0; i < timeData.length; i++) {
+                    excelData.push([
+                        timeData[i].toFixed(2),
+                        kineticData[i].toFixed(2),
+                        potentialData[i].toFixed(2),
+                        totalData[i].toFixed(2),
+                        workData[i].toFixed(2)
+                    ]);
+                }
+                
+                // Crear hoja de trabajo
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                
+                // Ajustar el ancho de las columnas
+                const colWidths = [
+                    { wch: 12 }, // Tiempo
+                    { wch: 18 }, // Energía Cinética
+                    { wch: 18 }, // Energía Potencial
+                    { wch: 15 }, // Energía Total
+                    { wch: 12 }  // Trabajo
+                ];
+                ws['!cols'] = colWidths;
+                
+                // Agregar la hoja al libro
+                XLSX.utils.book_append_sheet(wb, ws, 'Datos de Energía');
+                
+                // Generar archivo y descargar
+                const fileName = `datos_energia_${currentScenario}_${new Date().toISOString().slice(0, 19)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+            } catch (error) {
+                console.error('Error al generar Excel:', error);
+                alert('Error al generar el archivo Excel. Inténtalo de nuevo.');
+            }
+        }
+        
+        // Event listeners
+        massSlider.addEventListener('input', function() {
+            mass = parseInt(this.value);
+            updateDisplay();
+            if (!simulationRunning) drawScene();
+        });
+        
+        forceSlider.addEventListener('input', function() {
+            force = parseInt(this.value);
+            updateDisplay();
+            if (!simulationRunning) drawScene();
+        });
+        
+        frictionSlider.addEventListener('input', function() {
+            frictionCoefficient = parseFloat(this.value);
+            updateDisplay();
+            if (!simulationRunning) drawScene();
+        });
+        
+        startBtn.addEventListener('click', function() {
+            if (!simulationRunning) {
+                simulationRunning = true;
+                updatePhysics();
+            }
+        });
+        
+        resetBtn.addEventListener('click', function() {
+            simulationRunning = false;
+            if (animationId) cancelAnimationFrame(animationId);
+            initSimulation();
+        });
+        
+        pauseBtn.addEventListener('click', function() {
+            simulationRunning = !simulationRunning;
+            if (simulationRunning) {
+                updatePhysics();
+            } else {
+                if (animationId) cancelAnimationFrame(animationId);
+            }
+        });
+        
+        horizontalScenarioBtn.addEventListener('click', function() {
+            currentScenario = 'horizontal';
+            initSimulation();
+        });
+        
+        inclinedScenarioBtn.addEventListener('click', function() {
+            currentScenario = 'inclined';
+            initSimulation();
+        });
+        
+        springScenarioBtn.addEventListener('click', function() {
+            currentScenario = 'spring';
+            initSimulation();
+        });
+        
+        generateGraphBtn.addEventListener('click', function() {
+            drawGraph();
+        });
+        
+        downloadGraphBtn.addEventListener('click', function() {
+            downloadGraph();
+        });
+        
+        downloadExcelBtn.addEventListener('click', function() {
+            downloadExcel();
+        });
+        
+        // Inicializar
+        window.addEventListener('load', initSimulation);
+        window.addEventListener('resize', initSimulation);
+    </script>
+</body>
+</html>

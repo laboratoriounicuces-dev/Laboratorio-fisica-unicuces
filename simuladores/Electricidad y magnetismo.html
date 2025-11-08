@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Electricidad y Magnetismo - UNICUCES</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --deep-navy: #0f0c29;
+            --dark-purple: #302b63;
+            --medium-purple: #4a3f8c;
+            --light-purple: #6a52b5;
+            --electric-blue: #2196f3;
+            --light-blue: #64b5f6;
+            --lavender: #b39ddb;
+            --white: #ffffff;
+            --light-gray: #f5f7ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Exo 2', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--deep-navy), var(--dark-purple));
+            color: var(--white);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+            background: linear-gradient(to right, var(--light-blue), var(--lavender));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 3s infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px rgba(33, 150, 243, 0.7); }
+            100% { text-shadow: 0 0 20px rgba(179, 157, 219, 0.9); }
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            color: var(--lavender);
+        }
+        
+        .experiments-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .experiment-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .experiment-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .experiment-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--light-blue);
+        }
+        
+        .experiment-title i {
+            font-size: 1.5rem;
+            color: var(--light-blue);
+        }
+        
+        .canvas-container {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+            flex-grow: 1;
+            min-height: 300px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .chart-container {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+            height: 250px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+        
+        button {
+            background: linear-gradient(to right, var(--medium-purple), var(--light-purple));
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, var(--light-purple), var(--electric-blue));
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .slider-container {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+        
+        .slider-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--lavender);
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--light-purple);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: var(--light-blue);
+        }
+        
+        .explanation {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.9;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            border-left: 4px solid var(--light-purple);
+            color: var(--lavender);
+        }
+        
+        .particle-counter {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 10;
+            color: var(--lavender);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 25px;
+            font-size: 1rem;
+            opacity: 0.8;
+            border-top: 1px solid var(--light-purple);
+            color: var(--lavender);
+        }
+        
+        .instructions {
+            text-align: center;
+            margin: 20px 0;
+            font-style: italic;
+            opacity: 0.8;
+            color: var(--lavender);
+        }
+        
+        .chart-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .chart-title {
+            font-size: 1.2rem;
+            color: var(--light-blue);
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .experiments-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .experiment-title {
+                font-size: 1.5rem;
+            }
+            
+            .chart-container {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Simulador de Electricidad y Magnetismo</h1>
+            <p class="subtitle">Explora los principios fundamentales de la electricidad y el magnetismo a través de experimentos interactivos. Arrastra elementos, ajusta parámetros y observa los efectos en tiempo real.</p>
+            <p class="instructions">💡 Haz clic y arrastra para interactuar con los elementos en cada simulación</p>
+        </header>
+        
+        <div class="experiments-container">
+            <!-- Experimento 1: Campo Magnético Mejorado -->
+            <div class="experiment-card">
+                <h2 class="experiment-title"><i>🧲</i> Campo Magnético Interactivo</h2>
+                <div class="canvas-container">
+                    <div class="particle-counter">Imanes: <span id="magnetCount">0</span></div>
+                    <canvas id="magneticFieldCanvas" width="600" height="300"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-controls">
+                        <div class="chart-title">Fuerza Magnética vs. Distancia</div>
+                        <button id="downloadMagnetChart"><i class="fas fa-download"></i> Descargar Gráfica</button>
+                    </div>
+                    <canvas id="magnetChart"></canvas>
+                </div>
+                <div class="controls">
+                    <button id="addNorthMagnet"><i>➕</i> Añadir Polo Norte</button>
+                    <button id="addSouthMagnet"><i>➖</i> Añadir Polo Sur</button>
+                    <button id="clearMagnets"><i>🗑️</i> Limpiar Todo</button>
+                </div>
+                <div class="slider-container">
+                    <label for="fieldStrength">Fuerza del Campo: <span id="fieldStrengthValue" class="value-display">5</span></label>
+                    <input type="range" id="fieldStrength" min="1" max="10" value="5">
+                </div>
+                <div class="slider-container">
+                    <label for="fieldDensity">Densidad de Líneas: <span id="fieldDensityValue" class="value-display">5</span></label>
+                    <input type="range" id="fieldDensity" min="1" max="10" value="5">
+                </div>
+                <p class="explanation">
+                    Observa cómo se forman las líneas de campo magnético alrededor de los imanes. 
+                    Los polos opuestos se atraen y los polos iguales se repelen. Arrastra los imanes para ver cómo cambia el campo.
+                </p>
+            </div>
+            
+            <!-- Experimento 2: Circuito Eléctrico Mejorado -->
+            <div class="experiment-card">
+                <h2 class="experiment-title"><i>💡</i> Circuito Eléctrico Interactivo</h2>
+                <div class="canvas-container">
+                    <div class="particle-counter">Componentes: <span id="componentCount">0</span></div>
+                    <canvas id="circuitCanvas" width="600" height="300"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-controls">
+                        <div class="chart-title">Corriente vs. Tiempo</div>
+                        <button id="downloadCircuitChart"><i class="fas fa-download"></i> Descargar Gráfica</button>
+                    </div>
+                    <canvas id="circuitChart"></canvas>
+                </div>
+                <div class="controls">
+                    <button id="addBattery"><i>🔋</i> Añadir Batería</button>
+                    <button id="addResistor"><i>⏚</i> Añadir Resistencia</button>
+                    <button id="addBulb"><i>💡</i> Añadir Bombilla</button>
+                    <button id="addSwitch"><i>🔘</i> Añadir Interruptor</button>
+                    <button id="clearCircuit"><i>🗑️</i> Limpiar Todo</button>
+                </div>
+                <div class="slider-container">
+                    <label for="voltage">Voltaje (V): <span id="voltageValue" class="value-display">6</span></label>
+                    <input type="range" id="voltage" min="1" max="12" value="6">
+                </div>
+                <div class="slider-container">
+                    <label for="resistance">Resistencia (Ω): <span id="resistanceValue" class="value-display">5</span></label>
+                    <input type="range" id="resistance" min="1" max="10" value="5">
+                </div>
+                <p class="explanation">
+                    Construye circuitos eléctricos simples y observa cómo fluye la corriente. 
+                    Los electrones se mueven del polo negativo al positivo de la batería. Conecta los componentes para completar el circuito.
+                </p>
+            </div>
+            
+            <!-- Experimento 3: Electroimán -->
+            <div class="experiment-card">
+                <h2 class="experiment-title"><i>🔌</i> Electroimán</h2>
+                <div class="canvas-container">
+                    <div class="particle-counter">Objetos metálicos: <span id="metalCount">0</span></div>
+                    <canvas id="electromagnetCanvas" width="600" height="300"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-controls">
+                        <div class="chart-title">Fuerza Magnética vs. Corriente</div>
+                        <button id="downloadElectromagnetChart"><i class="fas fa-download"></i> Descargar Gráfica</button>
+                    </div>
+                    <canvas id="electromagnetChart"></canvas>
+                </div>
+                <div class="controls">
+                    <button id="addMetal"><i>🔩</i> Añadir Objeto Metálico</button>
+                    <button id="clearMetals"><i>🗑️</i> Limpiar Objetos</button>
+                    <button id="togglePower"><i>🔋</i> Encender/Apagar</button>
+                </div>
+                <div class="slider-container">
+                    <label for="coilCurrent">Corriente en la Bobina (A): <span id="coilCurrentValue" class="value-display">5</span></label>
+                    <input type="range" id="coilCurrent" min="0" max="10" value="5">
+                </div>
+                <div class="slider-container">
+                    <label for="coilTurns">Vueltas de la Bobina: <span id="coilTurnsValue" class="value-display">10</span></label>
+                    <input type="range" id="coilTurns" min="5" max="20" value="10">
+                </div>
+                <p class="explanation">
+                    Un electroimán crea un campo magnético cuando la electricidad fluye a través de una bobina. 
+                    Observa cómo atrae objetos metálicos cuando está encendido y cómo el campo desaparece cuando se apaga.
+                </p>
+            </div>
+            
+            <!-- Experimento 4: Motor Eléctrico -->
+            <div class="experiment-card">
+                <h2 class="experiment-title"><i>🔄</i> Motor Eléctrico</h2>
+                <div class="canvas-container">
+                    <canvas id="motorCanvas" width="600" height="300"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-controls">
+                        <div class="chart-title">Velocidad vs. Tiempo</div>
+                        <button id="downloadMotorChart"><i class="fas fa-download"></i> Descargar Gráfica</button>
+                    </div>
+                    <canvas id="motorChart"></canvas>
+                </div>
+                <div class="controls">
+                    <button id="startMotor"><i>▶️</i> Iniciar Motor</button>
+                    <button id="stopMotor"><i>⏸️</i> Detener Motor</button>
+                    <button id="reverseMotor"><i>🔄</i> Invertir Dirección</button>
+                </div>
+                <div class="slider-container">
+                    <label for="motorVoltage">Voltaje del Motor (V): <span id="motorVoltageValue" class="value-display">6</span></label>
+                    <input type="range" id="motorVoltage" min="1" max="12" value="6">
+                </div>
+                <div class="slider-container">
+                    <label for="motorSpeed">Velocidad del Motor: <span id="motorSpeedValue" class="value-display">5</span></label>
+                    <input type="range" id="motorSpeed" min="1" max="10" value="5">
+                </div>
+                <p class="explanation">
+                    Un motor eléctrico convierte la energía eléctrica en movimiento mecánico usando campos magnéticos. 
+                    La corriente que fluye a través de la bobina interactúa con el campo magnético del imán, creando una fuerza que hace girar el rotor.
+                </p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Simulador creado para la Feria Científica - Electricidad y Magnetismo | ¡Interactúa y experimenta con la física!</p>
+        </footer>
+    </div>
+
+    <script>
+        // ===============================
+        // EXPERIMENTO 1: CAMPO MAGNÉTICO MEJORADO
+        // ===============================
+        const magneticFieldCanvas = document.getElementById('magneticFieldCanvas');
+        const magneticFieldCtx = magneticFieldCanvas.getContext('2d');
+        const addNorthMagnetBtn = document.getElementById('addNorthMagnet');
+        const addSouthMagnetBtn = document.getElementById('addSouthMagnet');
+        const clearMagnetsBtn = document.getElementById('clearMagnets');
+        const fieldStrengthSlider = document.getElementById('fieldStrength');
+        const fieldDensitySlider = document.getElementById('fieldDensity');
+        const fieldStrengthValue = document.getElementById('fieldStrengthValue');
+        const fieldDensityValue = document.getElementById('fieldDensityValue');
+        const magnetCount = document.getElementById('magnetCount');
+        const downloadMagnetChartBtn = document.getElementById('downloadMagnetChart');
+        
+        let magnets = [];
+        let fieldStrength = 5;
+        let fieldDensity = 5;
+        let draggedMagnet = null;
+        let animationId;
+        
+        // Configuración del gráfico para campo magnético
+        const magnetChartCanvas = document.getElementById('magnetChart');
+        const magnetChart = new Chart(magnetChartCanvas, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Fuerza Magnética (N)',
+                    data: [],
+                    borderColor: '#64b5f6',
+                    backgroundColor: 'rgba(100, 181, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#b39ddb'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Distancia (m)',
+                            color: '#b39ddb'
+                        },
+                        grid: {
+                            color: 'rgba(179, 157, 219, 0.2)'
+                        },
+                        ticks: {
+                            color: '#b39ddb'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Fuerza (N)',
+                            color: '#b39ddb'
+                        },
+                        grid: {
+                            color: 'rgba(179, 157, 219, 0.2)'
+                        },
+                        ticks: {
+                            color: '#b39ddb'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Actualizar gráfica de campo magnético
+        function updateMagnetChart() {
+            if (magnets.length < 2) return;
+            
+            // Calcular distancia entre dos imanes
+            const magnet1 = magnets[0];
+            const magnet2 = magnets[1];
+            const dx = magnet2.x - magnet1.x;
+            const dy = magnet2.y - magnet1.y;
+            const distance = Math.sqrt(dx * dx + dy * dy) / 50; // Escalar la distancia
+            
+            // Calcular fuerza magnética (ley de Coulomb para magnetismo)
+            const force = (magnet1.strength * magnet2.strength * fieldStrength) / (distance * distance);
+            const direction = (magnet1.polarity === magnet2.polarity) ? -1 : 1; // Repulsión o atracción
+            const finalForce = direction * force;
+            
+            // Actualizar gráfica
+            const now = new Date();
+            const timeLabel = now.getMinutes() + ':' + now.getSeconds();
+            
+            magnetChart.data.labels.push(timeLabel);
+            magnetChart.data.datasets[0].data.push(finalForce);
+            
+            // Mantener solo los últimos 20 puntos
+            if (magnetChart.data.labels.length > 20) {
+                magnetChart.data.labels.shift();
+                magnetChart.data.datasets[0].data.shift();
+            }
+            
+            magnetChart.update();
+        }
+        
+        // Clase para representar un imán
+        class Magnet {
+            constructor(x, y, polarity) {
+                this.x = x;
+                this.y = y;
+                this.polarity = polarity; // 'north' o 'south'
+                this.strength = 50;
+                this.radius = 20;
+                this.isDragging = false;
+                this.vx = 0;
+                this.vy = 0;
+            }
+            
+            draw() {
+                magneticFieldCtx.beginPath();
+                magneticFieldCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                
+                // Crear un gradiente para el imán
+                const gradient = magneticFieldCtx.createRadialGradient(
+                    this.x, this.y, 0, 
+                    this.x, this.y, this.radius
+                );
+                
+                if (this.polarity === 'north') {
+                    gradient.addColorStop(0, '#ff4d4d');
+                    gradient.addColorStop(1, '#cc0000');
+                } else {
+                    gradient.addColorStop(0, '#4d79ff');
+                    gradient.addColorStop(1, '#0033cc');
+                }
+                
+                magneticFieldCtx.fillStyle = gradient;
+                magneticFieldCtx.fill();
+                
+                // Borde del imán
+                magneticFieldCtx.strokeStyle = 'white';
+                magneticFieldCtx.lineWidth = 2;
+                magneticFieldCtx.stroke();
+                
+                // Dibujar el símbolo N o S
+                magneticFieldCtx.fillStyle = 'white';
+                magneticFieldCtx.font = 'bold 14px Arial';
+                magneticFieldCtx.textAlign = 'center';
+                magneticFieldCtx.textBaseline = 'middle';
+                magneticFieldCtx.fillText(this.polarity === 'north' ? 'N' : 'S', this.x, this.y);
+            }
+            
+            isPointInside(x, y) {
+                const dx = x - this.x;
+                const dy = y - this.y;
+                return dx * dx + dy * dy <= this.radius * this.radius;
+            }
+            
+            update() {
+                if (this.isDragging) return;
+                
+                // Aplicar fuerzas magnéticas de otros imanes
+                let fx = 0, fy = 0;
+                
+                for (const otherMagnet of magnets) {
+                    if (otherMagnet === this) continue;
+                    
+                    const dx = otherMagnet.x - this.x;
+                    const dy = otherMagnet.y - this.y;
+                    const distanceSq = dx * dx + dy * dy;
+                    
+                    if (distanceSq < 1) continue; // Evitar división por cero
+                    
+                    const distance = Math.sqrt(distanceSq);
+                    const minDistance = this.radius + otherMagnet.radius;
+                    
+                    // Si los imanes están muy cerca, aplicar fuerza de repulsión fuerte
+                    if (distance < minDistance) {
+                        const overlap = minDistance - distance;
+                        const repulsionForce = overlap * 0.5;
+                        fx -= (dx / distance) * repulsionForce;
+                        fy -= (dy / distance) * repulsionForce;
+                        continue;
+                    }
+                    
+                    // Fuerza magnética (atractiva o repulsiva)
+                    // CORRECCIÓN: Polos opuestos se atraen, polos iguales se repelen
+                    const forceMagnitude = (this.strength * otherMagnet.strength * fieldStrength) / distanceSq;
+                    const direction = (this.polarity === otherMagnet.polarity) ? -1 : 1; // Mismos polos se repelen (-1), opuestos se atraen (1)
+                    
+                    fx += direction * forceMagnitude * (dx / distance);
+                    fy += direction * forceMagnitude * (dy / distance);
+                }
+                
+                // Aplicar fuerza con amortiguación
+                this.vx = this.vx * 0.9 + fx * 0.1;
+                this.vy = this.vy * 0.9 + fy * 0.1;
+                
+                // Actualizar posición
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Mantener dentro de los límites del canvas
+                this.x = Math.max(this.radius, Math.min(magneticFieldCanvas.width - this.radius, this.x));
+                this.y = Math.max(this.radius, Math.min(magneticFieldCanvas.height - this.radius, this.y));
+                
+                // Rebote en los bordes
+                if (this.x <= this.radius || this.x >= magneticFieldCanvas.width - this.radius) {
+                    this.vx *= -0.5;
+                }
+                if (this.y <= this.radius || this.y >= magneticFieldCanvas.height - this.radius) {
+                    this.vy *= -0.5;
+                }
+            }
+        }
+        
+        // Dibujar líneas de campo magnético
+        function drawFieldLines() {
+            const step = 25 - (fieldDensity * 2); // Más denso con valores más altos
+            const lineLength = 12;
+            
+            for (let x = 0; x < magneticFieldCanvas.width; x += step) {
+                for (let y = 0; y < magneticFieldCanvas.height; y += step) {
+                    let fieldX = 0;
+                    let fieldY = 0;
+                    
+                    // Calcular el campo en este punto
+                    for (const magnet of magnets) {
+                        const dx = x - magnet.x;
+                        const dy = y - magnet.y;
+                        const distanceSq = dx * dx + dy * dy;
+                        
+                        if (distanceSq < 1) continue; // Evitar división por cero
+                        
+                        const distance = Math.sqrt(distanceSq);
+                        const force = magnet.strength * fieldStrength / distanceSq;
+                        
+                        // La dirección depende de la polaridad
+                        const direction = magnet.polarity === 'north' ? 1 : -1;
+                        
+                        fieldX += direction * force * dx / distance;
+                        fieldY += direction * force * dy / distance;
+                    }
+                    
+                    // Normalizar y dibujar la línea
+                    const magnitude = Math.sqrt(fieldX * fieldX + fieldY * fieldY);
+                    
+                    if (magnitude > 0.1) {
+                        const normX = fieldX / magnitude;
+                        const normY = fieldY / magnitude;
+                        
+                        // Color basado en la intensidad del campo
+                        const intensity = Math.min(1, magnitude / 10);
+                        const hue = 240 - (intensity * 120); // De azul a rojo
+                        
+                        magneticFieldCtx.beginPath();
+                        magneticFieldCtx.moveTo(x, y);
+                        magneticFieldCtx.lineTo(x + normX * lineLength, y + normY * lineLength);
+                        magneticFieldCtx.strokeStyle = `hsla(${hue}, 100%, 60%, ${intensity})`;
+                        magneticFieldCtx.lineWidth = 2;
+                        magneticFieldCtx.stroke();
+                        
+                        // Dibujar punta de flecha
+                        magneticFieldCtx.beginPath();
+                        magneticFieldCtx.moveTo(x + normX * lineLength, y + normY * lineLength);
+                        magneticFieldCtx.lineTo(
+                            x + normX * (lineLength - 5) + normY * 3,
+                            y + normY * (lineLength - 5) - normX * 3
+                        );
+                        magneticFieldCtx.lineTo(
+                            x + normX * (lineLength - 5) - normY * 3,
+                            y + normY * (lineLength - 5) + normX * 3
+                        );
+                        magneticFieldCtx.closePath();
+                        magneticFieldCtx.fillStyle = `hsla(${hue}, 100%, 60%, ${intensity})`;
+                        magneticFieldCtx.fill();
+                    }
+                }
+            }
+        }
+        
+        function drawMagneticField() {
+            magneticFieldCtx.clearRect(0, 0, magneticFieldCanvas.width, magneticFieldCanvas.height);
+            
+            // Actualizar posiciones de los imanes
+            for (const magnet of magnets) {
+                magnet.update();
+            }
+            
+            // Dibujar líneas de campo
+            drawFieldLines();
+            
+            // Dibujar imanes
+            for (const magnet of magnets) {
+                magnet.draw();
+            }
+            
+            // Actualizar gráfica
+            updateMagnetChart();
+            
+            animationId = requestAnimationFrame(drawMagneticField);
+        }
+        
+        // Event listeners para el experimento de campo magnético
+        addNorthMagnetBtn.addEventListener('click', () => {
+            const x = Math.random() * (magneticFieldCanvas.width - 60) + 30;
+            const y = Math.random() * (magneticFieldCanvas.height - 60) + 30;
+            
+            magnets.push(new Magnet(x, y, 'north'));
+            magnetCount.textContent = magnets.length;
+        });
+        
+        addSouthMagnetBtn.addEventListener('click', () => {
+            const x = Math.random() * (magneticFieldCanvas.width - 60) + 30;
+            const y = Math.random() * (magneticFieldCanvas.height - 60) + 30;
+            
+            magnets.push(new Magnet(x, y, 'south'));
+            magnetCount.textContent = magnets.length;
+        });
+        
+        clearMagnetsBtn.addEventListener('click', () => {
+            magnets = [];
+            magnetCount.textContent = '0';
+            magnetChart.data.labels = [];
+            magnetChart.data.datasets[0].data = [];
+            magnetChart.update();
+        });
+        
+        fieldStrengthSlider.addEventListener('input', () => {
+            fieldStrength = parseInt(fieldStrengthSlider.value);
+            fieldStrengthValue.textContent = fieldStrength;
+        });
+        
+        fieldDensitySlider.addEventListener('input', () => {
+            fieldDensity = parseInt(fieldDensitySlider.value);
+            fieldDensityValue.textContent = fieldDensity;
+        });
+        
+        // Descargar gráfica de campo magnético
+        downloadMagnetChartBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'grafica_campo_magnetico.png';
+            link.href = magnetChartCanvas.toDataURL('image/png');
+            link.click();
+        });
+        
+        // Interacción con el ratón para arrastrar imanes
+        magneticFieldCanvas.addEventListener('mousedown', (e) => {
+            const rect = magneticFieldCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            for (const magnet of magnets) {
+                if (magnet.isPointInside(x, y)) {
+                    draggedMagnet = magnet;
+                    magnet.isDragging = true;
+                    magnet.vx = 0;
+                    magnet.vy = 0;
+                    break;
+                }
+            }
+        });
+        
+        magneticFieldCanvas.addEventListener('mousemove', (e) => {
+            if (draggedMagnet) {
+                const rect = magneticFieldCanvas.getBoundingClientRect();
+                draggedMagnet.x = e.clientX - rect.left;
+                draggedMagnet.y = e.clientY - rect.top;
+            }
+        });
+        
+        magneticFieldCanvas.addEventListener('mouseup', () => {
+            if (draggedMagnet) {
+                draggedMagnet.isDragging = false;
+                draggedMagnet = null;
+            }
+        });
+        
+        magneticFieldCanvas.addEventListener('mouseleave', () => {
+            if (draggedMagnet) {
+                draggedMagnet.isDragging = false;
+                draggedMagnet = null;
+            }
+        });
+        
+        // Iniciar el dibujo del campo magnético
+        drawMagneticField();
+        
+        // ===============================
+        // EXPERIMENTO 2: CIRCUITO ELÉCTRICO MEJORADO
+        // ===============================
+        const circuitCanvas = document.getElementById('circuitCanvas');
+        const circuitCtx = circuitCanvas.getContext('2d');
+        const addBatteryBtn = document.getElementById('addBattery');
+        const addResistorBtn = document.getElementById('addResistor');
+        const addBulbBtn = document.getElementById('addBulb');
+        const addSwitchBtn = document.getElementById('addSwitch');
+        const clearCircuitBtn = document.getElementById('clearCircuit');
+        const voltageSlider = document.getElementById('voltage');
+        const resistanceSlider = document.getElementById('resistance');
+        const voltageValue = document.getElementById('voltageValue');
+        const resistanceValue = document.getElementById('resistanceValue');
+        const componentCount = document.getElementById('componentCount');
+        const downloadCircuitChartBtn = document.getElementById('downloadCircuitChart');
+        
+        let circuitComponents = [];
+        let voltage = 6;
+        let resistance = 5;
+        let draggedComponent = null;
+        let wires = [];
+        let circuitClosed = false;
+        let currentValue = 0;
+        let circuitTime = 0;
+        
+        // Configuración del gráfico para circuito eléctrico
+        const circuitChartCanvas = document.getElementById('circuitChart');
+        const circuitChart = new Chart(circuitChartCanvas, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Corriente (A)',
+                    data: [],
+                    borderColor: '#ffcc00',
+                    backgroundColor: 'rgba(255, 204, 0, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#b39ddb'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Tiempo (s)',
+                            color: '#b39ddb'
+                        },
+                        grid: {
+                            color: 'rgba(179, 157, 219, 0.2)'
+                        },
+                        ticks: {
+                            color: '#b39ddb'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Corriente (A)',
+                            color: '#b39ddb'
+                        },
+                        grid: {
+                            color: 'rgba(179, 157, 219, 0.2)'
+                        },
+                        ticks: {
+                            color: '#b39ddb'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Actualizar gráfica de circuito eléctrico
+        function updateCircuitChart() {
+            if (!circuitClosed || circuitComponents.length < 2) {
+                currentValue = 0;
+                return;
+            }
+            
+            // Calcular corriente usando la ley de Ohm: I = V / R
+            currentValue = voltage / resistance;
+            
+            // Simular variaciones en la corriente
+            currentValue += (Math.random() - 0.5) * 0.1;
+            
+            // Actualizar gráfica
+            circuitTime += 0.1;
+            circuitChart.data.labels.push(circuitTime.toFixed(1));
+            circuitChart.data.datasets[0].data.push(currentValue);
+            
+            // Mantener solo los últimos 20 puntos
+            if (circuitChart.data.labels.length > 20) {
+                circuitChart.data.labels.shift();
+                circuitChart.data.datasets[0].data.shift();
+            }
+            
+            circuitChart.update();
+        }
+        
+        // Clase base para componentes del circuito
+        class CircuitComponent {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.connected = false;
+                this.width = 40;
+                this.height = 40;
+                this.isDragging = false;
+                this.terminals = [];
+            }
+            
+            draw() {
+                // Este método será sobrescrito por las clases hijas
+            }
+            
+            isPointInside(x, y) {
+                return x >= this.x - this.width/2 && 
+                       x <= this.x + this.width/2 && 
+                       y >= this.y - this.height/2 && 
+                       y <= this.y + this.height/2;
+            }
+            
+            getTerminals() {
+                return this.terminals;
+            }
+        }
+        
+        class Battery extends CircuitComponent {
+            constructor(x, y) {
+                super(x, y, 'battery');
+                this.terminals = [
+                    {x: this.x - 20, y: this.y}, // Terminal negativo
+                    {x: this.x + 20, y: this.y}  // Terminal positivo
+                ];
+            }
+            
+            draw() {
+                // Dibujar batería con gradiente
+                const gradient = circuitCtx.createLinearGradient(
+                    this.x - 20, this.y, 
+                    this.x + 20, this.y
+                );
+                gradient.addColorStop(0, '#333');
+                gradient.addColorStop(0.4, '#666');
+                gradient.addColorStop(0.6, '#666');
+                gradient.addColorStop(1, '#333');
+                
+                circuitCtx.fillStyle = gradient;
+                circuitCtx.fillRect(this.x - 20, this.y - 10, 40, 20);
+                
+                // Terminal positivo
+                circuitCtx.fillStyle = 'red';
+                circuitCtx.fillRect(this.x - 20, this.y - 10, 5, 20);
+                
+                // Terminal negativo
+                circuitCtx.fillStyle = 'blue';
+                circuitCtx.fillRect(this.x + 15, this.y - 10, 5, 20);
+                
+                // Etiqueta
+                circuitCtx.fillStyle = 'white';
+                circuitCtx.font = 'bold 12px Arial';
+                circuitCtx.textAlign = 'center';
+                circuitCtx.fillText(`${voltage}V`, this.x, this.y - 15);
+                
+                // Resaltar si está siendo arrastrado
+                if (this.isDragging) {
+                    circuitCtx.strokeStyle = 'yellow';
+                    circuitCtx.lineWidth = 2;
+                    circuitCtx.strokeRect(this.x - 22, this.y - 12, 44, 24);
+                }
+            }
+        }
+        
+        class Resistor extends CircuitComponent {
+            constructor(x, y) {
+                super(x, y, 'resistor');
+                this.terminals = [
+                    {x: this.x - 20, y: this.y},
+                    {x: this.x + 20, y: this.y}
+                ];
+            }
+            
+            draw() {
+                // Dibujar resistencia con líneas en zigzag
+                circuitCtx.strokeStyle = 'brown';
+                circuitCtx.lineWidth = 4;
+                circuitCtx.beginPath();
+                circuitCtx.moveTo(this.x - 20, this.y);
+                circuitCtx.lineTo(this.x - 10, this.y);
+                circuitCtx.lineTo(this.x - 5, this.y - 8);
+                circuitCtx.lineTo(this.x, this.y + 8);
+                circuitCtx.lineTo(this.x + 5, this.y - 8);
+                circuitCtx.lineTo(this.x + 10, this.y);
+                circuitCtx.lineTo(this.x + 20, this.y);
+                circuitCtx.stroke();
+                
+                // Etiqueta
+                circuitCtx.fillStyle = 'white';
+                circuitCtx.font = 'bold 12px Arial';
+                circuitCtx.textAlign = 'center';
+                circuitCtx.fillText(`${resistance}Ω`, this.x, this.y - 15);
+                
+                // Resaltar si está siendo arrastrado
+                if (this.isDragging) {
+                    circuitCtx.strokeStyle = 'yellow';
+                    circuitCtx.lineWidth = 2;
+                    circuitCtx.strokeRect(this.x - 22, this.y - 12, 44, 24);
+                }
+            }
+        }
+        
+        class Bulb extends CircuitComponent {
+            constructor(x, y) {
+                super(x, y, 'bulb');
+                this.lit = false;
+                this.terminals = [
+                    {x: this.x - 15, y: this.y + 25},
+                    {x: this.x + 15, y: this.y + 25}
+                ];
+            }
+            
+            draw() {
+                // Dibujar bombilla
+                circuitCtx.beginPath();
+                circuitCtx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+                
+                if (this.lit && circuitClosed && voltage > 3) {
+                    // Bombilla encendida con gradiente
+                    const gradient = circuitCtx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, 15
+                    );
+                    gradient.addColorStop(0, '#ffff99');
+                    gradient.addColorStop(1, '#ffcc00');
+                    circuitCtx.fillStyle = gradient;
+                    
+                    // Efecto de brillo
+                    circuitCtx.shadowColor = 'yellow';
+                    circuitCtx.shadowBlur = 15;
+                } else {
+                    // Bombilla apagada
+                    circuitCtx.fillStyle = 'lightgray';
+                    circuitCtx.shadowBlur = 0;
+                }
+                
+                circuitCtx.fill();
+                circuitCtx.strokeStyle = 'white';
+                circuitCtx.stroke();
+                
+                // Base de la bombilla
+                circuitCtx.beginPath();
+                circuitCtx.moveTo(this.x - 10, this.y + 15);
+                circuitCtx.lineTo(this.x - 5, this.y + 25);
+                circuitCtx.lineTo(this.x + 5, this.y + 25);
+                circuitCtx.lineTo(this.x + 10, this.y + 15);
+                circuitCtx.closePath();
+                circuitCtx.fillStyle = 'gray';
+                circuitCtx.fill();
+                circuitCtx.stroke();
+                
+                circuitCtx.shadowBlur = 0; // Resetear sombra
+                
+                // Resaltar si está siendo arrastrado
+                if (this.isDragging) {
+                    circuitCtx.strokeStyle = 'yellow';
+                    circuitCtx.lineWidth = 2;
+                    circuitCtx.strokeRect(this.x - 17, this.y - 17, 34, 44);
+                }
+            }
+        }
+        
+        class Switch extends CircuitComponent {
+            constructor(x, y) {
+                super(x, y, 'switch');
+                this.isClosed = false;
+                this.terminals = [
+                    {x: this.x - 20, y: this.y},
+                    {x: this.x + 20, y: this.y}
+                ];
+            }
+            
+            draw() {
+                // Dibujar interruptor
+                circuitCtx.strokeStyle = 'silver';
+                circuitCtx.lineWidth = 3;
+                
+                // Base
+                circuitCtx.beginPath();
+                circuitCtx.moveTo(this.x - 20, this.y);
+                circuitCtx.lineTo(this.x - 5, this.y);
+                circuitCtx.moveTo(this.x + 5, this.y);
+                circuitCtx.lineTo(this.x + 20, this.y);
+                circuitCtx.stroke();
+                
+                // Palanca
+                circuitCtx.beginPath();
+                if (this.isClosed) {
+                    circuitCtx.moveTo(this.x - 5, this.y);
+                    circuitCtx.lineTo(this.x + 5, this.y);
+                } else {
+                    circuitCtx.moveTo(this.x - 5, this.y);
+                    circuitCtx.lineTo(this.x, this.y - 10);
+                }
+                circuitCtx.stroke();
+                
+                // Etiqueta
+                circuitCtx.fillStyle = 'white';
+                circuitCtx.font = 'bold 12px Arial';
+                circuitCtx.textAlign = 'center';
+                circuitCtx.fillText(this.isClosed ? 'ON' : 'OFF', this.x, this.y - 20);
+                
+                // Resaltar si está siendo arrastrado
+                if (this.isDragging) {
+                    circuitCtx.strokeStyle = 'yellow';
+                    circuitCtx.lineWidth = 2;
+                    circuitCtx.strokeRect(this.x - 22, this.y - 12, 44, 24);
+                }
+            }
+            
+            toggle() {
+                this.isClosed = !this.isClosed;
+                circuitClosed = this.isClosed;
+                if (!circuitClosed) {
+                    circuitTime = 0;
+                    circuitChart.data.labels = [];
+                    circuitChart.data.datasets[0].data = [];
+                }
+            }
+        }
+        
+        class Wire {
+            constructor(startX, startY, endX, endY) {
+                this.startX = startX;
+                this.startY = startY;
+                this.endX = endX;
+                this.endY = endY;
+            }
+            
+            draw() {
+                circuitCtx.strokeStyle = circuitClosed ? 'gold' : 'gray';
+                circuitCtx.lineWidth = 3;
+                circuitCtx.setLineDash([]);
+                circuitCtx.beginPath();
+                circuitCtx.moveTo(this.startX, this.startY);
+                circuitCtx.lineTo(this.endX, this.endY);
+                circuitCtx.stroke();
+                
+                // Dibujar electrones moviéndose si el circuito está cerrado
+                if (circuitClosed && voltage > 0) {
+                    const now = Date.now();
+                    const progress = (now % 2000) / 2000; // 2 segundos para completar el ciclo
+                    
+                    const electronX = this.startX + (this.endX - this.startX) * progress;
+                    const electronY = this.startY + (this.endY - this.startY) * progress;
+                    
+                    circuitCtx.fillStyle = 'cyan';
+                    circuitCtx.beginPath();
+                    circuitCtx.arc(electronX, electronY, 3, 0, Math.PI * 2);
+                    circuitCtx.fill();
+                }
+            }
+        }
+        
+        function drawCircuit() {
+            circuitCtx.clearRect(0, 0, circuitCanvas.width, circuitCanvas.height);
+            
+            // Dibujar cables
+            for (const wire of wires) {
+                wire.draw();
+            }
+            
+            // Dibujar componentes
+            for (const component of circuitComponents) {
+                component.draw();
+            }
+            
+            // Encender bombillas si hay voltaje suficiente y el circuito está cerrado
+            for (const component of circuitComponents) {
+                if (component.type === 'bulb') {
+                    component.lit = (circuitClosed && voltage > 3);
+                }
+            }
+            
+            // Actualizar gráfica
+            updateCircuitChart();
+            
+            requestAnimationFrame(drawCircuit);
+        }
+        
+        // Event listeners para el experimento de circuito
+        addBatteryBtn.addEventListener('click', () => {
+            const x = Math.random() * (circuitCanvas.width - 60) + 30;
+            const y = Math.random() * (circuitCanvas.height - 60) + 30;
+            
+            circuitComponents.push(new Battery(x, y));
+            componentCount.textContent = circuitComponents.length;
+            
+            // Conectar automáticamente si hay otro componente
+            autoConnectComponents();
+        });
+        
+        addResistorBtn.addEventListener('click', () => {
+            const x = Math.random() * (circuitCanvas.width - 60) + 30;
+            const y = Math.random() * (circuitCanvas.height - 60) + 30;
+            
+            circuitComponents.push(new Resistor(x, y));
+            componentCount.textContent = circuitComponents.length;
+            
+            // Conectar automáticamente si hay otro componente
+            autoConnectComponents();
+        });
+        
+        addBulbBtn.addEventListener('click', () => {
+            const x = Math.random() * (circuitCanvas.width - 60) + 30;
+            const y = Math.random() * (circuitCanvas.height - 60) + 30;
+            
+            circuitComponents.push(new Bulb(x, y));
+            componentCount.textContent = circuitComponents.length;
+            
+            // Conectar automáticamente si hay otro componente
+            autoConnectComponents();
+        });
+        
+        addSwitchBtn.addEventListener('click', () => {
+            const x = Math.random() * (circuitCanvas.width - 60) + 30;
+            const y = Math.random() * (circuitCanvas.height - 60) + 30;
+            
+            circuitComponents.push(new Switch(x, y));
+            componentCount.textContent = circuitComponents.length;
+            
+            // Conectar automáticamente si hay otro componente
+            autoConnectComponents();
+        });
+        
+        clearCircuitBtn.addEventListener('click', () => {
+            circuitComponents = [];
+            wires = [];
+            circuitClosed = false;
+            componentCount.textContent = '0';
+            circuitChart.data.labels = [];
+            circuitChart.data.datasets[0].data = [];
+            circuitChart.update();
+        });
+        
+        voltageSlider.addEventListener('input', () => {
+            voltage = parseInt(voltageSlider.value);
+            voltageValue.textContent = voltage;
+        });
+        
+        resistanceSlider.addEventListener('input', () => {
+            resistance = parseInt(resistanceSlider.value);
+            resistanceValue.textContent = resistance;
+        });
+        
+        // Descargar gráfica de circuito eléctrico
+        downloadCircuitChartBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'grafica_circuito_electrico.png';
+            link.href = circuitChartCanvas.toDataURL('image/png');
+            link.click();
+        });
+        
+        // Función para conectar componentes automáticamente
+        function autoConnectComponents() {
+            if (circuitComponents.length < 2) return;
+            
+            wires = [];
+            
+            // Conectar componentes en serie
+            for (let i = 0; i < circuitComponents.length - 1; i++) {
+                const comp1 = circuitComponents[i];
+                const comp2 = circuitComponents[i + 1];
+                
+                const terminals1 = comp1.getTerminals();
+                const terminals2 = comp2.getTerminals();
+                
+                // Conectar el terminal derecho del primer componente con el izquierdo del segundo
+                if (terminals1.length > 1 && terminals2.length > 1) {
+                    wires.push(new Wire(
+                        terminals1[1].x, terminals1[1].y,
+                        terminals2[0].x, terminals2[0].y
+                    ));
+                }
+            }
+            
+            // Conectar el último componente con el primero para formar un circuito cerrado
+            if (circuitComponents.length > 2) {
+                const first = circuitComponents[0];
+                const last = circuitComponents[circuitComponents.length - 1];
+                
+                const terminalsFirst = first.getTerminals();
+                const terminalsLast = last.getTerminals();
+                
+                if (terminalsFirst.length > 0 && terminalsLast.length > 1) {
+                    wires.push(new Wire(
+                        terminalsLast[1].x, terminalsLast[1].y,
+                        terminalsFirst[0].x, terminalsFirst[0].y
+                    ));
+                }
+            }
+        }
+        
+        // Interacción con el ratón para arrastrar componentes y hacer clic en interruptores
+        circuitCanvas.addEventListener('mousedown', (e) => {
+            const rect = circuitCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            for (const component of circuitComponents) {
+                if (component.isPointInside(x, y)) {
+                    if (component.type === 'switch') {
+                        component.toggle();
+                    } else {
+                        draggedComponent = component;
+                        component.isDragging = true;
+                    }
+                    break;
+                }
+            }
+        });
+        
+        circuitCanvas.addEventListener('mousemove', (e) => {
+            if (draggedComponent) {
+                const rect = circuitCanvas.getBoundingClientRect();
+                draggedComponent.x = e.clientX - rect.left;
+                draggedComponent.y = e.clientY - rect.top;
+                
+                // Actualizar posiciones de los terminales
+                draggedComponent.terminals = [];
+                if (draggedComponent.type === 'battery') {
+                    draggedComponent.terminals = [
+                        {x: draggedComponent.x - 20, y: draggedComponent.y},
+                        {x: draggedComponent.x + 20, y: draggedComponent.y}
+                    ];
+                } else if (draggedComponent.type === 'resistor' || draggedComponent.type === 'switch') {
+                    draggedComponent.terminals = [
+                        {x: draggedComponent.x - 20, y: draggedComponent.y},
+                        {x: draggedComponent.x + 20, y: draggedComponent.y}
+                    ];
+                } else if (draggedComponent.type === 'bulb') {
+                    draggedComponent.terminals = [
+                        {x: draggedComponent.x - 15, y: draggedComponent.y + 25},
+                        {x: draggedComponent.x + 15, y: draggedComponent.y + 25}
+                    ];
+                }
+                
+                // Actualizar cables conectados
+                autoConnectComponents();
+            }
+        });
+        
+        circuitCanvas.addEventListener('mouseup', () => {
+            if (draggedComponent) {
+                draggedComponent.isDragging = false;
+                draggedComponent = null;
+            }
+        });
+        
+        // Iniciar el dibujo del circuito
+        drawCircuit();
+        
+        // ===============================
+        // EXPERIMENTO 3: ELECTROIMÁN
+        // ===============================
+        const electromagnetCanvas = document.getElementById('electromagnetCanvas');
+        const electromagnetCtx = electromagnetCanvas.getContext('2d');
+        const addMetalBtn = document.getElementById('addMetal');
+        const clearMetalsBtn = document.getElementById('clearMetals');
+        const togglePowerBtn = document.getElementById('togglePower');
+        const coilCurrentSlider = document.getElementById('coilCurrent');
+        const coilTurnsSlider = document.getElementById('coilTurns');
+        const coilCurrentValue = document.getElementById('coilCurrentValue');
+        const coilTurnsValue = document.getElementById('coilTurnsValue');
+        const metalCount = document.getElementById('metalCount');
+        const downloadElectromagnetChartBtn = document.getElementById('downloadElectromagnetChart');
+        
+        let metals = [];
+        let coilCurrent = 5;
+        let coilTurns = 10;
+        let isElectromagnetOn = false;
+        let electromagnetStrength = 0;
+        let electromagnetData = [];
+        
+        // Configuración del gráfico para electroimán
+        const electromagnetChartCanvas = document.getElementById('electromagnetChart');
+        const electromagnetChart = new Chart(electromagnetChartCanvas, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Fuerza Magnética (N)',
+                    data: [],
+                    borderColor: '#ff6666',
+                    backgroundColor: 'rgba(255, 102, 102, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#b39ddb'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Corriente (A)',
+                            color: '#b39ddb'
+                        },
+                        grid: {
+                            color: 'rgba(179, 157, 219, 0.2)'
+                        },
+                        ticks: {
+                            color: '#b39ddb'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Fuerza (N)',
+                            color: '#b39ddb'
+                        },
+                        grid: {
+                            color: 'rgba(179, 157, 219, 0.2)'
+                        },
+                        ticks: {
+                            color: '#b39ddb'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Actualizar gráfica de electroimán
+        function updateElectromagnetChart() {
+            if (!isElectromagnetOn) return;
+            
+            // Calcular fuerza magnética
+            electromagnetStrength = coilCurrent * coilTurns / 50;
+            
+            // Actualizar gráfica
+            electromagnetChart.data.labels.push(coilCurrent.toString());
+            electromagnetChart.data.datasets[0].data.push(electromagnetStrength);
+            
+            // Mantener solo los últimos 15 puntos
+            if (electromagnetChart.data.labels.length > 15) {
+                electromagnetChart.data.labels.shift();
+                electromagnetChart.data.datasets[0].data.shift();
+            }
+            
+            electromagnetChart.update();
+        }
+        
+        class MetalObject {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 12;
+                this.isAttracted = false;
+                this.vx = 0;
+                this.vy = 0;
+            }
+            
+            draw() {
+                electromagnetCtx.beginPath();
+                electromagnetCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                
+                const gradient = electromagnetCtx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.radius
+                );
+                
+                if (this.isAttracted) {
+                    gradient.addColorStop(0, '#ffcc00');
+                    gradient.addColorStop(1, '#cc9900');
+                } else {
+                    gradient.addColorStop(0, '#cccccc');
+                    gradient.addColorStop(1, '#999999');
+                }
+                
+                electromagnetCtx.fillStyle = gradient;
+                electromagnetCtx.fill();
+                
+                electromagnetCtx.strokeStyle = 'white';
+                electromagnetCtx.lineWidth = 1;
+                electromagnetCtx.stroke();
+            }
+            
+            update() {
+                if (!isElectromagnetOn) {
+                    this.isAttracted = false;
+                    return;
+                }
+                
+                const coilX = electromagnetCanvas.width / 2;
+                const coilY = electromagnetCanvas.height / 2;
+                
+                const dx = coilX - this.x;
+                const dy = coilY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Si está lo suficientemente cerca del electroimán, es atraído
+                if (distance < 150) {
+                    this.isAttracted = true;
+                    
+                    // Fuerza de atracción proporcional a la corriente y vueltas
+                    const force = (coilCurrent * coilTurns) / 50;
+                    
+                    this.vx = this.vx * 0.9 + (dx / distance) * force * 0.1;
+                    this.vy = this.vy * 0.9 + (dy / distance) * force * 0.1;
+                    
+                    this.x += this.vx;
+                    this.y += this.vy;
+                } else {
+                    this.isAttracted = false;
+                }
+            }
+        }
+        
+        function drawElectromagnet() {
+            electromagnetCtx.clearRect(0, 0, electromagnetCanvas.width, electromagnetCanvas.height);
+            
+            // Dibujar electroimán (bobina con núcleo de hierro)
+            const coilX = electromagnetCanvas.width / 2;
+            const coilY = electromagnetCanvas.height / 2;
+            const coilRadius = 30;
+            
+            // Núcleo de hierro
+            electromagnetCtx.fillStyle = isElectromagnetOn ? '#cc0000' : '#663333';
+            electromagnetCtx.fillRect(coilX - 10, coilY - 60, 20, 120);
+            
+            // Bobina
+            electromagnetCtx.strokeStyle = isElectromagnetOn ? '#ff9900' : '#666666';
+            electromagnetCtx.lineWidth = 3;
+            
+            for (let i = 0; i < coilTurns; i++) {
+                const y = coilY - 50 + (i * 100 / coilTurns);
+                electromagnetCtx.beginPath();
+                electromagnetCtx.arc(coilX, y, coilRadius, 0, Math.PI * 2);
+                electromagnetCtx.stroke();
+            }
+            
+            // Base
+            electromagnetCtx.fillStyle = '#333333';
+            electromagnetCtx.fillRect(coilX - 40, coilY + 50, 80, 20);
+            
+            // Cable de alimentación
+            electromagnetCtx.strokeStyle = isElectromagnetOn ? '#00ff00' : '#666666';
+            electromagnetCtx.lineWidth = 3;
+            electromagnetCtx.beginPath();
+            electromagnetCtx.moveTo(coilX - 40, coilY + 60);
+            electromagnetCtx.lineTo(50, coilY + 60);
+            electromagnetCtx.lineTo(50, 30);
+            electromagnetCtx.lineTo(30, 30);
+            electromagnetCtx.stroke();
+            
+            // Actualizar y dibujar objetos metálicos
+            for (const metal of metals) {
+                metal.update();
+                metal.draw();
+            }
+            
+            // Dibujar campo magnético si está encendido
+            if (isElectromagnetOn) {
+                electromagnetStrength = coilCurrent * coilTurns / 50;
+                
+                // Dibujar líneas de campo magnético
+                electromagnetCtx.strokeStyle = `rgba(255, 100, 100, ${Math.min(0.7, electromagnetStrength / 2)})`;
+                electromagnetCtx.lineWidth = 1;
+                electromagnetCtx.setLineDash([5, 5]);
+                
+                for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+                    for (let r = coilRadius + 10; r < 200; r += 20) {
+                        const startX = coilX + Math.cos(angle) * (r - 10);
+                        const startY = coilY + Math.sin(angle) * (r - 10);
+                        const endX = coilX + Math.cos(angle) * r;
+                        const endY = coilY + Math.sin(angle) * r;
+                        
+                        electromagnetCtx.beginPath();
+                        electromagnetCtx.moveTo(startX, startY);
+                        electromagnetCtx.lineTo(endX, endY);
+                        electromagnetCtx.stroke();
+                    }
+                }
+                
+                electromagnetCtx.setLineDash([]);
+            }
+            
+            // Indicador de estado
+            electromagnetCtx.fillStyle = 'white';
+            electromagnetCtx.font = '16px Arial';
+            electromagnetCtx.textAlign = 'left';
+            electromagnetCtx.fillText(`Electroimán: ${isElectromagnetOn ? 'ENCENDIDO' : 'APAGADO'}`, 20, 30);
+            electromagnetCtx.fillText(`Fuerza: ${electromagnetStrength.toFixed(2)}`, 20, 55);
+            
+            // Actualizar gráfica
+            updateElectromagnetChart();
+            
+            requestAnimationFrame(drawElectromagnet);
+        }
+        
+        // Event listeners para el electroimán
+        addMetalBtn.addEventListener('click', () => {
+            const x = Math.random() * (electromagnetCanvas.width - 100) + 50;
+            const y = Math.random() * (electromagnetCanvas.height - 100) + 50;
+            
+            // Asegurarse de que no aparezca demasiado cerca del electroimán
+            if (Math.abs(x - electromagnetCanvas.width/2) < 100) {
+                metals.push(new MetalObject(x + 150, y));
+            } else {
+                metals.push(new MetalObject(x, y));
+            }
+            
+            metalCount.textContent = metals.length;
+        });
+        
+        clearMetalsBtn.addEventListener('click', () => {
+            metals = [];
+            metalCount.textContent = '0';
+        });
+        
+        togglePowerBtn.addEventListener('click', () => {
+            isElectromagnetOn = !isElectromagnetOn;
+            if (!isElectromagnetOn) {
+                electromagnetChart.data.labels = [];
+                electromagnetChart.data.datasets[0].data = [];
+                electromagnetChart.update();
+            }
+        });
+        
+        coilCurrentSlider.addEventListener('input', () => {
+            coilCurrent = parseInt(coilCurrentSlider.value);
+            coilCurrentValue.textContent = coilCurrent;
+        });
+        
+        coilTurnsSlider.addEventListener('input', () => {
+            coilTurns = parseInt(coilTurnsSlider.value);
+            coilTurnsValue.textContent = coilTurns;
+        });
+        
+        // Descargar gráfica de electroimán
+        downloadElectromagnetChartBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'grafica_electroiman.png';
+            link.href = electromagnetChartCanvas.toDataURL('image/png');
+            link.click();
+        });
+        
+        // Iniciar el dibujo del electroimán
+        drawElectromagnet();
+        
+        // ===============================
+        // EXPERIMENTO 4: MOTOR ELÉCTRICO
+        // ===============================
+        const motorCanvas = document.getElementById('motorCanvas');
+        const motorCtx = motorCanvas.getContext('2d');
+        const startMotorBtn = document.getElementById('startMotor');
+        const stopMotorBtn = document.getElementById('stopMotor');
+        const reverseMotorBtn = document.getElementById('reverseMotor');
+        const motorVoltageSlider = document.getElementById('motorVoltage');
+        const motorSpeedSlider = document.getElementById('motorSpeed');
+        const motorVoltageValue = document.getElementById('motorVoltageValue');
+        const motorSpeedValue = document.getElementById('motorSpeedValue');
+        const downloadMotorChartBtn = document.getElementById('downloadMotorChart');
+        
+        let motorAngle = 0;
+        let motorRotationSpeed = 0;
+        let isMotorRunning = false;
+        let motorDirection = 1; // 1 para adelante, -1 para atrás
+        let motorVoltage = 6;
+        let targetSpeed = 5;
+        let motorTime = 0;
+        
+        // Configuración del gráfico para motor eléctrico
+        const motorChartCanvas = document.getElementById('motorChart');
+        const motorChart = new Chart(motorChartCanvas, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Velocidad (RPM)',
+                    data: [],
+                    borderColor: '#6a52b5',
+                    backgroundColor: 'rgba(106, 82, 181, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#b39ddb'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Tiempo (s)',
+                            color: '#b39ddb'
+                        },
+                        grid: {
+                            color: 'rgba(179, 157, 219, 0.2)'
+                        },
+                        ticks: {
+                            color: '#b39ddb'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Velocidad (RPM)',
+                            color: '#b39ddb'
+                        },
+                        grid: {
+                            color: 'rgba(179, 157, 219, 0.2)'
+                        },
+                        ticks: {
+                            color: '#b39ddb'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Actualizar gráfica de motor eléctrico
+        function updateMotorChart() {
+            if (!isMotorRunning) return;
+            
+            // Calcular velocidad en RPM
+            const speedRPM = Math.abs(motorRotationSpeed) * 100;
+            
+            // Actualizar gráfica
+            motorTime += 0.1;
+            motorChart.data.labels.push(motorTime.toFixed(1));
+            motorChart.data.datasets[0].data.push(speedRPM);
+            
+            // Mantener solo los últimos 20 puntos
+            if (motorChart.data.labels.length > 20) {
+                motorChart.data.labels.shift();
+                motorChart.data.datasets[0].data.shift();
+            }
+            
+            motorChart.update();
+        }
+        
+        function drawMotor() {
+            motorCtx.clearRect(0, 0, motorCanvas.width, motorCanvas.height);
+            
+            const centerX = motorCanvas.width / 2;
+            const centerY = motorCanvas.height / 2;
+            
+            // Dibujar base del motor
+            motorCtx.fillStyle = '#333333';
+            motorCtx.fillRect(centerX - 60, centerY + 40, 120, 20);
+            
+            // Dibujar carcasa del motor
+            motorCtx.fillStyle = '#555555';
+            motorCtx.beginPath();
+            motorCtx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+            motorCtx.fill();
+            motorCtx.strokeStyle = '#777777';
+            motorCtx.lineWidth = 3;
+            motorCtx.stroke();
+            
+            // Dibujar rotor
+            motorCtx.save();
+            motorCtx.translate(centerX, centerY);
+            motorCtx.rotate(motorAngle);
+            
+            // Eje
+            motorCtx.fillStyle = '#888888';
+            motorCtx.beginPath();
+            motorCtx.arc(0, 0, 10, 0, Math.PI * 2);
+            motorCtx.fill();
+            
+            // Bobinas del rotor
+            for (let i = 0; i < 4; i++) {
+                const angle = i * Math.PI / 2;
+                motorCtx.fillStyle = i % 2 === 0 ? '#ff6666' : '#6666ff';
+                motorCtx.beginPath();
+                motorCtx.arc(Math.cos(angle) * 30, Math.sin(angle) * 30, 15, 0, Math.PI * 2);
+                motorCtx.fill();
+                motorCtx.strokeStyle = 'white';
+                motorCtx.lineWidth = 1;
+                motorCtx.stroke();
+            }
+            
+            motorCtx.restore();
+            
+            // Dibujar imanes del estator
+            for (let i = 0; i < 2; i++) {
+                const angle = i * Math.PI;
+                motorCtx.fillStyle = i === 0 ? '#ff0000' : '#0000ff';
+                motorCtx.beginPath();
+                motorCtx.arc(
+                    centerX + Math.cos(angle) * 70,
+                    centerY + Math.sin(angle) * 70,
+                    20, 0, Math.PI * 2
+                );
+                motorCtx.fill();
+                motorCtx.strokeStyle = 'white';
+                motorCtx.lineWidth = 2;
+                motorCtx.stroke();
+                
+                // Etiquetas N/S
+                motorCtx.fillStyle = 'white';
+                motorCtx.font = 'bold 14px Arial';
+                motorCtx.textAlign = 'center';
+                motorCtx.textBaseline = 'middle';
+                motorCtx.fillText(
+                    i === 0 ? 'N' : 'S',
+                    centerX + Math.cos(angle) * 70,
+                    centerY + Math.sin(angle) * 70
+                );
+            }
+            
+            // Dibujar cables de alimentación
+            motorCtx.strokeStyle = isMotorRunning ? '#00ff00' : '#666666';
+            motorCtx.lineWidth = 3;
+            motorCtx.beginPath();
+            motorCtx.moveTo(centerX - 80, centerY - 60);
+            motorCtx.lineTo(centerX - 40, centerY - 60);
+            motorCtx.lineTo(centerX - 40, centerY - 30);
+            motorCtx.stroke();
+            
+            motorCtx.beginPath();
+            motorCtx.moveTo(centerX + 80, centerY - 60);
+            motorCtx.lineTo(centerX + 40, centerY - 60);
+            motorCtx.lineTo(centerX + 40, centerY - 30);
+            motorCtx.stroke();
+            
+            // Actualizar ángulo del motor
+            if (isMotorRunning) {
+                // Acelerar/desacelerar gradualmente hacia la velocidad objetivo
+                const acceleration = 0.05;
+                if (motorRotationSpeed < targetSpeed * motorDirection) {
+                    motorRotationSpeed += acceleration;
+                } else if (motorRotationSpeed > targetSpeed * motorDirection) {
+                    motorRotationSpeed -= acceleration;
+                }
+                
+                motorAngle += motorRotationSpeed * (motorVoltage / 6) * 0.05;
+            } else {
+                // Desacelerar gradualmente
+                motorRotationSpeed *= 0.95;
+                motorAngle += motorRotationSpeed * 0.05;
+                
+                if (Math.abs(motorRotationSpeed) < 0.01) {
+                    motorRotationSpeed = 0;
+                }
+            }
+            
+            // Dibujar información
+            motorCtx.fillStyle = 'white';
+            motorCtx.font = '16px Arial';
+            motorCtx.textAlign = 'left';
+            motorCtx.fillText(`Motor: ${isMotorRunning ? 'ENCENDIDO' : 'APAGADO'}`, 20, 30);
+            motorCtx.fillText(`Velocidad: ${(Math.abs(motorRotationSpeed) * 100).toFixed(0)} RPM`, 20, 55);
+            motorCtx.fillText(`Dirección: ${motorDirection > 0 ? 'ADELANTE' : 'REVERSO'}`, 20, 80);
+            
+            // Actualizar gráfica
+            updateMotorChart();
+            
+            requestAnimationFrame(drawMotor);
+        }
+        
+        // Event listeners para el motor
+        startMotorBtn.addEventListener('click', () => {
+            isMotorRunning = true;
+        });
+        
+        stopMotorBtn.addEventListener('click', () => {
+            isMotorRunning = false;
+            motorTime = 0;
+            motorChart.data.labels = [];
+            motorChart.data.datasets[0].data = [];
+            motorChart.update();
+        });
+        
+        reverseMotorBtn.addEventListener('click', () => {
+            motorDirection *= -1;
+            targetSpeed *= -1;
+        });
+        
+        motorVoltageSlider.addEventListener('input', () => {
+            motorVoltage = parseInt(motorVoltageSlider.value);
+            motorVoltageValue.textContent = motorVoltage;
+        });
+        
+        motorSpeedSlider.addEventListener('input', () => {
+            targetSpeed = parseInt(motorSpeedSlider.value);
+            motorSpeedValue.textContent = targetSpeed;
+            
+            if (motorDirection < 0) {
+                targetSpeed = -targetSpeed;
+            }
+        });
+        
+        // Descargar gráfica de motor eléctrico
+        downloadMotorChartBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'grafica_motor_electrico.png';
+            link.href = motorChartCanvas.toDataURL('image/png');
+            link.click();
+        });
+        
+        // Iniciar el dibujo del motor
+        drawMotor();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Dinámica - Laboratorio Virtual UNICUCES</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --deep-navy: #0f0c29;
+            --dark-purple: #302b63;
+            --medium-purple: #4a3f8c;
+            --light-purple: #6a52b5;
+            --electric-blue: #2196f3;
+            --light-blue: #64b5f6;
+            --lavender: #b39ddb;
+            --white: #ffffff;
+            --light-gray: #f5f7ff;
+            --neon-pink: #ff2a6d;
+            --neon-green: #00ff9d;
+            --neon-yellow: #ffd166;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--deep-navy), var(--dark-purple));
+            color: var(--white);
+            line-height: 1.6;
+            min-height: 100vh;
+            font-family: 'Exo 2', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        /* Simulator Modal - INTERFAZ MEJORADA */
+        .simulator-modal {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 12, 41, 0.98);
+            z-index: 2000;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            animation: modalAppear 0.3s ease;
+        }
+        
+        @keyframes modalAppear {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .modal-content {
+            background: linear-gradient(145deg, var(--dark-purple), var(--medium-purple));
+            margin: 2rem auto;
+            width: 95%;
+            max-width: 1400px;
+            border-radius: 24px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid var(--light-purple);
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--dark-purple), var(--medium-purple));
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--light-purple);
+            position: relative;
+        }
+        
+        .modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--electric-blue), transparent);
+        }
+        
+        .modal-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2.2rem;
+            color: var(--light-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .close-modal {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--lavender);
+            color: var(--lavender);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            background: var(--electric-blue);
+            color: var(--white);
+            border-color: var(--electric-blue);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 2.5rem;
+        }
+        
+        /* Tabs Mejorados */
+        .simulator-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+            background: rgba(15, 12, 41, 0.6);
+            padding: 1rem;
+            border-radius: 16px;
+            border: 1px solid var(--light-purple);
+            position: relative;
+        }
+        
+        .simulator-tabs::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(100, 181, 246, 0.05), transparent);
+            border-radius: 16px;
+        }
+        
+        .simulator-tab {
+            padding: 1rem 2rem;
+            background: rgba(15, 12, 41, 0.8);
+            border: 1px solid var(--light-purple);
+            border-radius: 12px;
+            color: var(--lavender);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex: 1;
+            text-align: center;
+            min-width: 180px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .simulator-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(100, 181, 246, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .simulator-tab:hover::before {
+            left: 100%;
+        }
+        
+        .simulator-tab.active {
+            background: linear-gradient(135deg, var(--light-blue), var(--electric-blue));
+            color: var(--deep-navy);
+            border-color: var(--electric-blue);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .simulator-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .simulator-content.active {
+            display: block;
+        }
+        
+        /* Formularios Mejorados */
+        .simulator-form {
+            background: rgba(15, 12, 41, 0.6);
+            padding: 2.5rem;
+            border-radius: 20px;
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--light-purple);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .simulator-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(100, 181, 246, 0.05), transparent);
+        }
+        
+        .simulator-form h3 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.8rem;
+            color: var(--light-blue);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .simulator-form p {
+            color: var(--lavender);
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            text-align: center;
+            font-weight: 500;
+            background: rgba(100, 181, 246, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 181, 246, 0.2);
+        }
+        
+        .form-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.8rem;
+            color: var(--lavender);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 1.2rem 1.5rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--light-purple);
+            border-radius: 12px;
+            color: var(--white);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            font-family: 'Exo 2', sans-serif;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--light-blue);
+            box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(179, 157, 219, 0.6);
+        }
+        
+        .simulator-button {
+            background: linear-gradient(135deg, var(--light-blue), var(--electric-blue));
+            color: var(--deep-navy);
+            border: none;
+            padding: 1.2rem 2.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.2rem;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .simulator-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .simulator-button:hover::before {
+            left: 100%;
+        }
+        
+        .simulator-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.6);
+        }
+        
+        /* Resultados Mejorados */
+        .results-container {
+            background: rgba(15, 12, 41, 0.6);
+            padding: 2.5rem;
+            border-radius: 20px;
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--light-purple);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .results-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(0, 255, 157, 0.05), transparent);
+        }
+        
+        .results-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.8rem;
+            color: var(--light-blue);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.2rem 0;
+            border-bottom: 1px solid rgba(179, 157, 219, 0.3);
+            align-items: center;
+            position: relative;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-label {
+            color: var(--lavender);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+        }
+        
+        .result-value {
+            color: var(--neon-green);
+            font-weight: 700;
+            font-size: 1.4rem;
+            background: rgba(0, 255, 157, 0.1);
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+            animation: pulseValue 2s infinite;
+        }
+        
+        @keyframes pulseValue {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 157, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 157, 0.4); }
+        }
+        
+        /* Contenedores de Animación y Gráficas Mejorados */
+        .animation-container, .chart-container {
+            background: rgba(15, 12, 41, 0.6);
+            padding: 2.5rem;
+            border-radius: 20px;
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--light-purple);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .animation-container::before, .chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 42, 109, 0.05), transparent);
+        }
+        
+        .animation-title, .chart-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.6rem;
+            color: var(--light-blue);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+        }
+        
+        .animation-canvas {
+            width: 100%;
+            height: 300px;
+            background: rgba(15, 12, 41, 0.8);
+            border-radius: 12px;
+            border: 1px solid var(--light-purple);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Controles Mejorados */
+        .animation-controls, .chart-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .control-button, .export-button {
+            background: linear-gradient(135deg, var(--light-purple), var(--medium-purple));
+            color: var(--white);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-family: 'Exo 2', sans-serif;
+            flex: 1;
+            min-width: 200px;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(106, 82, 181, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .control-button::before, .export-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .control-button:hover::before, .export-button:hover::before {
+            left: 100%;
+        }
+        
+        .control-button:hover, .export-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(106, 82, 181, 0.5);
+        }
+        
+        .control-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .modal-body {
+                padding: 1.5rem;
+            }
+            
+            .simulator-tabs {
+                flex-direction: column;
+            }
+            
+            .simulator-tab {
+                min-width: auto;
+            }
+            
+            .animation-controls, .chart-actions {
+                flex-direction: column;
+            }
+            
+            .control-button, .export-button {
+                min-width: auto;
+            }
+        }
+        
+        /* Efectos de partículas */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--light-blue);
+            border-radius: 50%;
+            animation: floatParticle 20s infinite linear;
+        }
+        
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Efectos de partículas -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Simulator Modal MEJORADO -->
+    <div class="simulator-modal" id="simulator-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">SIMULADOR DE DINÁMICA</h2>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="simulator-tabs">
+                    <div class="simulator-tab active" data-tab="newton">Leyes de Newton</div>
+                    <div class="simulator-tab" data-tab="friction">Fricción</div>
+                    <div class="simulator-tab" data-tab="centripetal">Fuerza Centrípeta</div>
+                    <div class="simulator-tab" data-tab="pendulum">Péndulo</div>
+                    <div class="simulator-tab" data-tab="projectile">Movimiento Parabólico</div>
+                </div>
+                
+                <!-- Leyes de Newton -->
+                <div class="simulator-content active" id="newton-content">
+                    <div class="simulator-form">
+                        <h3>SEGUNDA LEY DE NEWTON</h3>
+                        <p>F = m × a</p>
+                        <div class="form-group">
+                            <label for="mass"><i class="fas fa-weight-hanging"></i> MASA (kg)</label>
+                            <input type="number" id="mass" placeholder="Ingrese la masa en kg" value="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="acceleration"><i class="fas fa-tachometer-alt"></i> ACELERACIÓN (m/s²)</label>
+                            <input type="number" id="acceleration" placeholder="Ingrese la aceleración en m/s²" value="2">
+                        </div>
+                        <button class="simulator-button" id="calculate-force">
+                            <i class="fas fa-calculator"></i> CALCULAR FUERZA
+                        </button>
+                    </div>
+                    
+                    <div class="results-container">
+                        <h3 class="results-title">RESULTADOS</h3>
+                        <div class="result-item">
+                            <span class="result-label">FUERZA (N):</span>
+                            <span class="result-value" id="force-result">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="animation-container">
+                        <h3 class="animation-title">ANIMACIÓN: MOVIMIENTO ACELERADO</h3>
+                        <canvas class="animation-canvas" id="newton-animation"></canvas>
+                        <div class="animation-controls">
+                            <button class="control-button" id="newton-start">
+                                <i class="fas fa-play"></i> INICIAR ANIMACIÓN
+                            </button>
+                            <button class="control-button" id="newton-pause" disabled>
+                                <i class="fas fa-pause"></i> PAUSAR
+                            </button>
+                            <button class="control-button" id="newton-reset">
+                                <i class="fas fa-redo"></i> REINICIAR
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">GRÁFICA: RELACIÓN FUERZA-ACELERACIÓN</h3>
+                        <canvas id="newton-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Fricción -->
+                <div class="simulator-content" id="friction-content">
+                    <div class="simulator-form">
+                        <h3>FUERZA DE FRICCIÓN</h3>
+                        <p>F_f = μ × N</p>
+                        <div class="form-group">
+                            <label for="friction-coefficient"><i class="fas fa-sliders-h"></i> COEFICIENTE DE FRICCIÓN</label>
+                            <input type="number" id="friction-coefficient" placeholder="Ingrese μ" value="0.3" step="0.1" min="0" max="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="normal-force"><i class="fas fa-compress-arrows-alt"></i> FUERZA NORMAL (N)</label>
+                            <input type="number" id="normal-force" placeholder="Ingrese la fuerza normal" value="50">
+                        </div>
+                        <button class="simulator-button" id="calculate-friction">
+                            <i class="fas fa-calculator"></i> CALCULAR FRICCIÓN
+                        </button>
+                    </div>
+                    
+                    <div class="results-container">
+                        <h3 class="results-title">RESULTADOS</h3>
+                        <div class="result-item">
+                            <span class="result-label">FUERZA DE FRICCIÓN (N):</span>
+                            <span class="result-value" id="friction-result">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="animation-container">
+                        <h3 class="animation-title">ANIMACIÓN: BLOQUE CON FRICCIÓN</h3>
+                        <canvas class="animation-canvas" id="friction-animation"></canvas>
+                        <div class="animation-controls">
+                            <button class="control-button" id="friction-start">
+                                <i class="fas fa-play"></i> INICIAR ANIMACIÓN
+                            </button>
+                            <button class="control-button" id="friction-reset">
+                                <i class="fas fa-redo"></i> REINICIAR
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">GRÁFICA: FRICCIÓN VS COEFICIENTE</h3>
+                        <canvas id="friction-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Fuerza Centrípeta -->
+                <div class="simulator-content" id="centripetal-content">
+                    <div class="simulator-form">
+                        <h3>FUERZA CENTRÍPETA</h3>
+                        <p>F_c = (m × v²) / r</p>
+                        <div class="form-group">
+                            <label for="centripetal-mass"><i class="fas fa-weight-hanging"></i> MASA (kg)</label>
+                            <input type="number" id="centripetal-mass" placeholder="Ingrese la masa" value="2">
+                        </div>
+                        <div class="form-group">
+                            <label for="velocity"><i class="fas fa-tachometer-alt"></i> VELOCIDAD (m/s)</label>
+                            <input type="number" id="velocity" placeholder="Ingrese la velocidad" value="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="radius"><i class="fas fa-circle"></i> RADIO (m)</label>
+                            <input type="number" id="radius" placeholder="Ingrese el radio" value="3">
+                        </div>
+                        <button class="simulator-button" id="calculate-centripetal">
+                            <i class="fas fa-calculator"></i> CALCULAR FUERZA CENTRÍPETA
+                        </button>
+                    </div>
+                    
+                    <div class="results-container">
+                        <h3 class="results-title">RESULTADOS</h3>
+                        <div class="result-item">
+                            <span class="result-label">FUERZA CENTRÍPETA (N):</span>
+                            <span class="result-value" id="centripetal-result">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="animation-container">
+                        <h3 class="animation-title">ANIMACIÓN: MOVIMIENTO CIRCULAR</h3>
+                        <canvas class="animation-canvas" id="centripetal-animation"></canvas>
+                        <div class="animation-controls">
+                            <button class="control-button" id="centripetal-start">
+                                <i class="fas fa-play"></i> INICIAR ANIMACIÓN
+                            </button>
+                            <button class="control-button" id="centripetal-reset">
+                                <i class="fas fa-redo"></i> REINICIAR
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">GRÁFICA: FUERZA CENTRÍPETA VS VELOCIDAD</h3>
+                        <canvas id="centripetal-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Péndulo -->
+                <div class="simulator-content" id="pendulum-content">
+                    <div class="simulator-form">
+                        <h3>PÉNDULO SIMPLE</h3>
+                        <p>T = 2π√(L/g)</p>
+                        <div class="form-group">
+                            <label for="pendulum-length"><i class="fas fa-ruler"></i> LONGITUD (m)</label>
+                            <input type="number" id="pendulum-length" placeholder="Ingrese la longitud" value="2">
+                        </div>
+                        <div class="form-group">
+                            <label for="gravity"><i class="fas fa-weight"></i> GRAVEDAD (m/s²)</label>
+                            <input type="number" id="gravity" placeholder="Ingrese la gravedad" value="9.8">
+                        </div>
+                        <button class="simulator-button" id="calculate-pendulum">
+                            <i class="fas fa-calculator"></i> CALCULAR PERIODO
+                        </button>
+                    </div>
+                    
+                    <div class="results-container">
+                        <h3 class="results-title">RESULTADOS</h3>
+                        <div class="result-item">
+                            <span class="result-label">PERIODO (s):</span>
+                            <span class="result-value" id="pendulum-result">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="animation-container">
+                        <h3 class="animation-title">ANIMACIÓN: MOVIMIENTO PENDULAR</h3>
+                        <canvas class="animation-canvas" id="pendulum-animation"></canvas>
+                        <div class="animation-controls">
+                            <button class="control-button" id="pendulum-start">
+                                <i class="fas fa-play"></i> INICIAR ANIMACIÓN
+                            </button>
+                            <button class="control-button" id="pendulum-reset">
+                                <i class="fas fa-redo"></i> REINICIAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movimiento Parabólico -->
+                <div class="simulator-content" id="projectile-content">
+                    <div class="simulator-form">
+                        <h3>MOVIMIENTO PARABÓLICO</h3>
+                        <p>y = x·tan(θ) - (g·x²)/(2·v₀²·cos²(θ))</p>
+                        <div class="form-group">
+                            <label for="initial-velocity"><i class="fas fa-bolt"></i> VELOCIDAD INICIAL (m/s)</label>
+                            <input type="number" id="initial-velocity" placeholder="Ingrese velocidad" value="20">
+                        </div>
+                        <div class="form-group">
+                            <label for="angle"><i class="fas fa-angle-up"></i> ÁNGULO (°)</label>
+                            <input type="number" id="angle" placeholder="Ingrese ángulo" value="45" min="0" max="90">
+                        </div>
+                        <button class="simulator-button" id="calculate-projectile">
+                            <i class="fas fa-calculator"></i> CALCULAR TRAYECTORIA
+                        </button>
+                    </div>
+                    
+                    <div class="results-container">
+                        <h3 class="results-title">RESULTADOS</h3>
+                        <div class="result-item">
+                            <span class="result-label">ALCANCE MÁXIMO (m):</span>
+                            <span class="result-value" id="range-result">0</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">ALTURA MÁXIMA (m):</span>
+                            <span class="result-value" id="height-result">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="animation-container">
+                        <h3 class="animation-title">ANIMACIÓN: TRAYECTORIA PARABÓLICA</h3>
+                        <canvas class="animation-canvas" id="projectile-animation"></canvas>
+                        <div class="animation-controls">
+                            <button class="control-button" id="projectile-start">
+                                <i class="fas fa-play"></i> INICIAR ANIMACIÓN
+                            </button>
+                            <button class="control-button" id="projectile-reset">
+                                <i class="fas fa-redo"></i> REINICIAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // SIMULADOR DE DINÁMICA CORREGIDO
+        // TODAS LAS ANIMACIONES FUNCIONAN
+        // =============================================
+
+        class DinamicaSimulator {
+            constructor() {
+                this.animationIds = {
+                    newton: null,
+                    friction: null,
+                    centripetal: null,
+                    pendulum: null,
+                    projectile: null
+                };
+                
+                this.charts = {
+                    newton: null,
+                    friction: null,
+                    centripetal: null
+                };
+                
+                this.init();
+            }
+
+            init() {
+                this.createParticles();
+                this.setupEventListeners();
+                this.initializeCanvases();
+                this.initializeAllCharts();
+                this.performInitialCalculations();
+            }
+
+            createParticles() {
+                const particlesContainer = document.getElementById('particles');
+                for (let i = 0; i < 50; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + 'vw';
+                    particle.style.animationDelay = Math.random() * 20 + 's';
+                    particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                    particlesContainer.appendChild(particle);
+                }
+            }
+
+            setupEventListeners() {
+                // Tabs
+                document.querySelectorAll('.simulator-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => this.switchTab(e.target));
+                });
+                
+                // Botones de cálculo
+                document.getElementById('calculate-force').addEventListener('click', () => this.calculateNewton());
+                document.getElementById('calculate-friction').addEventListener('click', () => this.calculateFriction());
+                document.getElementById('calculate-centripetal').addEventListener('click', () => this.calculateCentripetal());
+                document.getElementById('calculate-pendulum').addEventListener('click', () => this.calculatePendulum());
+                document.getElementById('calculate-projectile').addEventListener('click', () => this.calculateProjectile());
+                
+                // Controles de animación
+                document.getElementById('newton-start').addEventListener('click', () => this.startNewtonAnimation());
+                document.getElementById('newton-reset').addEventListener('click', () => this.resetNewtonAnimation());
+                document.getElementById('friction-start').addEventListener('click', () => this.startFrictionAnimation());
+                document.getElementById('friction-reset').addEventListener('click', () => this.resetFrictionAnimation());
+                document.getElementById('centripetal-start').addEventListener('click', () => this.startCentripetalAnimation());
+                document.getElementById('centripetal-reset').addEventListener('click', () => this.resetCentripetalAnimation());
+                document.getElementById('pendulum-start').addEventListener('click', () => this.startPendulumAnimation());
+                document.getElementById('pendulum-reset').addEventListener('click', () => this.resetPendulumAnimation());
+                document.getElementById('projectile-start').addEventListener('click', () => this.startProjectileAnimation());
+                document.getElementById('projectile-reset').addEventListener('click', () => this.resetProjectileAnimation());
+            }
+
+            switchTab(tabElement) {
+                const tabId = tabElement.getAttribute('data-tab');
+                
+                // Remover clase active de todas las pestañas y contenidos
+                document.querySelectorAll('.simulator-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.simulator-content').forEach(c => c.classList.remove('active'));
+                
+                // Agregar clase active a la pestaña y contenido actual
+                tabElement.classList.add('active');
+                document.getElementById(`${tabId}-content`).classList.add('active');
+                
+                // Inicializar canvases cuando se cambia de pestaña
+                this.initializeCanvases();
+            }
+
+            // ========== CÁLCULOS ==========
+            calculateNewton() {
+                const mass = parseFloat(document.getElementById('mass').value) || 0;
+                const acceleration = parseFloat(document.getElementById('acceleration').value) || 0;
+                const force = mass * acceleration;
+                document.getElementById('force-result').textContent = force.toFixed(2);
+                this.updateNewtonChart(mass, acceleration, force);
+            }
+
+            calculateFriction() {
+                const mu = parseFloat(document.getElementById('friction-coefficient').value) || 0;
+                const normalForce = parseFloat(document.getElementById('normal-force').value) || 0;
+                const frictionForce = mu * normalForce;
+                document.getElementById('friction-result').textContent = frictionForce.toFixed(2);
+                this.updateFrictionChart(mu, frictionForce);
+            }
+
+            calculateCentripetal() {
+                const mass = parseFloat(document.getElementById('centripetal-mass').value) || 0;
+                const velocity = parseFloat(document.getElementById('velocity').value) || 0;
+                const radius = parseFloat(document.getElementById('radius').value) || 1;
+                const centripetalForce = (mass * Math.pow(velocity, 2)) / radius;
+                document.getElementById('centripetal-result').textContent = centripetalForce.toFixed(2);
+                this.updateCentripetalChart(velocity, centripetalForce);
+            }
+
+            calculatePendulum() {
+                const length = parseFloat(document.getElementById('pendulum-length').value) || 0;
+                const gravity = parseFloat(document.getElementById('gravity').value) || 9.8;
+                const period = 2 * Math.PI * Math.sqrt(length / gravity);
+                document.getElementById('pendulum-result').textContent = period.toFixed(2);
+            }
+
+            calculateProjectile() {
+                const v0 = parseFloat(document.getElementById('initial-velocity').value) || 0;
+                const angle = parseFloat(document.getElementById('angle').value) || 45;
+                const angleRad = angle * Math.PI / 180;
+                const g = 9.8;
+                
+                const range = (Math.pow(v0, 2) * Math.sin(2 * angleRad)) / g;
+                const maxHeight = (Math.pow(v0, 2) * Math.pow(Math.sin(angleRad), 2)) / (2 * g);
+                
+                document.getElementById('range-result').textContent = range.toFixed(2);
+                document.getElementById('height-result').textContent = maxHeight.toFixed(2);
+            }
+
+            // ========== ANIMACIONES CORREGIDAS ==========
+            startNewtonAnimation() {
+                const canvas = document.getElementById('newton-animation');
+                const ctx = canvas.getContext('2d');
+                const mass = parseFloat(document.getElementById('mass').value) || 5;
+                const acceleration = parseFloat(document.getElementById('acceleration').value) || 2;
+                
+                let position = 50;
+                let velocity = 0;
+                const force = mass * acceleration;
+                
+                const animate = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Dibujar pista
+                    ctx.fillStyle = '#4a3f8c';
+                    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+                    
+                    // Dibujar bloque
+                    ctx.fillStyle = '#64b5f6';
+                    ctx.fillRect(position, canvas.height - 100, 60, 50);
+                    
+                    // Dibujar flecha de fuerza
+                    ctx.strokeStyle = '#ff6b6b';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(position + 60, canvas.height - 75);
+                    ctx.lineTo(position + 100, canvas.height - 75);
+                    ctx.stroke();
+                    
+                    // Actualizar posición
+                    velocity += acceleration * 0.1;
+                    position += velocity;
+                    
+                    if (position < canvas.width - 60) {
+                        this.animationIds.newton = requestAnimationFrame(animate);
+                    }
+                };
+                
+                animate();
+            }
+
+            resetNewtonAnimation() {
+                this.cancelAnimation('newton');
+                const canvas = document.getElementById('newton-animation');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            startFrictionAnimation() {
+                const canvas = document.getElementById('friction-animation');
+                const ctx = canvas.getContext('2d');
+                const mu = parseFloat(document.getElementById('friction-coefficient').value) || 0.3;
+                
+                let position = 50;
+                let velocity = 5;
+                const friction = mu * 0.5;
+                
+                const animate = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Dibujar superficie
+                    ctx.fillStyle = '#8d6e63';
+                    ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+                    
+                    // Dibujar bloque
+                    ctx.fillStyle = '#ffb74d';
+                    ctx.fillRect(position, canvas.height - 80, 60, 50);
+                    
+                    // Dibujar flecha de fricción
+                    ctx.strokeStyle = '#ff6b6b';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(position, canvas.height - 55);
+                    ctx.lineTo(position - 30, canvas.height - 55);
+                    ctx.stroke();
+                    
+                    // Actualizar posición con fricción
+                    velocity -= friction;
+                    if (velocity < 0) velocity = 0;
+                    position += velocity;
+                    
+                    if (velocity > 0 && position < canvas.width - 60) {
+                        this.animationIds.friction = requestAnimationFrame(animate);
+                    }
+                };
+                
+                animate();
+            }
+
+            resetFrictionAnimation() {
+                this.cancelAnimation('friction');
+                const canvas = document.getElementById('friction-animation');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            startCentripetalAnimation() {
+                const canvas = document.getElementById('centripetal-animation');
+                const ctx = canvas.getContext('2d');
+                const radius = parseFloat(document.getElementById('radius').value) || 3;
+                const velocity = parseFloat(document.getElementById('velocity').value) || 5;
+                
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const scaledRadius = Math.min(radius * 20, 100);
+                let angle = 0;
+                
+                const animate = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Dibujar trayectoria circular
+                    ctx.strokeStyle = 'rgba(100, 181, 246, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, scaledRadius, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    
+                    // Calcular posición
+                    const x = centerX + scaledRadius * Math.cos(angle);
+                    const y = centerY + scaledRadius * Math.sin(angle);
+                    
+                    // Dibujar objeto
+                    ctx.fillStyle = '#4caf50';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 15, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Dibujar vector velocidad
+                    const velX = -scaledRadius * Math.sin(angle);
+                    const velY = scaledRadius * Math.cos(angle);
+                    
+                    ctx.strokeStyle = '#ffeb3b';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + velX * 0.3, y + velY * 0.3);
+                    ctx.stroke();
+                    
+                    // Actualizar ángulo
+                    angle += velocity * 0.02;
+                    
+                    this.animationIds.centripetal = requestAnimationFrame(animate);
+                };
+                
+                animate();
+            }
+
+            resetCentripetalAnimation() {
+                this.cancelAnimation('centripetal');
+                const canvas = document.getElementById('centripetal-animation');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            startPendulumAnimation() {
+                const canvas = document.getElementById('pendulum-animation');
+                const ctx = canvas.getContext('2d');
+                const length = parseFloat(document.getElementById('pendulum-length').value) || 2;
+                
+                const pivotX = canvas.width / 2;
+                const pivotY = 50;
+                const scaledLength = length * 30;
+                let angle = Math.PI / 4;
+                let angularVelocity = 0;
+                const damping = 0.99;
+                
+                const animate = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Calcular posición del péndulo
+                    const bobX = pivotX + scaledLength * Math.sin(angle);
+                    const bobY = pivotY + scaledLength * Math.cos(angle);
+                    
+                    // Dibujar cuerda
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(pivotX, pivotY);
+                    ctx.lineTo(bobX, bobY);
+                    ctx.stroke();
+                    
+                    // Dibujar pivote
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.beginPath();
+                    ctx.arc(pivotX, pivotY, 8, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Dibujar masa
+                    ctx.fillStyle = '#64b5f6';
+                    ctx.beginPath();
+                    ctx.arc(bobX, bobY, 15, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Física del péndulo
+                    const gravity = 0.5;
+                    angularVelocity += (-gravity / scaledLength) * Math.sin(angle);
+                    angle += angularVelocity;
+                    angularVelocity *= damping;
+                    
+                    this.animationIds.pendulum = requestAnimationFrame(animate);
+                };
+                
+                animate();
+            }
+
+            resetPendulumAnimation() {
+                this.cancelAnimation('pendulum');
+                const canvas = document.getElementById('pendulum-animation');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            startProjectileAnimation() {
+                const canvas = document.getElementById('projectile-animation');
+                const ctx = canvas.getContext('2d');
+                const v0 = parseFloat(document.getElementById('initial-velocity').value) || 20;
+                const angle = parseFloat(document.getElementById('angle').value) || 45;
+                const angleRad = angle * Math.PI / 180;
+                
+                let time = 0;
+                const g = 0.5;
+                const scale = 5;
+                
+                // Calcular trayectoria completa
+                const totalTime = (2 * v0 * Math.sin(angleRad)) / g;
+                const points = [];
+                for (let t = 0; t <= totalTime; t += 0.1) {
+                    const x = v0 * Math.cos(angleRad) * t * scale;
+                    const y = canvas.height - (v0 * Math.sin(angleRad) * t - 0.5 * g * t * t) * scale;
+                    points.push({x, y});
+                }
+                
+                const animate = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Dibujar suelo
+                    ctx.fillStyle = '#8d6e63';
+                    ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+                    
+                    // Dibujar trayectoria
+                    ctx.strokeStyle = 'rgba(100, 181, 246, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    for (let i = 0; i < points.length; i++) {
+                        if (i === 0) {
+                            ctx.moveTo(points[i].x, points[i].y);
+                        } else {
+                            ctx.lineTo(points[i].x, points[i].y);
+                        }
+                    }
+                    ctx.stroke();
+                    
+                    // Calcular posición actual
+                    const x = v0 * Math.cos(angleRad) * time * scale;
+                    const y = canvas.height - (v0 * Math.sin(angleRad) * time - 0.5 * g * time * time) * scale;
+                    
+                    // Dibujar proyectil
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    time += 0.1;
+                    
+                    if (time <= totalTime) {
+                        this.animationIds.projectile = requestAnimationFrame(animate);
+                    }
+                };
+                
+                animate();
+            }
+
+            resetProjectileAnimation() {
+                this.cancelAnimation('projectile');
+                const canvas = document.getElementById('projectile-animation');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            cancelAnimation(type) {
+                if (this.animationIds[type]) {
+                    cancelAnimationFrame(this.animationIds[type]);
+                    this.animationIds[type] = null;
+                }
+            }
+
+            stopAllAnimations() {
+                Object.keys(this.animationIds).forEach(type => {
+                    this.cancelAnimation(type);
+                });
+            }
+
+            // ========== GRÁFICAS ==========
+            initializeAllCharts() {
+                this.initializeNewtonChart();
+                this.initializeFrictionChart();
+                this.initializeCentripetalChart();
+            }
+
+            initializeNewtonChart() {
+                const ctx = document.getElementById('newton-chart').getContext('2d');
+                if (this.charts.newton) this.charts.newton.destroy();
+                
+                this.charts.newton = new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Fuerza vs Aceleración',
+                            data: [],
+                            borderColor: '#64b5f6',
+                            backgroundColor: 'rgba(100, 181, 246, 0.6)',
+                            borderWidth: 2,
+                            pointRadius: 6
+                        }]
+                    },
+                    options: this.getChartOptions('Aceleración (m/s²)', 'Fuerza (N)', 'Relación Fuerza vs Aceleración')
+                });
+            }
+
+            initializeFrictionChart() {
+                const ctx = document.getElementById('friction-chart').getContext('2d');
+                if (this.charts.friction) this.charts.friction.destroy();
+                
+                this.charts.friction = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: 'Fricción vs Coeficiente',
+                            data: [],
+                            borderColor: '#ffb74d',
+                            backgroundColor: 'rgba(255, 183, 77, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        }]
+                    },
+                    options: this.getChartOptions('Coeficiente de Fricción', 'Fuerza de Fricción (N)', 'Relación Fricción vs Coeficiente')
+                });
+            }
+
+            initializeCentripetalChart() {
+                const ctx = document.getElementById('centripetal-chart').getContext('2d');
+                if (this.charts.centripetal) this.charts.centripetal.destroy();
+                
+                this.charts.centripetal = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: 'Fuerza Centrípeta vs Velocidad',
+                            data: [],
+                            borderColor: '#4caf50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        }]
+                    },
+                    options: this.getChartOptions('Velocidad (m/s)', 'Fuerza Centrípeta (N)', 'Relación Fuerza Centrípeta vs Velocidad')
+                });
+            }
+
+            getChartOptions(xLabel, yLabel, title) {
+                return {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            color: '#ffffff',
+                            font: { size: 16, family: 'Rajdhani' }
+                        },
+                        legend: {
+                            labels: {
+                                color: '#ffffff',
+                                font: { size: 14 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: xLabel,
+                                color: '#b39ddb',
+                                font: { size: 14, family: 'Exo 2' }
+                            },
+                            ticks: { color: '#b39ddb' },
+                            grid: { color: 'rgba(179, 157, 219, 0.1)' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: yLabel,
+                                color: '#b39ddb',
+                                font: { size: 14, family: 'Exo 2' }
+                            },
+                            ticks: { color: '#b39ddb' },
+                            grid: { color: 'rgba(179, 157, 219, 0.1)' }
+                        }
+                    }
+                };
+            }
+
+            updateNewtonChart(mass, acceleration, force) {
+                if (!this.charts.newton) return;
+                this.charts.newton.data.datasets[0].data.push({x: acceleration, y: force});
+                if (this.charts.newton.data.datasets[0].data.length > 10) {
+                    this.charts.newton.data.datasets[0].data.shift();
+                }
+                this.charts.newton.update();
+            }
+
+            updateFrictionChart(mu, frictionForce) {
+                if (!this.charts.friction) return;
+                this.charts.friction.data.datasets[0].data.push({x: mu, y: frictionForce});
+                if (this.charts.friction.data.datasets[0].data.length > 10) {
+                    this.charts.friction.data.datasets[0].data.shift();
+                }
+                this.charts.friction.update();
+            }
+
+            updateCentripetalChart(velocity, centripetalForce) {
+                if (!this.charts.centripetal) return;
+                this.charts.centripetal.data.datasets[0].data.push({x: velocity, y: centripetalForce});
+                if (this.charts.centripetal.data.datasets[0].data.length > 10) {
+                    this.charts.centripetal.data.datasets[0].data.shift();
+                }
+                this.charts.centripetal.update();
+            }
+
+            initializeCanvases() {
+                const canvases = document.querySelectorAll('.animation-canvas');
+                canvases.forEach(canvas => {
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = canvas.offsetHeight;
+                });
+            }
+
+            performInitialCalculations() {
+                setTimeout(() => {
+                    document.getElementById('calculate-force').click();
+                    document.getElementById('calculate-friction').click();
+                    document.getElementById('calculate-centripetal').click();
+                    document.getElementById('calculate-pendulum').click();
+                    document.getElementById('calculate-projectile').click();
+                }, 1000);
+            }
+        }
+
+        // Inicializar el simulador cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            window.dinamicaSimulator = new DinamicaSimulator();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,3543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Estática Avanzado con Exportación CSV</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --success: #22c55e;
+            --animation-duration: 0.3s;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background-color: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        
+        header {
+            background: linear-gradient(to right, var(--dark), var(--primary-dark));
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+        
+        .tabs {
+            display: flex;
+            background: linear-gradient(to right, var(--dark), var(--primary-dark));
+            border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 18px 30px;
+            cursor: pointer;
+            transition: all var(--animation-duration) ease;
+            border-right: 1px solid rgba(99, 102, 241, 0.3);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tab:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+        
+        .tab.active {
+            background-color: rgba(99, 102, 241, 0.2);
+            color: white;
+        }
+        
+        .content {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
+        }
+        
+        .cartesian-container {
+            background-color: var(--darker);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
+            height: 600px;
+        }
+        
+        .cartesian-plane {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #1e293b;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            cursor: crosshair;
+            box-shadow: var(--shadow);
+        }
+        
+        .grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .axis {
+            position: absolute;
+            background-color: #94a3b8;
+        }
+        
+        .axis-x {
+            width: 100%;
+            height: 2px;
+            top: 50%;
+            left: 0;
+        }
+        
+        .axis-y {
+            width: 2px;
+            height: 100%;
+            top: 0;
+            left: 50%;
+        }
+        
+        .axis-label {
+            position: absolute;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: rgba(15, 23, 42, 0.8);
+            padding: 4px 8px;
+            border-radius: var(--border-radius);
+        }
+        
+        .axis-label-x {
+            bottom: 15px;
+            right: 15px;
+        }
+        
+        .axis-label-y {
+            top: 15px;
+            left: 15px;
+        }
+        
+        .grid-line {
+            position: absolute;
+            background-color: rgba(148, 163, 184, 0.1);
+        }
+        
+        .grid-line-vertical {
+            width: 1px;
+            height: 100%;
+        }
+        
+        .grid-line-horizontal {
+            width: 100%;
+            height: 1px;
+        }
+        
+        .force-vector {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: all var(--animation-duration) ease;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .force-line {
+            position: absolute;
+            height: 5px;
+            background: linear-gradient(to right, rgba(239, 68, 68, 0.8), #ef4444);
+            transform-origin: 0 0;
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        }
+        
+        .force-arrowhead {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 10px 15px 10px;
+            border-color: transparent transparent #ef4444 transparent;
+            transform-origin: center;
+            filter: drop-shadow(0 0 3px rgba(239, 68, 68, 0.7));
+        }
+        
+        .force-label {
+            position: absolute;
+            color: #ef4444;
+            font-size: 13px;
+            font-weight: bold;
+            background-color: rgba(15, 23, 42, 0.9);
+            padding: 4px 8px;
+            border-radius: var(--border-radius);
+            pointer-events: none;
+            white-space: nowrap;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .object {
+            position: absolute;
+            border-radius: var(--border-radius);
+            transform-origin: center;
+            transition: all var(--animation-duration) ease;
+            box-shadow: var(--shadow);
+            border: 2px solid #60a5fa;
+            cursor: pointer;
+            transform: translate3d(0, 0, 0);
+            will-change: transform;
+        }
+        
+        .object-rectangle {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+        
+        .object-lamp {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 50% 50% 10px 10px;
+        }
+        
+        .object-triangle {
+            width: 0;
+            height: 0;
+            background: transparent !important;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 86px solid #16a34a;
+            border-top: none;
+        }
+        
+        .object-circle {
+            background: linear-gradient(135deg, #a855f7, #9333ea);
+            border-radius: 50%;
+        }
+        
+        .object-pole {
+            background: linear-gradient(135deg, #78716c, #57534e);
+            border-radius: var(--border-radius);
+        }
+        
+        .object-beam {
+            background: linear-gradient(135deg, #475569, #334155);
+        }
+        
+        .object-weight {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            border-radius: 50%;
+        }
+        
+        .object-selected {
+            box-shadow: 0 0 20px #60a5fa;
+            z-index: 20;
+        }
+        
+        .object-dragging {
+            opacity: 0.8;
+            cursor: grabbing;
+        }
+        
+        .object-fixed {
+            border: 3px solid #eab308 !important;
+            box-shadow: 0 0 20px #eab308 !important;
+        }
+        
+        .fixed-indicator {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #eab308, #ca8a04);
+            border-radius: 50%;
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+            box-shadow: 0 0 8px rgba(234, 179, 8, 0.7);
+            border: 2px solid #ca8a04;
+        }
+        
+        .support {
+            position: absolute;
+            background-color: #6366f1;
+            border-radius: 50%;
+            box-shadow: var(--shadow);
+            border: 2px solid #a5b4fc;
+            z-index: 5;
+        }
+        
+        .cable {
+            position: absolute;
+            height: 7px;
+            transform-origin: 0 0;
+            z-index: 4;
+            pointer-events: none;
+            background: linear-gradient(to right, #78716c, #57534e);
+            border-radius: 4px;
+            box-shadow: var(--shadow);
+            border: 1px solid #57534e;
+        }
+        
+        .connection-point {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 50%;
+            z-index: 6;
+            cursor: pointer;
+            border: 2px solid #f59e0b;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+            transition: all 0.2s ease;
+        }
+        
+        .connection-point:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.9);
+        }
+        
+        .connection-point-selected {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            border-color: #dc2626;
+            box-shadow: 0 0 12px rgba(220, 38, 38, 0.9);
+        }
+        
+        .coordinate-display {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: rgba(15, 23, 42, 0.9);
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            font-size: 13px;
+            color: #94a3b8;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            z-index: 20;
+        }
+        
+        .controls-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            padding: 25px;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: var(--shadow);
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #60a5fa;
+            font-size: 14px;
+        }
+        
+        input, select, button {
+            padding: 12px;
+            background-color: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: var(--border-radius);
+            color: var(--light);
+            font-size: 14px;
+            transition: all var(--animation-duration) ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        button {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--animation-duration) ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: linear-gradient(to right, var(--primary-dark), #4338ca);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .animation-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.7), rgba(79, 70, 229, 0.9));
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: var(--shadow);
+        }
+        
+        .animation-btn {
+            padding: 12px 24px;
+            font-size: 14px;
+        }
+        
+        .play-btn {
+            background: linear-gradient(to right, var(--success), #16a34a);
+        }
+        
+        .pause-btn {
+            background: linear-gradient(to right, var(--warning), #d97706);
+        }
+        
+        .reset-btn {
+            background: linear-gradient(to right, var(--danger), #dc2626);
+        }
+        
+        .physics-toggle {
+            background: linear-gradient(to right, #a855f7, #9333ea);
+        }
+        
+        .friction-toggle {
+            background: linear-gradient(to right, var(--warning), #d97706);
+        }
+        
+        .toggle-on {
+            background: linear-gradient(to right, var(--success), #16a34a) !important;
+        }
+        
+        .time-display {
+            font-weight: bold;
+            color: #60a5fa;
+            font-size: 16px;
+            margin-left: auto;
+            background: rgba(15, 23, 42, 0.7);
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+        }
+        
+        .info-panel {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border-left: 5px solid var(--primary);
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .info-panel h3 {
+            color: #60a5fa;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        .keyboard-shortcuts {
+            background-color: rgba(99, 102, 241, 0.1);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        
+        .shortcut-key {
+            background-color: var(--primary-dark);
+            padding: 4px 8px;
+            border-radius: var(--border-radius);
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .results-table th, .results-table td {
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .results-table th {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            font-weight: 600;
+        }
+        
+        .results-table tr:nth-child(even) {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+        
+        .results-table tr:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+        
+        .theory-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            padding: 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        .theory-section h2 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(to right, var(--dark), var(--primary-dark));
+            color: white;
+            margin-top: 25px;
+            border-top: 3px solid var(--primary);
+        }
+        
+        .object-type-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .object-type-btn {
+            flex: 1;
+            min-width: 130px;
+            padding: 15px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all var(--animation-duration) ease;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        
+        .object-type-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+        }
+        
+        .object-type-btn:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.3));
+            transform: translateY(-2px);
+        }
+        
+        .physics-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .physics-btn {
+            flex: 1;
+            min-width: 220px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .connection-mode {
+            background: linear-gradient(to right, #f59e0b, #d97706);
+        }
+        
+        .history-item {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary);
+            cursor: pointer;
+            transition: all var(--animation-duration) ease;
+            box-shadow: var(--shadow);
+        }
+        
+        .history-item:hover {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(30, 41, 59, 0.95));
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .history-item-title {
+            font-weight: bold;
+            color: #60a5fa;
+            font-size: 1.2rem;
+        }
+        
+        .history-item-date {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+        
+        .history-item-summary {
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+        
+        .history-item-equilibrium {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .equilibrium-yes {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .equilibrium-no {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .history-btn {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .properties-panel {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border-left: 5px solid var(--secondary);
+            box-shadow: var(--shadow);
+        }
+        
+        .properties-panel h3 {
+            color: #60a5fa;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .property-group {
+            margin-bottom: 15px;
+        }
+        
+        .property-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        
+        .property-name {
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+        
+        .property-value {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+        
+        .material-selector {
+            margin-top: 10px;
+        }
+        
+        .material-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .material-option:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+        
+        .material-option.active {
+            background-color: rgba(99, 102, 241, 0.2);
+        }
+        
+        .material-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+        
+        .action-history {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border-left: 5px solid var(--warning);
+            box-shadow: var(--shadow);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .action-history h3 {
+            color: #f59e0b;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .history-action {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background-color: rgba(15, 23, 42, 0.5);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .history-action:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+        
+        .history-action.current {
+            background-color: rgba(99, 102, 241, 0.2);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .history-time {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+        
+        .simulation-manager {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border-left: 5px solid var(--success);
+            box-shadow: var(--shadow);
+        }
+        
+        .simulation-manager h3 {
+            color: #10b981;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .simulation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .simulation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: rgba(15, 23, 42, 0.5);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .simulation-item:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+        
+        .simulation-name {
+            font-weight: 500;
+        }
+        
+        .simulation-date {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+        
+        .scale-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .scale-btn {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+        
+        .physics-info {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .physics-value {
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        .export-btn {
+            background: linear-gradient(to right, #8b5cf6, #7c3aed);
+        }
+        
+        .csv-preview {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark);
+            color: #fff;
+            text-align: center;
+            border-radius: var(--border-radius);
+            padding: 8px;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(30, 41, 59, 0.9));
+            padding: 15px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        
+        /* Nuevos estilos para mejoras */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: var(--border-radius);
+        }
+        
+        .force-hover {
+            filter: drop-shadow(0 0 12px currentColor);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            color: white;
+            z-index: 1001;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .notification-success {
+            background: linear-gradient(to right, var(--success), #16a34a);
+        }
+        
+        .notification-error {
+            background: linear-gradient(to right, var(--danger), #dc2626);
+        }
+        
+        .notification-warning {
+            background: linear-gradient(to right, var(--warning), #d97706);
+        }
+        
+        .notification-info {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .high-contrast {
+            --primary: #0056b3;
+            --light: #ffffff;
+            --dark: #000000;
+        }
+        
+        .accessibility-toggle {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-panel {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .physics-controls {
+                flex-direction: column;
+            }
+            
+            .physics-btn {
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                border-right: none;
+                border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+            }
+            
+            .object-type-selector {
+                flex-direction: column;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .animation-controls {
+                flex-wrap: wrap;
+            }
+            
+            .time-display {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Simulador de Estática Avanzado</h1>
+            <p class="subtitle">Análisis completo con exportación de datos y sistema de guardado</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="simulation">
+                <span>Simulación</span>
+            </div>
+            <div class="tab" data-tab="calculations">
+                <span>Cálculos</span>
+            </div>
+            <div class="tab" data-tab="export">
+                <span>Exportar</span>
+            </div>
+            <div class="tab" data-tab="help">
+                <span>Ayuda</span>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Pestaña de Simulación -->
+            <div class="tab-content active" id="simulation-tab">
+                <div class="main-content">
+                    <div class="cartesian-container">
+                        <div class="cartesian-plane" id="cartesianPlane">
+                            <div class="grid-lines" id="gridLines"></div>
+                            <div class="coordinate-display" id="coordinateDisplay">X: 0.00, Y: 0.00</div>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar">
+                        <div class="properties-panel">
+                            <h3>Propiedades del Elemento</h3>
+                            <div id="selectedProperties">
+                                <p>Selecciona un elemento para ver sus propiedades</p>
+                            </div>
+                        </div>
+                        
+                        <div class="action-history">
+                            <h3>Historial de Acciones</h3>
+                            <div class="history-list" id="historyList">
+                                <!-- Las acciones se añadirán aquí dinámicamente -->
+                            </div>
+                            <div class="button-group" style="margin-top: 15px;">
+                                <button id="undoBtn" class="animation-btn">
+                                    <span>↶</span>
+                                    <span>Deshacer</span>
+                                </button>
+                                <button id="redoBtn" class="animation-btn">
+                                    <span>↷</span>
+                                    <span>Rehacer</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="simulation-manager">
+                            <h3>Administrador de Simulaciones</h3>
+                            <div class="simulation-list" id="simulationList">
+                                <!-- Las simulaciones guardadas se mostrarán aquí -->
+                            </div>
+                            <div class="button-group" style="margin-top: 15px;">
+                                <button id="saveSimulationBtn" class="animation-btn">
+                                    <span>💾</span>
+                                    <span>Guardar</span>
+                                </button>
+                                <button id="loadSimulationBtn" class="animation-btn">
+                                    <span>📂</span>
+                                    <span>Cargar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="physics-controls">
+                    <button class="physics-btn physics-toggle" id="togglePhysics">
+                        <span>Física: ACTIVADA</span>
+                    </button>
+                    <button class="physics-btn friction-toggle" id="toggleFriction">
+                        <span>Fricción: ACTIVADA</span>
+                    </button>
+                    <button class="physics-btn connection-mode" id="toggleConnectionMode">
+                        <span>Modo Conexión: DESACTIVADO</span>
+                    </button>
+                    <button class="physics-btn" id="toggleGrid">
+                        <span>Cuadrícula: ACTIVADA</span>
+                    </button>
+                </div>
+                
+                <div class="animation-controls">
+                    <button class="animation-btn play-btn" id="playAnimation">
+                        <span>Reproducir</span>
+                    </button>
+                    <button class="animation-btn pause-btn" id="pauseAnimation" disabled>
+                        <span>Pausar</span>
+                    </button>
+                    <button class="animation-btn reset-btn" id="resetAnimation">
+                        <span>Reiniciar</span>
+                    </button>
+                    <div class="time-display" id="timeDisplay">Tiempo: 0.0s</div>
+                    <div class="scale-controls">
+                        <button class="scale-btn" id="zoomIn">+</button>
+                        <span id="scaleDisplay">100%</span>
+                        <button class="scale-btn" id="zoomOut">-</button>
+                    </div>
+                </div>
+                
+                <div class="object-type-selector">
+                    <div class="object-type-btn active" data-type="rectangle">
+                        <span>Rectángulo</span>
+                    </div>
+                    <div class="object-type-btn" data-type="lamp">
+                        <span>Lámpara</span>
+                    </div>
+                    <div class="object-type-btn" data-type="triangle">
+                        <span>Triángulo</span>
+                    </div>
+                    <div class="object-type-btn" data-type="circle">
+                        <span>Círculo</span>
+                    </div>
+                    <div class="object-type-btn" data-type="pole">
+                        <span>Poste</span>
+                    </div>
+                    <div class="object-type-btn" data-type="beam">
+                        <span>Viga</span>
+                    </div>
+                    <div class="object-type-btn" data-type="weight">
+                        <span>Peso</span>
+                    </div>
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label for="forceMagnitude">Magnitud de Fuerza (N)</label>
+                        <input type="number" id="forceMagnitude" min="1" max="500" value="50">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="forceAngle">Ángulo de Fuerza (°)</label>
+                        <input type="number" id="forceAngle" min="0" max="360" value="0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="objectMass">Masa del Objeto (kg)</label>
+                        <input type="number" id="objectMass" min="1" max="1000" value="10">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="objectSize">Tamaño del Objeto</label>
+                        <input type="number" id="objectSize" min="20" max="200" value="100">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="frictionCoefficient">Coeficiente de Fricción</label>
+                        <input type="number" id="frictionCoefficient" min="0" max="1" step="0.1" value="0.2">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="supportType">Tipo de Soporte</label>
+                        <select id="supportType">
+                            <option value="fixed">Fijo</option>
+                            <option value="pivot">Pivote</option>
+                            <option value="roller">Rodillo</option>
+                            <option value="free" selected>Libre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="materialType">Material</label>
+                        <select id="materialType">
+                            <option value="steel">Acero</option>
+                            <option value="aluminum">Aluminio</option>
+                            <option value="wood" selected>Madera</option>
+                            <option value="concrete">Concreto</option>
+                            <option value="plastic">Plástico</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="addForce" class="tooltip">
+                        <span>Añadir Fuerza</span>
+                        <span class="tooltiptext">Añade una fuerza en el centro del plano (Atajo: A)</span>
+                    </button>
+                    <button id="addObject" class="tooltip">
+                        <span>Añadir Objeto</span>
+                        <span class="tooltiptext">Añade un objeto en el centro del plano</span>
+                    </button>
+                    <button id="calculateEquilibrium" class="tooltip">
+                        <span>Calcular Equilibrio</span>
+                        <span class="tooltiptext">Calcula si el sistema está en equilibrio</span>
+                    </button>
+                    <button id="applyForces" class="tooltip">
+                        <span>Aplicar Fuerzas</span>
+                        <span class="tooltiptext">Aplica todas las fuerzas al sistema (Atajo: F)</span>
+                    </button>
+                    <button id="clearAll" class="tooltip">
+                        <span>Limpiar Todo</span>
+                        <span class="tooltiptext">Elimina todos los elementos de la simulación</span>
+                    </button>
+                </div>
+                
+                <div class="info-panel">
+                    <h3>Información Física en Tiempo Real</h3>
+                    <div class="stats-panel">
+                        <div class="stat-card">
+                            <div class="stat-value" id="accelerationDisplay">0.00</div>
+                            <div class="stat-label">Aceleración (m/s²)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="velocityDisplay">0.00</div>
+                            <div class="stat-label">Velocidad (m/s)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="resultantForceDisplay">0.00</div>
+                            <div class="stat-label">Fuerza Resultante (N)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="kineticEnergyDisplay">0.00</div>
+                            <div class="stat-label">Energía Cinética (J)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-panel">
+                    <h3>Resultados del Análisis</h3>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Fuerza</th>
+                                <th>Magnitud (N)</th>
+                                <th>Ángulo (°)</th>
+                                <th>Componente X</th>
+                                <th>Componente Y</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable">
+                            <tr>
+                                <td colspan="5">No hay fuerzas aplicadas</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <p><strong>ΣF<sub>x</sub>:</strong> <span id="sumFx">0.00</span> N</p>
+                            <p><strong>ΣF<sub>y</sub>:</strong> <span id="sumFy">0.00</span> N</p>
+                        </div>
+                        <div>
+                            <p><strong>Aceleración Resultante:</strong> <span id="resultantAcceleration">0.00</span> m/s²</p>
+                            <p><strong>Estado:</strong> <span id="equilibriumStatus">No calculado</span></p>
+                        </div>
+                        <div>
+                            <p><strong>ΣMomentos:</strong> <span id="sumMoments">0.00</span> N·m</p>
+                            <p><strong>Deformación:</strong> <span id="deformationDisplay">0.00</span> mm</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pestaña de Cálculos -->
+            <div class="tab-content" id="calculations-tab">
+                <div class="theory-section">
+                    <h2>Cálculos Detallados de la Simulación</h2>
+                    <div id="detailedCalculations">
+                        <p>Realiza una simulación primero para ver los cálculos detallados.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pestaña de Exportación -->
+            <div class="tab-content" id="export-tab">
+                <div class="theory-section">
+                    <h2>Exportar Datos de la Simulación</h2>
+                    
+                    <div class="info-panel">
+                        <h3>Generar Archivo CSV</h3>
+                        <p>Exporta todos los datos de tu simulación en formato CSV para análisis posterior:</p>
+                        
+                        <div class="button-group">
+                            <button id="generateCSV" class="export-btn">
+                                <span>📊</span>
+                                <span>Generar CSV Completo</span>
+                            </button>
+                            <button id="previewCSV">
+                                <span>👁️</span>
+                                <span>Vista Previa CSV</span>
+                            </button>
+                            <button id="generatePDF" class="export-btn">
+                                <span>📄</span>
+                                <span>Generar PDF</span>
+                            </button>
+                            <button id="exportJSON" class="export-btn">
+                                <span>🔧</span>
+                                <span>Exportar JSON</span>
+                            </button>
+                        </div>
+                        
+                        <div id="csvPreview" class="csv-preview" style="display: none;">
+                            <p>La vista previa del CSV aparecerá aquí...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-panel">
+                        <h3>Información Incluida en el CSV</h3>
+                        <ul>
+                            <li><strong>Metadatos de la simulación:</strong> Fecha, hora, duración</li>
+                            <li><strong>Objetos:</strong> Tipo, masa, posición, dimensiones, material</li>
+                            <li><strong>Fuerzas aplicadas:</strong> Magnitud, ángulo, componentes</li>
+                            <li><strong>Cálculos de equilibrio:</strong> Sumatorias de fuerzas y momentos</li>
+                            <li><strong>Resultados físicos:</strong> Aceleración, velocidad, energía</li>
+                            <li><strong>Análisis detallado:</strong> Cálculos paso a paso</li>
+                            <li><strong>Propiedades de materiales:</strong> Densidad, módulo elástico</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pestaña de Ayuda -->
+            <div class="tab-content" id="help-tab">
+                <div class="theory-section">
+                    <h2>Guía de Uso del Simulador</h2>
+                    
+                    <div class="info-panel">
+                        <h3>Atajos de Teclado</h3>
+                        <div class="keyboard-shortcuts">
+                            <div class="shortcut-item">
+                                <span>Espacio</span>
+                                <span class="shortcut-key">Play/Pausa</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>R</span>
+                                <span class="shortcut-key">Reiniciar simulación</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>P</span>
+                                <span class="shortcut-key">Activar/Desactivar física</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>F</span>
+                                <span class="shortcut-key">Aplicar fuerzas</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>A</span>
+                                <span class="shortcut-key">Añadir fuerza</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>Supr</span>
+                                <span class="shortcut-key">Eliminar elemento seleccionado</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>Ctrl+Z</span>
+                                <span class="shortcut-key">Deshacer</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>Ctrl+Y</span>
+                                <span class="shortcut-key">Rehacer</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span>Ctrl+S</span>
+                                <span class="shortcut-key">Guardar simulación</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-panel">
+                        <h3>Tutorial Rápido</h3>
+                        <ol style="margin-left: 20px; margin-top: 15px;">
+                            <li><strong>Añade objetos</strong> usando los botones de tipo de objeto</li>
+                            <li><strong>Aplica fuerzas</strong> haciendo clic en el plano o usando el botón "Añadir Fuerza"</li>
+                            <li><strong>Arrastra elementos</strong> para reposicionarlos (objetos y fuerzas)</li>
+                            <li><strong>Configura propiedades</strong> como masa, fricción y tipo de soporte</li>
+                            <li><strong>Calcula el equilibrio</strong> para ver si el sistema es estable</li>
+                            <li><strong>Activa la física</strong> para ver la simulación en tiempo real</li>
+                            <li><strong>Exporta los datos</strong> para análisis posterior</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="info-panel">
+                        <h3>Ejemplos Predefinidos</h3>
+                        <div class="button-group">
+                            <button id="exampleBeam" class="animation-btn">
+                                <span>Viga en Voladizo</span>
+                            </button>
+                            <button id="exampleBridge" class="animation-btn">
+                                <span>Puente Simple</span>
+                            </button>
+                            <button id="exampleCrane" class="animation-btn">
+                                <span>Grúa</span>
+                            </button>
+                            <button id="exampleSeeSaw" class="animation-btn">
+                                <span>Balancín</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Simulador de Estática Avanzado | Análisis completo de sistemas estáticos con exportación de datos</p>
+        </footer>
+    </div>
+
+    <script>
+        // Módulo principal de la aplicación - Versión Mejorada
+        const StaticSimulator = (function() {
+            // Variables globales
+            let cartesianForces = [];
+            let cartesianObjects = [];
+            let cables = [];
+            let connectionPoints = [];
+            let isAnimating = false;
+            let animationTime = 0;
+            let animationId = null;
+            let viewOffsetX = 0;
+            let viewOffsetY = 0;
+            let viewScale = 1;
+            let isDraggingView = false;
+            let isDraggingForce = false;
+            let isDraggingObject = false;
+            let dragStartX = 0;
+            let dragStartY = 0;
+            let selectedForce = null;
+            let selectedObject = null;
+            let selectedConnectionPoint = null;
+            let showGrid = true;
+            let currentObjectType = 'rectangle';
+            let physicsEnabled = true;
+            let frictionEnabled = true;
+            let connectionMode = false;
+            let firstConnectionPoint = null;
+            
+            // Sistema de historial (undo/redo)
+            let actionHistory = [];
+            let currentHistoryIndex = -1;
+            const MAX_HISTORY = 50;
+            
+            // Materiales predefinidos
+            const materials = {
+                steel: { 
+                    name: 'Acero', 
+                    density: 7850, 
+                    youngModulus: 200e9,
+                    color: '#4b5563'
+                },
+                aluminum: { 
+                    name: 'Aluminio', 
+                    density: 2700, 
+                    youngModulus: 69e9,
+                    color: '#9ca3af'
+                },
+                wood: { 
+                    name: 'Madera', 
+                    density: 700, 
+                    youngModulus: 10e9,
+                    color: '#a16207'
+                },
+                concrete: { 
+                    name: 'Concreto', 
+                    density: 2400, 
+                    youngModulus: 30e9,
+                    color: '#6b7280'
+                },
+                plastic: { 
+                    name: 'Plástico', 
+                    density: 950, 
+                    youngModulus: 3e9,
+                    color: '#dc2626'
+                }
+            };
+            
+            // Colores para las fuerzas
+            const forceColors = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
+                '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+            ];
+            
+            // Elementos del DOM
+            const cartesianPlane = document.getElementById('cartesianPlane');
+            const gridLines = document.getElementById('gridLines');
+            const coordinateDisplay = document.getElementById('coordinateDisplay');
+            const playAnimationBtn = document.getElementById('playAnimation');
+            const pauseAnimationBtn = document.getElementById('pauseAnimation');
+            const resetAnimationBtn = document.getElementById('resetAnimation');
+            const togglePhysicsBtn = document.getElementById('togglePhysics');
+            const toggleFrictionBtn = document.getElementById('toggleFriction');
+            const toggleConnectionModeBtn = document.getElementById('toggleConnectionMode');
+            const toggleGridBtn = document.getElementById('toggleGrid');
+            const addForceBtn = document.getElementById('addForce');
+            const addObjectBtn = document.getElementById('addObject');
+            const calculateEquilibriumBtn = document.getElementById('calculateEquilibrium');
+            const applyForcesBtn = document.getElementById('applyForces');
+            const clearAllBtn = document.getElementById('clearAll');
+            const resultsTable = document.getElementById('resultsTable');
+            const sumFxElem = document.getElementById('sumFx');
+            const sumFyElem = document.getElementById('sumFy');
+            const equilibriumStatusElem = document.getElementById('equilibriumStatus');
+            const objectTypeButtons = document.querySelectorAll('.object-type-btn');
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const detailedCalculations = document.getElementById('detailedCalculations');
+            const generateCSVBtn = document.getElementById('generateCSV');
+            const previewCSVBtn = document.getElementById('previewCSV');
+            const csvPreview = document.getElementById('csvPreview');
+            const generatePDFBtn = document.getElementById('generatePDF');
+            const exportJSONBtn = document.getElementById('exportJSON');
+            const selectedProperties = document.getElementById('selectedProperties');
+            const historyList = document.getElementById('historyList');
+            const undoBtn = document.getElementById('undoBtn');
+            const redoBtn = document.getElementById('redoBtn');
+            const saveSimulationBtn = document.getElementById('saveSimulationBtn');
+            const loadSimulationBtn = document.getElementById('loadSimulationBtn');
+            const simulationList = document.getElementById('simulationList');
+            const zoomInBtn = document.getElementById('zoomIn');
+            const zoomOutBtn = document.getElementById('zoomOut');
+            const scaleDisplay = document.getElementById('scaleDisplay');
+            const exampleBeamBtn = document.getElementById('exampleBeam');
+            const exampleBridgeBtn = document.getElementById('exampleBridge');
+            const exampleCraneBtn = document.getElementById('exampleCrane');
+            const exampleSeeSawBtn = document.getElementById('exampleSeeSaw');
+            
+            // Elementos de información física
+            const accelerationDisplay = document.getElementById('accelerationDisplay');
+            const velocityDisplay = document.getElementById('velocityDisplay');
+            const resultantForceDisplay = document.getElementById('resultantForceDisplay');
+            const kineticEnergyDisplay = document.getElementById('kineticEnergyDisplay');
+            const resultantAcceleration = document.getElementById('resultantAcceleration');
+            const sumMomentsElem = document.getElementById('sumMoments');
+            const deformationDisplay = document.getElementById('deformationDisplay');
+            
+            // Constantes físicas
+            const GRAVITY = 9.81;
+            const PIXELS_PER_METER = 10;
+            
+            // Variables para optimización
+            let lastRenderTime = 0;
+            const RENDER_INTERVAL = 16; // ~60fps
+            let objectPool = [];
+            let forcePool = [];
+            
+            // Sistema de notificaciones
+            class NotificationSystem {
+                static show(message, type = 'info', duration = 3000) {
+                    const notification = document.createElement('div');
+                    notification.className = `notification notification-${type}`;
+                    notification.textContent = message;
+                    
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, duration);
+                }
+            }
+            
+            // Sistema de comandos para undo/redo
+            class Command {
+                execute() {}
+                undo() {}
+            }
+            
+            class AddForceCommand extends Command {
+                constructor(force, simulator) {
+                    super();
+                    this.force = force;
+                    this.simulator = simulator;
+                }
+                
+                execute() {
+                    this.simulator.cartesianForces.push(this.force);
+                }
+                
+                undo() {
+                    const index = this.simulator.cartesianForces.indexOf(this.force);
+                    if (index > -1) {
+                        this.simulator.cartesianForces.splice(index, 1);
+                    }
+                }
+            }
+            
+            class AddObjectCommand extends Command {
+                constructor(object, simulator) {
+                    super();
+                    this.object = object;
+                    this.simulator = simulator;
+                }
+                
+                execute() {
+                    this.simulator.cartesianObjects.push(this.object);
+                }
+                
+                undo() {
+                    const index = this.simulator.cartesianObjects.indexOf(this.object);
+                    if (index > -1) {
+                        this.simulator.cartesianObjects.splice(index, 1);
+                    }
+                }
+            }
+            
+            // Sistema de colisiones
+            class CollisionSystem {
+                static checkObjectCollision(obj1, obj2) {
+                    return !(obj1.x + obj1.width < obj2.x ||
+                            obj1.x > obj2.x + obj2.width ||
+                            obj1.y + obj1.height < obj2.y ||
+                            obj1.y > obj2.y + obj2.height);
+                }
+                
+                static resolveCollision(obj1, obj2) {
+                    // Lógica de resolución de colisiones simplificada
+                    const dx = (obj1.x + obj1.width/2) - (obj2.x + obj2.width/2);
+                    const dy = (obj1.y + obj1.height/2) - (obj2.y + obj2.height/2);
+                    
+                    // Rebote elástico simple
+                    obj1.velocityX = -obj1.velocityX * 0.8;
+                    obj1.velocityY = -obj1.velocityY * 0.8;
+                    obj2.velocityX = -obj2.velocityX * 0.8;
+                    obj2.velocityY = -obj2.velocityY * 0.8;
+                }
+            }
+            
+            // Inicialización
+            function init() {
+                try {
+                    drawGrid();
+                    setupEventListeners();
+                    createDefaultObject();
+                    updateResultsTable();
+                    updatePhysicsDisplays();
+                    updateHistoryDisplay();
+                    loadSavedSimulations();
+                    
+                    pauseAnimationBtn.disabled = true;
+                    playAnimation();
+                    
+                    // Guardar estado inicial en el historial
+                    pushToHistory('Simulación iniciada');
+                    
+                    NotificationSystem.show('Simulador cargado correctamente', 'success');
+                } catch (error) {
+                    console.error('Error inicializando simulador:', error);
+                    NotificationSystem.show('Error al cargar el simulador', 'error');
+                }
+            }
+            
+            // Configurar event listeners
+            function setupEventListeners() {
+                // Event listeners para el plano
+                cartesianPlane.addEventListener('mousedown', handlePlaneMouseDown);
+                cartesianPlane.addEventListener('mousemove', handlePlaneMouseMove);
+                cartesianPlane.addEventListener('mouseup', handlePlaneMouseUp);
+                cartesianPlane.addEventListener('wheel', handlePlaneWheel);
+                cartesianPlane.addEventListener('contextmenu', handlePlaneRightClick);
+                cartesianPlane.addEventListener('click', handlePlaneClick);
+                
+                // Event listeners para controles
+                playAnimationBtn.addEventListener('click', playAnimation);
+                pauseAnimationBtn.addEventListener('click', pauseAnimation);
+                resetAnimationBtn.addEventListener('click', resetAnimation);
+                togglePhysicsBtn.addEventListener('click', togglePhysics);
+                toggleFrictionBtn.addEventListener('click', toggleFriction);
+                toggleConnectionModeBtn.addEventListener('click', toggleConnectionMode);
+                toggleGridBtn.addEventListener('click', toggleGrid);
+                addForceBtn.addEventListener('click', addForceFromControls);
+                addObjectBtn.addEventListener('click', addObjectFromControls);
+                calculateEquilibriumBtn.addEventListener('click', calculateEquilibrium);
+                applyForcesBtn.addEventListener('click', applyForces);
+                clearAllBtn.addEventListener('click', clearAll);
+                generateCSVBtn.addEventListener('click', generateCSV);
+                previewCSVBtn.addEventListener('click', previewCSV);
+                generatePDFBtn.addEventListener('click', generatePDF);
+                exportJSONBtn.addEventListener('click', exportJSON);
+                undoBtn.addEventListener('click', undo);
+                redoBtn.addEventListener('click', redo);
+                saveSimulationBtn.addEventListener('click', saveSimulation);
+                loadSimulationBtn.addEventListener('click', loadSimulation);
+                zoomInBtn.addEventListener('click', zoomIn);
+                zoomOutBtn.addEventListener('click', zoomOut);
+                exampleBeamBtn.addEventListener('click', loadExampleBeam);
+                exampleBridgeBtn.addEventListener('click', loadExampleBridge);
+                exampleCraneBtn.addEventListener('click', loadExampleCrane);
+                exampleSeeSawBtn.addEventListener('click', loadExampleSeeSaw);
+                
+                // Event listeners para selección de tipo de objeto
+                objectTypeButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        objectTypeButtons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        currentObjectType = btn.getAttribute('data-type');
+                    });
+                });
+                
+                // Event listener para teclado
+                document.addEventListener('keydown', handleKeyDown);
+                
+                // Event listeners para pestañas
+                setupTabListeners();
+                
+                // Redibujar cuadrícula cuando cambia el tamaño de la ventana
+                window.addEventListener('resize', () => {
+                    drawGrid();
+                    throttledDrawObjects();
+                });
+            }
+            
+            // Configurar event listeners para pestañas
+            function setupTabListeners() {
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabId = tab.getAttribute('data-tab');
+                        switchTab(tabId);
+                    });
+                });
+            }
+            
+            // Cambiar pestañas
+            function switchTab(tabId) {
+                tabs.forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+                
+                if (tabId === 'calculations') {
+                    updateDetailedCalculations();
+                } else if (tabId === 'export') {
+                    csvPreview.style.display = 'none';
+                }
+            }
+            
+            // Dibujar cuadrícula del plano cartesiano
+            function drawGrid() {
+                gridLines.innerHTML = '';
+                
+                if (!showGrid) return;
+                
+                const planeWidth = cartesianPlane.offsetWidth;
+                const planeHeight = cartesianPlane.offsetHeight;
+                const centerX = planeWidth / 2 + viewOffsetX;
+                const centerY = planeHeight / 2 + viewOffsetY;
+                
+                // Dibujar ejes
+                const axisX = document.createElement('div');
+                axisX.className = 'axis axis-x';
+                axisX.style.top = `${centerY}px`;
+                gridLines.appendChild(axisX);
+                
+                const axisY = document.createElement('div');
+                axisY.className = 'axis axis-y';
+                axisY.style.left = `${centerX}px`;
+                gridLines.appendChild(axisY);
+                
+                // Etiquetas de ejes
+                const labelX = document.createElement('div');
+                labelX.className = 'axis-label axis-label-x';
+                labelX.textContent = 'X';
+                labelX.style.left = `${planeWidth - 30}px`;
+                labelX.style.top = `${centerY + 10}px`;
+                gridLines.appendChild(labelX);
+                
+                const labelY = document.createElement('div');
+                labelY.className = 'axis-label axis-label-y';
+                labelY.textContent = 'Y';
+                labelY.style.left = `${centerX + 10}px`;
+                labelY.style.top = '10px';
+                gridLines.appendChild(labelY);
+                
+                // Dibujar líneas de cuadrícula
+                const gridSize = 50 * viewScale;
+                
+                for (let x = centerX % gridSize; x < planeWidth; x += gridSize) {
+                    const line = document.createElement('div');
+                    line.className = 'grid-line grid-line-vertical';
+                    line.style.left = `${x}px`;
+                    gridLines.appendChild(line);
+                }
+                
+                for (let y = centerY % gridSize; y < planeHeight; y += gridSize) {
+                    const line = document.createElement('div');
+                    line.className = 'grid-line grid-line-horizontal';
+                    line.style.top = `${y}px`;
+                    gridLines.appendChild(line);
+                }
+            }
+            
+            // Crear objeto por defecto
+            function createDefaultObject() {
+                const planeWidth = cartesianPlane.offsetWidth;
+                const planeHeight = cartesianPlane.offsetHeight;
+                
+                const object = createObject('rectangle', planeWidth / 2 - 50, planeHeight / 2 - 20, 100, 40);
+                cartesianObjects.push(object);
+                selectedObject = object;
+                
+                throttledDrawObjects();
+                updatePropertiesPanel();
+            }
+            
+            // Crear objeto según tipo
+            function createObject(type, x, y, width, height) {
+                const materialType = document.getElementById('materialType').value;
+                const material = materials[materialType];
+                
+                const object = {
+                    id: 'object' + (cartesianObjects.length + 1),
+                    type: type,
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    rotation: 0,
+                    mass: parseFloat(document.getElementById('objectMass').value) || 10,
+                    friction: parseFloat(document.getElementById('frictionCoefficient').value) || 0.2,
+                    velocityX: 0,
+                    velocityY: 0,
+                    accelerationX: 0,
+                    accelerationY: 0,
+                    angularVelocity: 0,
+                    supports: [],
+                    connectionPoints: [],
+                    supportType: document.getElementById('supportType').value,
+                    material: materialType,
+                    density: material.density,
+                    youngModulus: material.youngModulus,
+                    color: material.color
+                };
+                
+                switch(type) {
+                    case 'rectangle':
+                        object.className = 'object object-rectangle';
+                        break;
+                    case 'lamp':
+                        object.className = 'object object-lamp';
+                        break;
+                    case 'triangle':
+                        object.className = 'object object-triangle';
+                        break;
+                    case 'circle':
+                        object.className = 'object object-circle';
+                        break;
+                    case 'pole':
+                        object.className = 'object object-pole';
+                        object.width = 30;
+                        object.height = 150;
+                        break;
+                    case 'beam':
+                        object.className = 'object object-beam';
+                        object.width = 150;
+                        object.height = 30;
+                        break;
+                    case 'weight':
+                        object.className = 'object object-weight';
+                        object.width = 40;
+                        object.height = 40;
+                        object.mass = 20;
+                        break;
+                }
+                
+                return object;
+            }
+            
+            // Dibujar objetos, fuerzas, cables y puntos de conexión con throttling
+            function throttledDrawObjects() {
+                const now = Date.now();
+                if (now - lastRenderTime >= RENDER_INTERVAL) {
+                    drawObjects();
+                    lastRenderTime = now;
+                }
+            }
+            
+            function drawObjects() {
+                document.querySelectorAll('.object, .support, .force-vector, .cable, .connection-point, .fixed-indicator').forEach(el => {
+                    if (el.id !== 'gridLines' && el.id !== 'coordinateDisplay') {
+                        el.remove();
+                    }
+                });
+                
+                // Dibujar cables
+                cables.forEach(cable => {
+                    const cableEl = document.createElement('div');
+                    cableEl.className = 'cable';
+                    cableEl.id = cable.id;
+                    
+                    const dx = cable.endX - cable.startX;
+                    const dy = cable.endY - cable.startY;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    cableEl.style.width = `${length}px`;
+                    cableEl.style.left = `${cable.startX}px`;
+                    cableEl.style.top = `${cable.startY}px`;
+                    cableEl.style.transform = `rotate(${angle}deg)`;
+                    
+                    cartesianPlane.appendChild(cableEl);
+                });
+                
+                // Dibujar objetos
+                cartesianObjects.forEach(obj => {
+                    const objectEl = document.createElement('div');
+                    objectEl.className = obj.className;
+                    objectEl.id = obj.id;
+                    
+                    if (obj.type === 'triangle') {
+                        objectEl.style.width = '0';
+                        objectEl.style.height = '0';
+                        objectEl.style.borderLeft = `${obj.width/2}px solid transparent`;
+                        objectEl.style.borderRight = `${obj.width/2}px solid transparent`;
+                        objectEl.style.borderBottom = `${obj.height}px solid #16a34a`;
+                        objectEl.style.borderTop = 'none';
+                    } else {
+                        objectEl.style.width = `${obj.width}px`;
+                        objectEl.style.height = `${obj.height}px`;
+                    }
+                    
+                    objectEl.style.left = `${obj.x}px`;
+                    objectEl.style.top = `${obj.y}px`;
+                    objectEl.style.transform = `rotate(${obj.rotation}deg)`;
+                    objectEl.style.zIndex = '1';
+                    objectEl.style.backgroundColor = obj.color;
+                    
+                    if (obj === selectedObject) {
+                        objectEl.classList.add('object-selected');
+                    }
+                    
+                    if (isDraggingObject && obj === selectedObject) {
+                        objectEl.classList.add('object-dragging');
+                    }
+                    
+                    if (obj.supportType !== 'free') {
+                        objectEl.classList.add('object-fixed');
+                        
+                        const fixedIndicator = document.createElement('div');
+                        fixedIndicator.className = 'fixed-indicator';
+                        fixedIndicator.textContent = obj.supportType === 'fixed' ? 'F' : 
+                                                    obj.supportType === 'pivot' ? 'P' : 'R';
+                        fixedIndicator.title = `Soporte: ${obj.supportType}`;
+                        objectEl.appendChild(fixedIndicator);
+                    }
+                    
+                    cartesianPlane.appendChild(objectEl);
+                });
+                
+                // Dibujar puntos de conexión
+                connectionPoints.forEach(point => {
+                    const pointEl = document.createElement('div');
+                    pointEl.className = 'connection-point';
+                    pointEl.id = point.id;
+                    pointEl.style.left = `${point.x - 7}px`;
+                    pointEl.style.top = `${point.y - 7}px`;
+                    pointEl.style.zIndex = '6';
+                    
+                    if (point === selectedConnectionPoint) {
+                        pointEl.classList.add('connection-point-selected');
+                    }
+                    
+                    if (connectionMode && point === firstConnectionPoint) {
+                        pointEl.classList.add('connection-point-selected');
+                    }
+                    
+                    cartesianPlane.appendChild(pointEl);
+                });
+                
+                // Dibujar fuerzas
+                cartesianForces.forEach((force, index) => {
+                    drawCartesianForce(force, index);
+                });
+            }
+            
+            // Dibujar una fuerza en el plano
+            function drawCartesianForce(force, index) {
+                const forceVector = document.createElement('div');
+                forceVector.className = 'force-vector';
+                forceVector.id = `force-${index}`;
+                forceVector.style.left = `${force.x}px`;
+                forceVector.style.top = `${force.y}px`;
+                forceVector.style.zIndex = '3';
+                
+                if (force === selectedForce) {
+                    forceVector.style.filter = 'drop-shadow(0 0 8px rgba(255, 107, 107, 0.8))';
+                }
+                
+                const forceLine = document.createElement('div');
+                forceLine.className = 'force-line';
+                forceLine.style.width = `${force.magnitude / 5}px`;
+                forceLine.style.background = `linear-gradient(to right, ${forceColors[index % forceColors.length]}80, ${forceColors[index % forceColors.length]})`;
+                forceLine.style.transform = `rotate(${force.angle}deg)`;
+                
+                const arrowhead = document.createElement('div');
+                arrowhead.className = 'force-arrowhead';
+                arrowhead.style.borderColor = `transparent transparent ${forceColors[index % forceColors.length]} transparent`;
+                arrowhead.style.left = `${force.magnitude / 5}px`;
+                arrowhead.style.top = '-7.5px';
+                arrowhead.style.transform = `rotate(${force.angle}deg)`;
+                
+                const forceLabel = document.createElement('div');
+                forceLabel.className = 'force-label';
+                forceLabel.textContent = `F${index + 1}: ${force.magnitude}N, ${force.angle.toFixed(1)}°`;
+                forceLabel.style.left = `${force.magnitude / 10 - 30}px`;
+                forceLabel.style.top = '-30px';
+                forceLabel.style.transform = `rotate(${force.angle}deg)`;
+                forceLabel.style.backgroundColor = forceColors[index % forceColors.length];
+                forceLabel.style.color = '#0f172a';
+                
+                forceVector.appendChild(forceLine);
+                forceVector.appendChild(arrowhead);
+                forceVector.appendChild(forceLabel);
+                cartesianPlane.appendChild(forceVector);
+            }
+            
+            // Manejar eventos del mouse
+            function handlePlaneMouseDown(e) {
+                const rect = cartesianPlane.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                for (let i = cartesianForces.length - 1; i >= 0; i--) {
+                    const force = cartesianForces[i];
+                    if (isMouseOnCartesianForce(force, x, y)) {
+                        selectedForce = force;
+                        selectedObject = null;
+                        selectedConnectionPoint = null;
+                        isDraggingForce = true;
+                        dragStartX = x;
+                        dragStartY = y;
+                        throttledDrawObjects();
+                        updatePropertiesPanel();
+                        return;
+                    }
+                }
+                
+                for (let i = cartesianObjects.length - 1; i >= 0; i--) {
+                    const obj = cartesianObjects[i];
+                    if (isMouseOnObject(obj, x, y)) {
+                        selectedObject = obj;
+                        selectedForce = null;
+                        selectedConnectionPoint = null;
+                        isDraggingObject = true;
+                        dragStartX = x;
+                        dragStartY = y;
+                        throttledDrawObjects();
+                        updatePropertiesPanel();
+                        return;
+                    }
+                }
+                
+                isDraggingView = true;
+                dragStartX = x;
+                dragStartY = y;
+            }
+            
+            function handlePlaneMouseMove(e) {
+                const rect = cartesianPlane.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const worldX = (x - cartesianPlane.offsetWidth / 2 - viewOffsetX) / viewScale;
+                const worldY = (cartesianPlane.offsetHeight / 2 - y + viewOffsetY) / viewScale;
+                coordinateDisplay.textContent = `X: ${worldX.toFixed(2)}, Y: ${worldY.toFixed(2)}`;
+                
+                if (isDraggingForce && selectedForce) {
+                    const deltaX = x - selectedForce.x;
+                    const deltaY = y - selectedForce.y;
+                    
+                    selectedForce.x = x;
+                    selectedForce.y = y;
+                    
+                    if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+                        selectedForce.angle = (Math.atan2(deltaY, deltaX) * 180 / Math.PI + 360) % 360;
+                    }
+                    
+                    throttledDrawObjects();
+                } else if (isDraggingObject && selectedObject) {
+                    if (selectedObject.supportType !== 'free') {
+                        return;
+                    }
+                    
+                    selectedObject.x += x - dragStartX;
+                    selectedObject.y += y - dragStartY;
+                    
+                    dragStartX = x;
+                    dragStartY = y;
+                    
+                    throttledDrawObjects();
+                } else if (isDraggingView) {
+                    viewOffsetX += x - dragStartX;
+                    viewOffsetY += y - dragStartY;
+                    dragStartX = x;
+                    dragStartY = y;
+                    
+                    drawGrid();
+                    throttledDrawObjects();
+                }
+            }
+            
+            function handlePlaneMouseUp() {
+                if (isDraggingForce || isDraggingObject) {
+                    pushToHistory('Elemento movido');
+                }
+                
+                isDraggingForce = false;
+                isDraggingObject = false;
+                isDraggingView = false;
+                
+                // Remover clase de arrastre
+                document.querySelectorAll('.object-dragging').forEach(el => {
+                    el.classList.remove('object-dragging');
+                });
+            }
+            
+            function handlePlaneWheel(e) {
+                e.preventDefault();
+                
+                const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                const oldScale = viewScale;
+                viewScale *= zoomFactor;
+                
+                viewScale = Math.max(0.1, Math.min(5, viewScale));
+                
+                const rect = cartesianPlane.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const scaleChange = viewScale / oldScale;
+                viewOffsetX = mouseX - (mouseX - viewOffsetX) * scaleChange;
+                viewOffsetY = mouseY - (mouseY - viewOffsetY) * scaleChange;
+                
+                drawGrid();
+                throttledDrawObjects();
+                updateScaleDisplay();
+            }
+            
+            function handlePlaneRightClick(e) {
+                e.preventDefault();
+                
+                const rect = cartesianPlane.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                for (let i = cartesianForces.length - 1; i >= 0; i--) {
+                    const force = cartesianForces[i];
+                    if (isMouseOnCartesianForce(force, x, y)) {
+                        cartesianForces.splice(i, 1);
+                        pushToHistory('Fuerza eliminada');
+                        throttledDrawObjects();
+                        updateResultsTable();
+                        calculateEquilibrium();
+                        break;
+                    }
+                }
+                
+                for (let i = cartesianObjects.length - 1; i >= 0; i--) {
+                    const obj = cartesianObjects[i];
+                    if (isMouseOnObject(obj, x, y)) {
+                        cartesianObjects.splice(i, 1);
+                        selectedObject = null;
+                        pushToHistory('Objeto eliminado');
+                        throttledDrawObjects();
+                        updateResultsTable();
+                        calculateEquilibrium();
+                        updatePropertiesPanel();
+                        break;
+                    }
+                }
+            }
+            
+            function handlePlaneClick(e) {
+                if (isDraggingForce || isDraggingObject || isDraggingView) return;
+                
+                const rect = cartesianPlane.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                addCartesianForce({
+                    x: x,
+                    y: y,
+                    magnitude: parseFloat(document.getElementById('forceMagnitude').value) || 50,
+                    angle: parseFloat(document.getElementById('forceAngle').value) || 0
+                });
+            }
+            
+            function handleKeyDown(e) {
+                switch(e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        if (isAnimating) {
+                            pauseAnimation();
+                        } else {
+                            playAnimation();
+                        }
+                        break;
+                        
+                    case 'r':
+                    case 'R':
+                        e.preventDefault();
+                        resetAnimation();
+                        break;
+                        
+                    case 'p':
+                    case 'P':
+                        e.preventDefault();
+                        togglePhysics();
+                        break;
+                        
+                    case 'f':
+                    case 'F':
+                        e.preventDefault();
+                        applyForces();
+                        break;
+                        
+                    case 'a':
+                    case 'A':
+                        e.preventDefault();
+                        const rect = cartesianPlane.getBoundingClientRect();
+                        const x = rect.width / 2;
+                        const y = rect.height / 2;
+                        
+                        addCartesianForce({
+                            x: x,
+                            y: y,
+                            magnitude: parseFloat(document.getElementById('forceMagnitude').value) || 50,
+                            angle: parseFloat(document.getElementById('forceAngle').value) || 0
+                        });
+                        break;
+                        
+                    case 'Delete':
+                        if (selectedForce) {
+                            const index = cartesianForces.indexOf(selectedForce);
+                            if (index !== -1) {
+                                cartesianForces.splice(index, 1);
+                                selectedForce = null;
+                                pushToHistory('Fuerza eliminada');
+                                throttledDrawObjects();
+                                updateResultsTable();
+                                calculateEquilibrium();
+                                updatePropertiesPanel();
+                            }
+                        } else if (selectedObject) {
+                            const index = cartesianObjects.indexOf(selectedObject);
+                            if (index !== -1) {
+                                cartesianObjects.splice(index, 1);
+                                selectedObject = null;
+                                pushToHistory('Objeto eliminado');
+                                throttledDrawObjects();
+                                updateResultsTable();
+                                calculateEquilibrium();
+                                updatePropertiesPanel();
+                            }
+                        }
+                        break;
+                        
+                    case 'z':
+                    case 'Z':
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            undo();
+                        }
+                        break;
+                        
+                    case 'y':
+                    case 'Y':
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            redo();
+                        }
+                        break;
+                        
+                    case 's':
+                    case 'S':
+                        if (e.ctrlKey) {
+                            e.preventDefault();
+                            saveSimulation();
+                        }
+                        break;
+                }
+            }
+            
+            // Funciones auxiliares para detección de colisiones
+            function isMouseOnCartesianForce(force, mouseX, mouseY) {
+                const forceEndX = force.x + force.magnitude / 5 * Math.cos(force.angle * Math.PI / 180);
+                const forceEndY = force.y + force.magnitude / 5 * Math.sin(force.angle * Math.PI / 180);
+                
+                const distance = pointToLineDistance(mouseX, mouseY, force.x, force.y, forceEndX, forceEndY);
+                return distance < 10;
+            }
+            
+            function isMouseOnObject(obj, mouseX, mouseY) {
+                return mouseX >= obj.x && mouseX <= obj.x + obj.width &&
+                       mouseY >= obj.y && mouseY <= obj.y + obj.height;
+            }
+            
+            function pointToLineDistance(px, py, x1, y1, x2, y2) {
+                const A = px - x1;
+                const B = py - y1;
+                const C = x2 - x1;
+                const D = y2 - y1;
+                
+                const dot = A * C + B * D;
+                const lenSq = C * C + D * D;
+                let param = -1;
+                
+                if (lenSq !== 0) {
+                    param = dot / lenSq;
+                }
+                
+                let xx, yy;
+                
+                if (param < 0) {
+                    xx = x1;
+                    yy = y1;
+                } else if (param > 1) {
+                    xx = x2;
+                    yy = y2;
+                } else {
+                    xx = x1 + param * C;
+                    yy = y1 + param * D;
+                }
+                
+                const dx = px - xx;
+                const dy = py - yy;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+            
+            // Funciones para creación de elementos
+            function addCartesianForce(forceData) {
+                const force = {
+                    id: 'force' + (cartesianForces.length + 1),
+                    x: forceData.x,
+                    y: forceData.y,
+                    magnitude: forceData.magnitude,
+                    angle: forceData.angle
+                };
+                
+                cartesianForces.push(force);
+                pushToHistory('Fuerza añadida');
+                throttledDrawObjects();
+                updateResultsTable();
+                calculateEquilibrium();
+            }
+            
+            function addForceFromControls() {
+                const planeWidth = cartesianPlane.offsetWidth;
+                const planeHeight = cartesianPlane.offsetHeight;
+                
+                addCartesianForce({
+                    x: planeWidth / 2,
+                    y: planeHeight / 2,
+                    magnitude: parseFloat(document.getElementById('forceMagnitude').value) || 50,
+                    angle: parseFloat(document.getElementById('forceAngle').value) || 0
+                });
+            }
+            
+            function addObjectFromControls() {
+                const planeWidth = cartesianPlane.offsetWidth;
+                const planeHeight = cartesianPlane.offsetHeight;
+                const size = parseFloat(document.getElementById('objectSize').value) || 100;
+                
+                const object = createObject(currentObjectType, planeWidth / 2 - size/2, planeHeight / 2 - size/2, size, size);
+                cartesianObjects.push(object);
+                selectedObject = object;
+                pushToHistory('Objeto añadida');
+                
+                throttledDrawObjects();
+                updatePropertiesPanel();
+            }
+            
+            // Funciones de animación y física
+            function playAnimation() {
+                if (!isAnimating) {
+                    isAnimating = true;
+                    playAnimationBtn.disabled = true;
+                    pauseAnimationBtn.disabled = false;
+                    animationId = requestAnimationFrame(optimizedAnimate);
+                }
+            }
+            
+            function pauseAnimation() {
+                if (isAnimating) {
+                    isAnimating = false;
+                    playAnimationBtn.disabled = false;
+                    pauseAnimationBtn.disabled = true;
+                    cancelAnimationFrame(animationId);
+                }
+            }
+            
+            function resetAnimation() {
+                pauseAnimation();
+                animationTime = 0;
+                document.getElementById('timeDisplay').textContent = 'Tiempo: 0.0s';
+                
+                cartesianObjects.forEach(obj => {
+                    obj.velocityX = 0;
+                    obj.velocityY = 0;
+                    obj.accelerationX = 0;
+                    obj.accelerationY = 0;
+                    obj.angularVelocity = 0;
+                });
+                
+                throttledDrawObjects();
+                updatePhysicsDisplays();
+                pushToHistory('Simulación reiniciada');
+            }
+            
+            function optimizedAnimate(timestamp) {
+                if (!isAnimating) return;
+                
+                animationTime += 0.016;
+                document.getElementById('timeDisplay').textContent = `Tiempo: ${animationTime.toFixed(1)}s`;
+                
+                if (physicsEnabled) {
+                    updatePhysics();
+                }
+                
+                throttledDrawObjects();
+                updatePhysicsDisplays();
+                animationId = requestAnimationFrame(optimizedAnimate);
+            }
+            
+            function updatePhysics() {
+                cartesianObjects.forEach(obj => {
+                    if (obj.supportType !== 'free') return;
+                    
+                    let totalForceX = 0;
+                    let totalForceY = obj.mass * GRAVITY;
+                    
+                    cartesianForces.forEach(force => {
+                        const fx = force.magnitude * Math.cos(force.angle * Math.PI / 180);
+                        const fy = force.magnitude * Math.sin(force.angle * Math.PI / 180);
+                        totalForceX += fx;
+                        totalForceY += fy;
+                    });
+                    
+                    obj.accelerationX = totalForceX / obj.mass;
+                    obj.accelerationY = totalForceY / obj.mass;
+                    
+                    if (frictionEnabled) {
+                        const frictionForce = obj.friction * obj.mass * GRAVITY;
+                        if (obj.velocityX > 0) {
+                            obj.accelerationX -= frictionForce / obj.mass;
+                        } else if (obj.velocityX < 0) {
+                            obj.accelerationX += frictionForce / obj.mass;
+                        }
+                        
+                        if (obj.velocityY > 0) {
+                            obj.accelerationY -= frictionForce / obj.mass;
+                        } else if (obj.velocityY < 0) {
+                            obj.accelerationY += frictionForce / obj.mass;
+                        }
+                    }
+                    
+                    obj.velocityX += obj.accelerationX * 0.016;
+                    obj.velocityY += obj.accelerationY * 0.016;
+                    
+                    obj.x += obj.velocityX * 0.016 * PIXELS_PER_METER;
+                    obj.y += obj.velocityY * 0.016 * PIXELS_PER_METER;
+                    
+                    // Detección de colisiones entre objetos
+                    for (let i = 0; i < cartesianObjects.length; i++) {
+                        for (let j = i + 1; j < cartesianObjects.length; j++) {
+                            const obj1 = cartesianObjects[i];
+                            const obj2 = cartesianObjects[j];
+                            
+                            if (obj1.supportType === 'free' && obj2.supportType === 'free' && 
+                                CollisionSystem.checkObjectCollision(obj1, obj2)) {
+                                CollisionSystem.resolveCollision(obj1, obj2);
+                            }
+                        }
+                    }
+                    
+                    const planeWidth = cartesianPlane.offsetWidth;
+                    const planeHeight = cartesianPlane.offsetHeight;
+                    
+                    if (obj.x < 0) {
+                        obj.x = 0;
+                        obj.velocityX = -obj.velocityX * 0.5;
+                    }
+                    if (obj.x + obj.width > planeWidth) {
+                        obj.x = planeWidth - obj.width;
+                        obj.velocityX = -obj.velocityX * 0.5;
+                    }
+                    if (obj.y < 0) {
+                        obj.y = 0;
+                        obj.velocityY = -obj.velocityY * 0.5;
+                    }
+                    if (obj.y + obj.height > planeHeight) {
+                        obj.y = planeHeight - obj.height;
+                        obj.velocityY = -obj.velocityY * 0.5;
+                    }
+                });
+            }
+            
+            function applyForces() {
+                cartesianObjects.forEach(obj => {
+                    if (obj.supportType !== 'free') return;
+                    
+                    cartesianForces.forEach(force => {
+                        const fx = force.magnitude * Math.cos(force.angle * Math.PI / 180);
+                        const fy = force.magnitude * Math.sin(force.angle * Math.PI / 180);
+                        
+                        obj.velocityX += fx / obj.mass;
+                        obj.velocityY += fy / obj.mass;
+                    });
+                });
+                
+                updatePhysicsDisplays();
+                pushToHistory('Fuerzas aplicadas');
+            }
+            
+            // Actualizar displays de información física
+            function updatePhysicsDisplays() {
+                if (cartesianObjects.length === 0) return;
+                
+                const obj = cartesianObjects[0];
+                
+                const acceleration = Math.sqrt(obj.accelerationX * obj.accelerationX + obj.accelerationY * obj.accelerationY);
+                const velocity = Math.sqrt(obj.velocityX * obj.velocityX + obj.velocityY * obj.velocityY);
+                const resultantForce = obj.mass * acceleration;
+                const kineticEnergy = 0.5 * obj.mass * velocity * velocity;
+                
+                accelerationDisplay.textContent = acceleration.toFixed(2);
+                velocityDisplay.textContent = velocity.toFixed(2);
+                resultantForceDisplay.textContent = resultantForce.toFixed(2);
+                kineticEnergyDisplay.textContent = kineticEnergy.toFixed(2);
+                resultantAcceleration.textContent = `${acceleration.toFixed(2)} m/s²`;
+                
+                // Calcular deformación (simplificado)
+                const totalForce = Math.sqrt(
+                    cartesianForces.reduce((sum, f) => sum + f.magnitude, 0) ** 2 + 
+                    (obj.mass * GRAVITY) ** 2
+                );
+                const stress = totalForce / (obj.width * obj.height / 10000); // Convertir a m²
+                const strain = stress / obj.youngModulus;
+                const deformation = strain * (obj.height / 100) * 1000; // Deformación en mm
+                
+                deformationDisplay.textContent = deformation.toFixed(2);
+            }
+            
+            // Funciones de control de física
+            function togglePhysics() {
+                physicsEnabled = !physicsEnabled;
+                togglePhysicsBtn.textContent = `Física: ${physicsEnabled ? 'ACTIVADA' : 'DESACTIVADA'}`;
+                if (physicsEnabled) {
+                    togglePhysicsBtn.classList.add('toggle-on');
+                } else {
+                    togglePhysicsBtn.classList.remove('toggle-on');
+                }
+                pushToHistory(`Física ${physicsEnabled ? 'activada' : 'desactivada'}`);
+            }
+            
+            function toggleFriction() {
+                frictionEnabled = !frictionEnabled;
+                toggleFrictionBtn.textContent = `Fricción: ${frictionEnabled ? 'ACTIVADA' : 'DESACTIVADA'}`;
+                if (frictionEnabled) {
+                    toggleFrictionBtn.classList.add('toggle-on');
+                } else {
+                    toggleFrictionBtn.classList.remove('toggle-on');
+                }
+                pushToHistory(`Fricción ${frictionEnabled ? 'activada' : 'desactivada'}`);
+            }
+            
+            function toggleConnectionMode() {
+                connectionMode = !connectionMode;
+                toggleConnectionModeBtn.textContent = `Modo Conexión: ${connectionMode ? 'ACTIVADO' : 'DESACTIVADO'}`;
+                if (connectionMode) {
+                    toggleConnectionModeBtn.classList.add('toggle-on');
+                } else {
+                    toggleConnectionModeBtn.classList.remove('toggle-on');
+                }
+                pushToHistory(`Modo conexión ${connectionMode ? 'activado' : 'desactivado'}`);
+            }
+            
+            function toggleGrid() {
+                showGrid = !showGrid;
+                toggleGridBtn.textContent = `Cuadrícula: ${showGrid ? 'ACTIVADA' : 'DESACTIVADA'}`;
+                if (showGrid) {
+                    toggleGridBtn.classList.add('toggle-on');
+                } else {
+                    toggleGridBtn.classList.remove('toggle-on');
+                }
+                drawGrid();
+                pushToHistory(`Cuadrícula ${showGrid ? 'activada' : 'desactivada'}`);
+            }
+            
+            function zoomIn() {
+                viewScale = Math.min(5, viewScale * 1.2);
+                updateScaleDisplay();
+                drawGrid();
+                throttledDrawObjects();
+            }
+            
+            function zoomOut() {
+                viewScale = Math.max(0.1, viewScale / 1.2);
+                updateScaleDisplay();
+                drawGrid();
+                throttledDrawObjects();
+            }
+            
+            function updateScaleDisplay() {
+                scaleDisplay.textContent = `${Math.round(viewScale * 100)}%`;
+            }
+            
+            // Funciones de cálculo de equilibrio
+            function calculateEquilibrium() {
+                let sumFx = 0;
+                let sumFy = 0;
+                let sumMoments = 0;
+                
+                cartesianForces.forEach(force => {
+                    const fx = force.magnitude * Math.cos(force.angle * Math.PI / 180);
+                    const fy = force.magnitude * Math.sin(force.angle * Math.PI / 180);
+                    
+                    sumFx += fx;
+                    sumFy += fy;
+                    
+                    // Calcular momento (simplificado)
+                    if (cartesianObjects.length > 0) {
+                        const obj = cartesianObjects[0];
+                        const leverArmX = force.x - (obj.x + obj.width/2);
+                        const leverArmY = force.y - (obj.y + obj.height/2);
+                        sumMoments += fx * leverArmY - fy * leverArmX;
+                    }
+                });
+                
+                cartesianObjects.forEach(obj => {
+                    const weight = obj.mass * GRAVITY;
+                    sumFy += weight;
+                });
+                
+                sumFxElem.textContent = sumFx.toFixed(2);
+                sumFyElem.textContent = sumFy.toFixed(2);
+                sumMomentsElem.textContent = (sumMoments / 100).toFixed(2); // Escalar para mejor visualización
+                
+                const tolerance = 0.1;
+                const isEquilibrium = Math.abs(sumFx) < tolerance && Math.abs(sumFy) < tolerance && Math.abs(sumMoments) < tolerance * 100;
+                
+                equilibriumStatusElem.textContent = isEquilibrium ? 'EN EQUILIBRIO' : 'FUERA DE EQUILIBRIO';
+                equilibriumStatusElem.style.color = isEquilibrium ? '#4CAF50' : '#f44336';
+                
+                updateResultsTable();
+                updateDetailedCalculations();
+                pushToHistory('Equilibrio calculado');
+                
+                return isEquilibrium;
+            }
+            
+            function updateResultsTable() {
+                const resultsTableBody = document.getElementById('resultsTable');
+                resultsTableBody.innerHTML = '';
+                
+                if (cartesianForces.length === 0) {
+                    resultsTableBody.innerHTML = '<tr><td colspan="5">No hay fuerzas aplicadas</td></tr>';
+                    return;
+                }
+                
+                cartesianForces.forEach((force, index) => {
+                    const fx = force.magnitude * Math.cos(force.angle * Math.PI / 180);
+                    const fy = force.magnitude * Math.sin(force.angle * Math.PI / 180);
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>F${index + 1}</td>
+                        <td>${force.magnitude.toFixed(2)}</td>
+                        <td>${force.angle.toFixed(1)}</td>
+                        <td>${fx.toFixed(2)}</td>
+                        <td>${fy.toFixed(2)}</td>
+                    `;
+                    resultsTableBody.appendChild(row);
+                });
+            }
+            
+            // Actualizar cálculos detallados
+            function updateDetailedCalculations() {
+                if (!detailedCalculations) return;
+                
+                let html = '<h3>Análisis Detallado de Fuerzas</h3>';
+                
+                if (cartesianForces.length === 0) {
+                    html += '<p>No hay fuerzas aplicadas para analizar.</p>';
+                    detailedCalculations.innerHTML = html;
+                    return;
+                }
+                
+                html += '<div class="physics-info">';
+                html += '<p><strong>Fecha y hora de simulación:</strong> ' + new Date().toLocaleString() + '</p>';
+                html += '<p><strong>Tiempo transcurrido:</strong> ' + animationTime.toFixed(1) + ' segundos</p>';
+                html += '</div>';
+                
+                let sumFx = 0;
+                let sumFy = 0;
+                let sumMoments = 0;
+                
+                html += '<h4>Descomposición de Fuerzas</h4>';
+                cartesianForces.forEach((force, index) => {
+                    const fx = force.magnitude * Math.cos(force.angle * Math.PI / 180);
+                    const fy = force.magnitude * Math.sin(force.angle * Math.PI / 180);
+                    
+                    sumFx += fx;
+                    sumFy += fy;
+                    
+                    if (cartesianObjects.length > 0) {
+                        const obj = cartesianObjects[0];
+                        const leverArmX = force.x - (obj.x + obj.width/2);
+                        const leverArmY = force.y - (obj.y + obj.height/2);
+                        sumMoments += fx * leverArmY - fy * leverArmX;
+                    }
+                    
+                    html += `<div class="physics-info">`;
+                    html += `<p><strong>Fuerza F${index + 1}:</strong> ${force.magnitude} N ∠ ${force.angle.toFixed(1)}°</p>`;
+                    html += `<p>F${index + 1}x = ${force.magnitude} × cos(${force.angle.toFixed(1)}°) = ${fx.toFixed(2)} N</p>`;
+                    html += `<p>F${index + 1}y = ${force.magnitude} × sin(${force.angle.toFixed(1)}°) = ${fy.toFixed(2)} N</p>`;
+                    html += `</div>`;
+                });
+                
+                html += '<h4>Sumatorias de Fuerzas</h4>';
+                html += `<div class="physics-info">`;
+                html += `<p>ΣFx = ${sumFx.toFixed(2)} N</p>`;
+                html += `<p>ΣFy = ${sumFy.toFixed(2)} N</p>`;
+                html += `<p>ΣMomentos = ${(sumMoments / 100).toFixed(2)} N·m</p>`;
+                html += `<p>Fuerza resultante = √(${sumFx.toFixed(2)}² + ${sumFy.toFixed(2)}²) = ${Math.sqrt(sumFx*sumFx + sumFy*sumFy).toFixed(2)} N</p>`;
+                html += `</div>`;
+                
+                if (cartesianObjects.length > 0) {
+                    const obj = cartesianObjects[0];
+                    html += '<h4>Análisis del Objeto</h4>';
+                    html += `<div class="physics-info">`;
+                    html += `<p><strong>Tipo:</strong> ${obj.type}</p>`;
+                    html += `<p><strong>Masa:</strong> ${obj.mass} kg</p>`;
+                    html += `<p><strong>Material:</strong> ${materials[obj.material].name}</p>`;
+                    html += `<p><strong>Densidad:</strong> ${obj.density} kg/m³</p>`;
+                    html += `<p><strong>Módulo elástico:</strong> ${(obj.youngModulus / 1e9).toFixed(1)} GPa</p>`;
+                    html += `<p><strong>Peso:</strong> ${obj.mass} × 9.81 = ${(obj.mass * 9.81).toFixed(2)} N</p>`;
+                    html += `<p><strong>Fuerza normal:</strong> ${(obj.mass * 9.81).toFixed(2)} N</p>`;
+                    html += `<p><strong>Fuerza de fricción máxima:</strong> ${(obj.friction * obj.mass * 9.81).toFixed(2)} N</p>`;
+                    html += `</div>`;
+                    
+                    html += '<h4>Segunda Ley de Newton (F = m × a)</h4>';
+                    html += `<div class="physics-info">`;
+                    html += `<p>Aceleración en X: aₓ = Fₓ/m = ${sumFx.toFixed(2)}/${obj.mass} = ${(sumFx/obj.mass).toFixed(2)} m/s²</p>`;
+                    html += `<p>Aceleración en Y: aᵧ = Fᵧ/m = ${sumFy.toFixed(2)}/${obj.mass} = ${(sumFy/obj.mass).toFixed(2)} m/s²</p>`;
+                    html += `<p>Aceleración resultante: ${Math.sqrt((sumFx/obj.mass)*(sumFx/obj.mass) + (sumFy/obj.mass)*(sumFy/obj.mass)).toFixed(2)} m/s²</p>`;
+                    html += `</div>`;
+                    
+                    // Cálculo de deformación
+                    const totalForce = Math.sqrt(sumFx*sumFx + sumFy*sumFy);
+                    const area = (obj.width * obj.height) / 10000; // Convertir a m²
+                    const stress = totalForce / area;
+                    const strain = stress / obj.youngModulus;
+                    const deformation = strain * (obj.height / 100) * 1000; // Deformación en mm
+                    
+                    html += '<h4>Análisis de Deformación</h4>';
+                    html += `<div class="physics-info">`;
+                    html += `<p>Esfuerzo: σ = F/A = ${totalForce.toFixed(2)} / ${area.toFixed(6)} = ${(stress/1e6).toFixed(2)} MPa</p>`;
+                    html += `<p>Deformación: ε = σ/E = ${(stress/1e6).toFixed(2)} / ${(obj.youngModulus/1e9).toFixed(1)} = ${strain.toFixed(6)}</p>`;
+                    html += `<p>Deformación total: δ = ε × L = ${strain.toFixed(6)} × ${(obj.height/100).toFixed(2)} = ${deformation.toFixed(2)} mm</p>`;
+                    html += `</div>`;
+                }
+                
+                detailedCalculations.innerHTML = html;
+            }
+            
+            // Funciones de exportación
+            function generateCSV() {
+                try {
+                    const csvContent = generateCSVContent();
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `simulacion_estatica_${new Date().getTime()}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    NotificationSystem.show('Archivo CSV generado y descargado correctamente', 'success');
+                    pushToHistory('CSV exportado');
+                } catch (error) {
+                    console.error('Error generando CSV:', error);
+                    NotificationSystem.show('Error al generar el archivo CSV', 'error');
+                }
+            }
+            
+            function previewCSV() {
+                try {
+                    const csvContent = generateCSVContent();
+                    csvPreview.textContent = csvContent;
+                    csvPreview.style.display = 'block';
+                } catch (error) {
+                    console.error('Error generando vista previa CSV:', error);
+                    NotificationSystem.show('Error al generar vista previa', 'error');
+                }
+            }
+            
+            function generatePDF() {
+                // En una implementación real, aquí se usaría una librería como jsPDF
+                NotificationSystem.show('Funcionalidad de PDF en desarrollo. Por ahora, use la exportación CSV.', 'info');
+                pushToHistory('Intento de exportación PDF');
+            }
+            
+            function exportJSON() {
+                try {
+                    const simulationData = {
+                        metadata: {
+                            name: `Simulación_${new Date().getTime()}`,
+                            date: new Date().toISOString(),
+                            duration: animationTime
+                        },
+                        objects: cartesianObjects,
+                        forces: cartesianForces,
+                        cables: cables,
+                        settings: {
+                            physicsEnabled: physicsEnabled,
+                            frictionEnabled: frictionEnabled,
+                            viewScale: viewScale,
+                            viewOffsetX: viewOffsetX,
+                            viewOffsetY: viewOffsetY
+                        }
+                    };
+                    
+                    const dataStr = JSON.stringify(simulationData, null, 2);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `simulacion_estatica_${new Date().getTime()}.json`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    NotificationSystem.show('Archivo JSON generado y descargado correctamente', 'success');
+                    pushToHistory('JSON exportado');
+                } catch (error) {
+                    console.error('Error exportando JSON:', error);
+                    NotificationSystem.show('Error al exportar JSON', 'error');
+                }
+            }
+            
+            function generateCSVContent() {
+                let csv = '';
+                
+                // Encabezado del archivo
+                csv += 'SIMULACIÓN DE ESTÁTICA - ANÁLISIS COMPLETO\n';
+                csv += `Fecha de generación: ${new Date().toLocaleString()}\n`;
+                csv += `Tiempo de simulación: ${animationTime.toFixed(1)} segundos\n\n`;
+                
+                // Información de objetos
+                csv += 'OBJETOS EN LA SIMULACIÓN\n';
+                csv += 'Tipo,Masa (kg),Material,Posición X (px),Posición Y (px),Ancho (px),Alto (px),Soporte,Fricción,Densidad (kg/m³),Módulo Elástico (GPa)\n';
+                cartesianObjects.forEach(obj => {
+                    csv += `${obj.type},${obj.mass},${obj.material},${obj.x.toFixed(1)},${obj.y.toFixed(1)},${obj.width},${obj.height},${obj.supportType},${obj.friction},${obj.density},${(obj.youngModulus/1e9).toFixed(1)}\n`;
+                });
+                csv += '\n';
+                
+                // Información de fuerzas
+                csv += 'FUERZAS APLICADAS\n';
+                csv += 'Fuerza,Magnitud (N),Ángulo (°),Posición X (px),Posición Y (px),Componente X (N),Componente Y (N)\n';
+                cartesianForces.forEach((force, index) => {
+                    const fx = force.magnitude * Math.cos(force.angle * Math.PI / 180);
+                    const fy = force.magnitude * Math.sin(force.angle * Math.PI / 180);
+                    csv += `F${index + 1},${force.magnitude},${force.angle.toFixed(1)},${force.x.toFixed(1)},${force.y.toFixed(1)},${fx.toFixed(2)},${fy.toFixed(2)}\n`;
+                });
+                csv += '\n';
+                
+                // Cálculos de equilibrio
+                let sumFx = 0;
+                let sumFy = 0;
+                let sumMoments = 0;
+                cartesianForces.forEach(force => {
+                    const fx = force.magnitude * Math.cos(force.angle * Math.PI / 180);
+                    const fy = force.magnitude * Math.sin(force.angle * Math.PI / 180);
+                    sumFx += fx;
+                    sumFy += fy;
+                    
+                    if (cartesianObjects.length > 0) {
+                        const obj = cartesianObjects[0];
+                        const leverArmX = force.x - (obj.x + obj.width/2);
+                        const leverArmY = force.y - (obj.y + obj.height/2);
+                        sumMoments += fx * leverArmY - fy * leverArmX;
+                    }
+                });
+                
+                csv += 'ANÁLISIS DE EQUILIBRIO\n';
+                csv += 'Sumatoria Fx (N),Sumatoria Fy (N),Sumatoria Momentos (N·m),Fuerza Resultante (N),Estado\n';
+                const resultantForce = Math.sqrt(sumFx*sumFx + sumFy*sumFy);
+                const isEquilibrium = Math.abs(sumFx) < 0.1 && Math.abs(sumFy) < 0.1 && Math.abs(sumMoments) < 10;
+                csv += `${sumFx.toFixed(2)},${sumFy.toFixed(2)},${(sumMoments/100).toFixed(2)},${resultantForce.toFixed(2)},${isEquilibrium ? 'EQUILIBRIO' : 'NO EQUILIBRIO'}\n\n`;
+                
+                // Información física en tiempo real
+                if (cartesianObjects.length > 0) {
+                    const obj = cartesianObjects[0];
+                    const acceleration = Math.sqrt(obj.accelerationX * obj.accelerationX + obj.accelerationY * obj.accelerationY);
+                    const velocity = Math.sqrt(obj.velocityX * obj.velocityX + obj.velocityY * obj.velocityY);
+                    const kineticEnergy = 0.5 * obj.mass * velocity * velocity;
+                    
+                    csv += 'INFORMACIÓN FÍSICA EN TIEMPO REAL\n';
+                    csv += 'Aceleración (m/s²),Velocidad (m/s),Fuerza Resultante (N),Energía Cinética (J),Deformación (mm)\n';
+                    
+                    // Calcular deformación
+                    const totalForce = Math.sqrt(sumFx*sumFx + sumFy*sumFy);
+                    const area = (obj.width * obj.height) / 10000;
+                    const stress = totalForce / area;
+                    const strain = stress / obj.youngModulus;
+                    const deformation = strain * (obj.height / 100) * 1000;
+                    
+                    csv += `${acceleration.toFixed(2)},${velocity.toFixed(2)},${(obj.mass * acceleration).toFixed(2)},${kineticEnergy.toFixed(2)},${deformation.toFixed(2)}\n\n`;
+                }
+                
+                // Cálculos detallados
+                csv += 'CÁLCULOS DETALLADOS - SEGUNDA LEY DE NEWTON\n';
+                csv += 'Fórmula,Valor\n';
+                csv += `Masa del objeto,${cartesianObjects[0]?.mass || 0} kg\n`;
+                csv += `Fuerza resultante en X,${sumFx.toFixed(2)} N\n`;
+                csv += `Fuerza resultante en Y,${sumFy.toFixed(2)} N\n`;
+                csv += `Aceleración en X,${(sumFx/(cartesianObjects[0]?.mass || 1)).toFixed(2)} m/s²\n`;
+                csv += `Aceleración en Y,${(sumFy/(cartesianObjects[0]?.mass || 1)).toFixed(2)} m/s²\n`;
+                csv += `Aceleración resultante,${Math.sqrt((sumFx/(cartesianObjects[0]?.mass || 1))*(sumFx/(cartesianObjects[0]?.mass || 1)) + (sumFy/(cartesianObjects[0]?.mass || 1))*(sumFy/(cartesianObjects[0]?.mass || 1))).toFixed(2)} m/s²\n`;
+                
+                return csv;
+            }
+            
+            // Sistema de historial (undo/redo)
+            function pushToHistory(action) {
+                // Eliminar acciones futuras si estamos en medio del historial
+                if (currentHistoryIndex < actionHistory.length - 1) {
+                    actionHistory = actionHistory.slice(0, currentHistoryIndex + 1);
+                }
+                
+                // Guardar el estado actual
+                const state = {
+                    action: action,
+                    timestamp: new Date(),
+                    forces: JSON.parse(JSON.stringify(cartesianForces)),
+                    objects: JSON.parse(JSON.stringify(cartesianObjects)),
+                    cables: JSON.parse(JSON.stringify(cables)),
+                    connectionPoints: JSON.parse(JSON.stringify(connectionPoints)),
+                    viewOffsetX: viewOffsetX,
+                    viewOffsetY: viewOffsetY,
+                    viewScale: viewScale
+                };
+                
+                actionHistory.push(state);
+                
+                // Limitar el tamaño del historial
+                if (actionHistory.length > MAX_HISTORY) {
+                    actionHistory.shift();
+                }
+                
+                currentHistoryIndex = actionHistory.length - 1;
+                updateHistoryDisplay();
+            }
+            
+            function undo() {
+                if (currentHistoryIndex > 0) {
+                    currentHistoryIndex--;
+                    restoreState(actionHistory[currentHistoryIndex]);
+                    updateHistoryDisplay();
+                }
+            }
+            
+            function redo() {
+                if (currentHistoryIndex < actionHistory.length - 1) {
+                    currentHistoryIndex++;
+                    restoreState(actionHistory[currentHistoryIndex]);
+                    updateHistoryDisplay();
+                }
+            }
+            
+            function restoreState(state) {
+                cartesianForces = JSON.parse(JSON.stringify(state.forces));
+                cartesianObjects = JSON.parse(JSON.stringify(state.objects));
+                cables = JSON.parse(JSON.stringify(state.cables));
+                connectionPoints = JSON.parse(JSON.stringify(state.connectionPoints));
+                viewOffsetX = state.viewOffsetX;
+                viewOffsetY = state.viewOffsetY;
+                viewScale = state.viewScale;
+                
+                drawGrid();
+                throttledDrawObjects();
+                updateResultsTable();
+                calculateEquilibrium();
+                updatePhysicsDisplays();
+                updatePropertiesPanel();
+                updateScaleDisplay();
+            }
+            
+            function updateHistoryDisplay() {
+                historyList.innerHTML = '';
+                
+                actionHistory.forEach((state, index) => {
+                    const actionEl = document.createElement('div');
+                    actionEl.className = `history-action ${index === currentHistoryIndex ? 'current' : ''}`;
+                    actionEl.innerHTML = `
+                        <span>${state.action}</span>
+                        <span class="history-time">${state.timestamp.toLocaleTimeString()}</span>
+                    `;
+                    
+                    actionEl.addEventListener('click', () => {
+                        currentHistoryIndex = index;
+                        restoreState(state);
+                        updateHistoryDisplay();
+                    });
+                    
+                    historyList.appendChild(actionEl);
+                });
+                
+                // Desplazar al final
+                historyList.scrollTop = historyList.scrollHeight;
+                
+                // Actualizar estado de botones
+                undoBtn.disabled = currentHistoryIndex <= 0;
+                redoBtn.disabled = currentHistoryIndex >= actionHistory.length - 1;
+            }
+            
+            // Sistema de guardado/carga de simulaciones
+            function saveSimulation() {
+                try {
+                    const name = prompt('Nombre de la simulación:', `Simulación_${new Date().toLocaleDateString()}`);
+                    if (!name) return;
+                    
+                    if (!name.trim()) {
+                        throw new Error('Nombre de simulación inválido');
+                    }
+                    
+                    const simulation = {
+                        name: name,
+                        date: new Date().toISOString(),
+                        objects: cartesianObjects,
+                        forces: cartesianForces,
+                        cables: cables,
+                        connectionPoints: connectionPoints,
+                        settings: {
+                            physicsEnabled: physicsEnabled,
+                            frictionEnabled: frictionEnabled,
+                            viewOffsetX: viewOffsetX,
+                            viewOffsetY: viewOffsetY,
+                            viewScale: viewScale
+                        }
+                    };
+                    
+                    const key = `simulation_${Date.now()}`;
+                    localStorage.setItem(key, JSON.stringify(simulation));
+                    
+                    NotificationSystem.show(`Simulación "${name}" guardada correctamente`, 'success');
+                    pushToHistory('Simulación guardada');
+                    loadSavedSimulations();
+                } catch (error) {
+                    console.error('Error guardando simulación:', error);
+                    NotificationSystem.show('Error al guardar la simulación: ' + error.message, 'error');
+                }
+            }
+            
+            function loadSimulation() {
+                try {
+                    const simulations = getSavedSimulations();
+                    if (simulations.length === 0) {
+                        NotificationSystem.show('No hay simulaciones guardadas', 'info');
+                        return;
+                    }
+                    
+                    const simulationNames = simulations.map(s => s.name);
+                    const selectedName = prompt(
+                        'Simulaciones guardadas:\n' + simulationNames.join('\n') + '\n\nEscribe el nombre de la simulación a cargar:'
+                    );
+                    
+                    if (!selectedName) return;
+                    
+                    const simulation = simulations.find(s => s.name === selectedName);
+                    if (!simulation) {
+                        NotificationSystem.show('Simulación no encontrada', 'error');
+                        return;
+                    }
+                    
+                    // Cargar la simulación
+                    cartesianObjects = JSON.parse(JSON.stringify(simulation.objects));
+                    cartesianForces = JSON.parse(JSON.stringify(simulation.forces));
+                    cables = JSON.parse(JSON.stringify(simulation.cables));
+                    connectionPoints = JSON.parse(JSON.stringify(simulation.connectionPoints));
+                    
+                    if (simulation.settings) {
+                        physicsEnabled = simulation.settings.physicsEnabled;
+                        frictionEnabled = simulation.settings.frictionEnabled;
+                        viewOffsetX = simulation.settings.viewOffsetX || 0;
+                        viewOffsetY = simulation.settings.viewOffsetY || 0;
+                        viewScale = simulation.settings.viewScale || 1;
+                        
+                        togglePhysicsBtn.textContent = `Física: ${physicsEnabled ? 'ACTIVADA' : 'DESACTIVADA'}`;
+                        toggleFrictionBtn.textContent = `Fricción: ${frictionEnabled ? 'ACTIVADA' : 'DESACTIVADA'}`;
+                        
+                        if (physicsEnabled) {
+                            togglePhysicsBtn.classList.add('toggle-on');
+                        } else {
+                            togglePhysicsBtn.classList.remove('toggle-on');
+                        }
+                        
+                        if (frictionEnabled) {
+                            toggleFrictionBtn.classList.add('toggle-on');
+                        } else {
+                            toggleFrictionBtn.classList.remove('toggle-on');
+                        }
+                    }
+                    
+                    drawGrid();
+                    throttledDrawObjects();
+                    updateResultsTable();
+                    calculateEquilibrium();
+                    updatePhysicsDisplays();
+                    updatePropertiesPanel();
+                    updateScaleDisplay();
+                    
+                    pushToHistory(`Simulación "${selectedName}" cargada`);
+                    NotificationSystem.show(`Simulación "${selectedName}" cargada correctamente`, 'success');
+                } catch (error) {
+                    console.error('Error cargando simulación:', error);
+                    NotificationSystem.show('Error al cargar la simulación', 'error');
+                }
+            }
+            
+            function getSavedSimulations() {
+                const simulations = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('simulation_')) {
+                        try {
+                            const simulation = JSON.parse(localStorage.getItem(key));
+                            simulations.push(simulation);
+                        } catch (e) {
+                            console.error('Error al cargar simulación:', e);
+                        }
+                    }
+                }
+                
+                // Ordenar por fecha (más reciente primero)
+                return simulations.sort((a, b) => new Date(b.date) - new Date(a.date));
+            }
+            
+            function loadSavedSimulations() {
+                const simulations = getSavedSimulations();
+                simulationList.innerHTML = '';
+                
+                if (simulations.length === 0) {
+                    simulationList.innerHTML = '<p>No hay simulaciones guardadas</p>';
+                    return;
+                }
+                
+                simulations.forEach(simulation => {
+                    const item = document.createElement('div');
+                    item.className = 'simulation-item';
+                    item.innerHTML = `
+                        <div>
+                            <div class="simulation-name">${simulation.name}</div>
+                            <div class="simulation-date">${new Date(simulation.date).toLocaleDateString()}</div>
+                        </div>
+                    `;
+                    
+                    item.addEventListener('click', () => {
+                        if (confirm(`¿Cargar la simulación "${simulation.name}"?`)) {
+                            // Similar a loadSimulation pero sin prompt
+                            cartesianObjects = JSON.parse(JSON.stringify(simulation.objects));
+                            cartesianForces = JSON.parse(JSON.stringify(simulation.forces));
+                            cables = JSON.parse(JSON.stringify(simulation.cables));
+                            connectionPoints = JSON.parse(JSON.stringify(simulation.connectionPoints));
+                            
+                            if (simulation.settings) {
+                                physicsEnabled = simulation.settings.physicsEnabled;
+                                frictionEnabled = simulation.settings.frictionEnabled;
+                                viewOffsetX = simulation.settings.viewOffsetX || 0;
+                                viewOffsetY = simulation.settings.viewOffsetY || 0;
+                                viewScale = simulation.settings.viewScale || 1;
+                                
+                                togglePhysicsBtn.textContent = `Física: ${physicsEnabled ? 'ACTIVADA' : 'DESACTIVADA'}`;
+                                toggleFrictionBtn.textContent = `Fricción: ${frictionEnabled ? 'ACTIVADA' : 'DESACTIVADA'}`;
+                                
+                                if (physicsEnabled) {
+                                    togglePhysicsBtn.classList.add('toggle-on');
+                                } else {
+                                    togglePhysicsBtn.classList.remove('toggle-on');
+                                }
+                                
+                                if (frictionEnabled) {
+                                    toggleFrictionBtn.classList.add('toggle-on');
+                                } else {
+                                    toggleFrictionBtn.classList.remove('toggle-on');
+                                }
+                            }
+                            
+                            drawGrid();
+                            throttledDrawObjects();
+                            updateResultsTable();
+                            calculateEquilibrium();
+                            updatePhysicsDisplays();
+                            updatePropertiesPanel();
+                            updateScaleDisplay();
+                            
+                            pushToHistory(`Simulación "${simulation.name}" cargada`);
+                            NotificationSystem.show(`Simulación "${simulation.name}" cargada correctamente`, 'success');
+                        }
+                    });
+                    
+                    simulationList.appendChild(item);
+                });
+            }
+            
+            // Panel de propiedades
+            function updatePropertiesPanel() {
+                if (selectedObject) {
+                    let html = `
+                        <div class="property-group">
+                            <div class="property-item">
+                                <span class="property-name">Tipo:</span>
+                                <span class="property-value">${selectedObject.type}</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Masa:</span>
+                                <span class="property-value">${selectedObject.mass} kg</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Material:</span>
+                                <span class="property-value">${materials[selectedObject.material].name}</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Posición:</span>
+                                <span class="property-value">(${selectedObject.x.toFixed(1)}, ${selectedObject.y.toFixed(1)})</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Dimensiones:</span>
+                                <span class="property-value">${selectedObject.width} × ${selectedObject.height} px</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Soporte:</span>
+                                <span class="property-value">${selectedObject.supportType}</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Fricción:</span>
+                                <span class="property-value">${selectedObject.friction}</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Velocidad:</span>
+                                <span class="property-value">${Math.sqrt(selectedObject.velocityX*selectedObject.velocityX + selectedObject.velocityY*selectedObject.velocityY).toFixed(2)} m/s</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    selectedProperties.innerHTML = html;
+                } else if (selectedForce) {
+                    let html = `
+                        <div class="property-group">
+                            <div class="property-item">
+                                <span class="property-name">Magnitud:</span>
+                                <span class="property-value">${selectedForce.magnitude} N</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Ángulo:</span>
+                                <span class="property-value">${selectedForce.angle.toFixed(1)}°</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Posición:</span>
+                                <span class="property-value">(${selectedForce.x.toFixed(1)}, ${selectedForce.y.toFixed(1)})</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Componente X:</span>
+                                <span class="property-value">${(selectedForce.magnitude * Math.cos(selectedForce.angle * Math.PI / 180)).toFixed(2)} N</span>
+                            </div>
+                            <div class="property-item">
+                                <span class="property-name">Componente Y:</span>
+                                <span class="property-value">${(selectedForce.magnitude * Math.sin(selectedForce.angle * Math.PI / 180)).toFixed(2)} N</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    selectedProperties.innerHTML = html;
+                } else {
+                    selectedProperties.innerHTML = '<p>Selecciona un elemento para ver sus propiedades</p>';
+                }
+            }
+            
+            // Ejemplos predefinidos
+            function loadExampleBeam() {
+                clearAll();
+                
+                const planeWidth = cartesianPlane.offsetWidth;
+                const planeHeight = cartesianPlane.offsetHeight;
+                
+                // Crear viga
+                const beam = createObject('beam', planeWidth / 2 - 75, planeHeight / 2 - 15, 150, 30);
+                beam.supportType = 'fixed';
+                beam.mass = 50;
+                cartesianObjects.push(beam);
+                
+                // Añadir peso en el extremo
+                const weight = createObject('weight', planeWidth / 2 + 60, planeHeight / 2 - 20, 40, 40);
+                weight.mass = 20;
+                cartesianObjects.push(weight);
+                
+                // Añadir fuerza hacia abajo en el extremo
+                addCartesianForce({
+                    x: planeWidth / 2 + 75,
+                    y: planeHeight / 2 + 20,
+                    magnitude: 100,
+                    angle: 270
+                });
+                
+                selectedObject = beam;
+                throttledDrawObjects();
+                updatePropertiesPanel();
+                pushToHistory('Ejemplo: Viga en voladizo cargada');
+                NotificationSystem.show('Ejemplo de viga en voladizo cargado', 'info');
+            }
+            
+            function loadExampleBridge() {
+                clearAll();
+                
+                const planeWidth = cartesianPlane.offsetWidth;
+                const planeHeight = cartesianPlane.offsetHeight;
+                
+                // Crear vigas del puente
+                const beam1 = createObject('beam', planeWidth / 2 - 200, planeHeight / 2 - 15, 150, 30);
+                beam1.supportType = 'roller';
+                cartesianObjects.push(beam1);
+                
+                const beam2 = createObject('beam', planeWidth / 2 - 50, planeHeight / 2 - 15, 150, 30);
+                beam2.supportType = 'pivot';
+                cartesianObjects.push(beam2);
+                
+                const beam3 = createObject('beam', planeWidth / 2 + 100, planeHeight / 2 - 15, 150, 30);
+                beam3.supportType = 'fixed';
+                cartesianObjects.push(beam3);
+                
+                // Añadir peso en el centro
+                const weight = createObject('weight', planeWidth / 2 - 20, planeHeight / 2 - 60, 40, 40);
+                weight.mass = 50;
+                cartesianObjects.push(weight);
+                
+                selectedObject = beam2;
+                throttledDrawObjects();
+                updatePropertiesPanel();
+                pushToHistory('Ejemplo: Puente simple con cargas');
+                NotificationSystem.show('Ejemplo de puente simple cargado', 'info');
+            }
+            
+            function loadExampleCrane() {
+                clearAll();
+                
+                const planeWidth = cartesianPlane.offsetWidth;
+                const planeHeight = cartesianPlane.offsetHeight;
+                
+                // Crear base
+                const base = createObject('pole', planeWidth / 2 - 15, planeHeight / 2 - 100, 30, 200);
+                base.supportType = 'fixed';
+                cartesianObjects.push(base);
+                
+                // Crear brazo
+                const arm = createObject('beam', planeWidth / 2 - 15, planeHeight / 2 - 120, 200, 20);
+                arm.supportType = 'pivot';
+                cartesianObjects.push(arm);
+                
+                // Añadir contrapeso
+                const counterweight = createObject('weight', planeWidth / 2 - 100, planeHeight / 2 - 120, 40, 40);
+                counterweight.mass = 100;
+                cartesianObjects.push(counterweight);
+                
+                // Añadir carga
+                const load = createObject('weight', planeWidth / 2 + 120, planeHeight / 2 - 120, 30, 30);
+                load.mass = 50;
+                cartesianObjects.push(load);
+                
+                selectedObject = arm;
+                throttledDrawObjects();
+                updatePropertiesPanel();
+                pushToHistory('Ejemplo: Grúa con contrapeso');
+                NotificationSystem.show('Ejemplo de grúa cargado', 'info');
+            }
+            
+            function loadExampleSeeSaw() {
+                clearAll();
+                
+                const planeWidth = cartesianPlane.offsetWidth;
+                const planeHeight = cartesianPlane.offsetHeight;
+                
+                // Crear balancín
+                const seesaw = createObject('beam', planeWidth / 2 - 100, planeHeight / 2 - 10, 200, 20);
+                seesaw.supportType = 'pivot';
+                cartesianObjects.push(seesaw);
+                
+                // Añadir pesos en los extremos
+                const weight1 = createObject('weight', planeWidth / 2 - 120, planeHeight / 2 - 50, 35, 35);
+                weight1.mass = 30;
+                cartesianObjects.push(weight1);
+                
+                const weight2 = createObject('weight', planeWidth / 2 + 85, planeHeight / 2 + 10, 35, 35);
+                weight2.mass = 40;
+                cartesianObjects.push(weight2);
+                
+                selectedObject = seesaw;
+                throttledDrawObjects();
+                updatePropertiesPanel();
+                pushToHistory('Ejemplo: Balancín con pesos desiguales');
+                NotificationSystem.show('Ejemplo de balancín cargado', 'info');
+            }
+            
+            // Funciones de gestión de datos
+            function clearAll() {
+                if (confirm('¿Estás seguro de que quieres limpiar toda la simulación?')) {
+                    cartesianForces = [];
+                    cartesianObjects = [];
+                    cables = [];
+                    connectionPoints = [];
+                    selectedForce = null;
+                    selectedObject = null;
+                    selectedConnectionPoint = null;
+                    firstConnectionPoint = null;
+                    
+                    throttledDrawObjects();
+                    updateResultsTable();
+                    calculateEquilibrium();
+                    updatePhysicsDisplays();
+                    updatePropertiesPanel();
+                    
+                    createDefaultObject();
+                    pushToHistory('Simulación limpiada');
+                    NotificationSystem.show('Simulación limpiada', 'info');
+                }
+            }
+            
+            // Devolver funciones públicas
+            return {
+                init: init
+            };
+        })();
+        
+        // Inicializar la aplicación cuando se carga la página
+        window.addEventListener('DOMContentLoaded', StaticSimulator.init);
+    </script>
+</body>
+</html>
